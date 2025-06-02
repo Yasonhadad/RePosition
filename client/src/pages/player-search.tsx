@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlayerCard } from "@/components/player/player-card";
 import { PlayerProfile } from "@/components/player/player-profile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Search } from "lucide-react";
 import type { Player } from "@shared/schema";
 import type { SearchFilters } from "@/types";
 
@@ -19,10 +21,18 @@ export default function PlayerSearch() {
     ageMax: undefined,
     sortBy: "compatibility",
   });
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    name: "",
+    position: "",
+    team: "",
+    ageMin: undefined,
+    ageMax: undefined,
+    sortBy: "compatibility",
+  });
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
-  const { data: players = [], isLoading } = useQuery<Player[]>({
-    queryKey: ["/api/players", filters],
+  const { data: playersData, isLoading } = useQuery<Player[]>({
+    queryKey: ["/api/players", searchFilters],
     queryFn: ({ queryKey }) => {
       const [url, searchFilters] = queryKey;
       const params = new URLSearchParams();
@@ -37,10 +47,15 @@ export default function PlayerSearch() {
     },
   });
 
-  const { data: clubs = [] } = useQuery<Array<{ name: string }>>({
+  // Ensure players is always an array
+  const players = Array.isArray(playersData) ? playersData : [];
+
+  const { data: clubsData = [] } = useQuery({
     queryKey: ["/api/clubs"],
-    select: (data) => data.map(club => ({ name: club.name })),
   });
+
+  // Ensure clubs is always an array
+  const clubs = Array.isArray(clubsData) ? clubsData : [];
 
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
   const ageRanges = [
@@ -69,6 +84,14 @@ export default function PlayerSearch() {
         ageMax: range.max,
       }));
     }
+  };
+
+  const handleSearch = () => {
+    setSearchFilters(filters);
+  };
+
+  const handlePlayerClick = (player: Player) => {
+    setSelectedPlayer(player);
   };
 
   return (
@@ -142,14 +165,25 @@ export default function PlayerSearch() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  {clubs.slice(0, 20).map((club) => (
-                    <SelectItem key={club.name} value={club.name}>
-                      {club.name}
+                  {clubs.slice(0, 20).map((club, index) => (
+                    <SelectItem key={club.name || index} value={club.name || ""}>
+                      {club.name || "Unknown Team"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          
+          {/* Search Button */}
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={handleSearch}
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              Search Players
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -215,12 +249,12 @@ export default function PlayerSearch() {
               ) : (
                 <div className="space-y-4">
                   {players.map((player) => (
-                    <PlayerCard
-                      key={player.id}
-                      player={player}
-                      isSelected={selectedPlayer?.id === player.id}
-                      onClick={() => setSelectedPlayer(player)}
-                    />
+                    <div key={player.id} onClick={() => handlePlayerClick(player)} className="cursor-pointer">
+                      <PlayerCard
+                        player={player}
+                        isSelected={selectedPlayer?.id === player.id}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
