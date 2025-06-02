@@ -10,6 +10,7 @@ import { PlayerProfile } from "@/components/player/player-profile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
 import type { Player, SearchFilters } from "@shared/schema";
+import { getClubs } from "@/lib/api";
 
 export default function PlayerSearch() {
   const [filters, setFilters] = useState<SearchFilters>({
@@ -51,17 +52,23 @@ export default function PlayerSearch() {
   // Ensure players is always an array
   const players = Array.isArray(playersData) ? playersData : [];
 
+  const { data: competitionsData = [] } = useQuery({
+    queryKey: ["/api/competitions"],
+  });
+
   const { data: clubsData = [] } = useQuery({
-    queryKey: ["/api/clubs"],
+    queryKey: ["/api/clubs", filters.league],
+    queryFn: () => getClubs(filters.league),
   });
 
   const { data: leaguesData = [] } = useQuery({
     queryKey: ["/api/leagues"],
   });
 
-  // Ensure clubs and leagues are always arrays
+  // Ensure clubs, leagues and competitions are always arrays
   const clubs = Array.isArray(clubsData) ? clubsData : [];
   const leagues = Array.isArray(leaguesData) ? leaguesData : [];
+  const competitions = Array.isArray(competitionsData) ? competitionsData : [];
 
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
   const ageRanges = [
@@ -171,9 +178,9 @@ export default function PlayerSearch() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Leagues</SelectItem>
-                  {leagues.map((league, index) => (
-                    <SelectItem key={league || index} value={league}>
-                      {league}
+                  {competitions.map((competition, index) => (
+                    <SelectItem key={competition.competition_id || index} value={competition.name}>
+                      {competition.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
