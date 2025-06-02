@@ -27,7 +27,7 @@ export default function PlayerSearch() {
       const [url, searchFilters] = queryKey;
       const params = new URLSearchParams();
       
-      Object.entries(searchFilters).forEach(([key, value]) => {
+      Object.entries(searchFilters as Record<string, any>).forEach(([key, value]) => {
         if (value !== undefined && value !== "" && value !== null) {
           params.append(key, value.toString());
         }
@@ -52,7 +52,12 @@ export default function PlayerSearch() {
   ];
 
   const handleFilterChange = (key: keyof SearchFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    // Handle "all" values by setting them to empty/undefined
+    let actualValue = value;
+    if (value === "all") {
+      actualValue = key === "position" || key === "team" ? "" : undefined;
+    }
+    setFilters(prev => ({ ...prev, [key]: actualValue }));
   };
 
   const handleAgeRangeChange = (value: string) => {
@@ -117,7 +122,7 @@ export default function PlayerSearch() {
                   <SelectValue placeholder="All Positions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Positions</SelectItem>
+                  <SelectItem value="all">All Positions</SelectItem>
                   {positions.map((position) => (
                     <SelectItem key={position} value={position}>
                       {position}
@@ -136,7 +141,7 @@ export default function PlayerSearch() {
                   <SelectValue placeholder="All Teams" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Teams</SelectItem>
+                  <SelectItem value="all">All Teams</SelectItem>
                   {clubs.slice(0, 20).map((club) => (
                     <SelectItem key={club.name} value={club.name}>
                       {club.name}
