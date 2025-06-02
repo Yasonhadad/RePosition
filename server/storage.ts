@@ -1,4 +1,6 @@
 import { players, clubs, position_compatibility, ml_analysis_cache, type Player, type Club, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, or, like, gte, lte, desc, asc } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -43,209 +45,184 @@ export interface IStorage {
   }>;
 }
 
-export class MemStorage implements IStorage {
-  private players: Map<number, Player>;
-  private clubs: Map<number, Club>;
-  private positionCompatibilities: Map<number, PositionCompatibility>;
-  private mlCache: Map<string, MlAnalysisCache>;
-  private currentPlayerId: number;
-  private currentClubId: number;
-  private currentCompatibilityId: number;
-  private currentCacheId: number;
-
-  constructor() {
-    this.players = new Map();
-    this.clubs = new Map();
-    this.positionCompatibilities = new Map();
-    this.mlCache = new Map();
-    this.currentPlayerId = 1;
-    this.currentClubId = 1;
-    this.currentCompatibilityId = 1;
-    this.currentCacheId = 1;
-  }
+export class DatabaseStorage implements IStorage {
+  constructor() {}
 
   // Players
   async getPlayer(id: number): Promise<Player | undefined> {
-    return this.players.get(id);
+    const [player] = await db.select().from(players).where(eq(players.id, id));
+    return player || undefined;
   }
 
   async getPlayerByPlayerId(playerId: number): Promise<Player | undefined> {
-    return Array.from(this.players.values()).find(player => player.player_id === playerId);
+    const [player] = await db.select().from(players).where(eq(players.player_id, playerId));
+    return player || undefined;
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
-    const id = this.currentPlayerId++;
-    const player: Player = {
-      ...insertPlayer,
-      id,
-      created_at: new Date(),
-    };
-    this.players.set(id, player);
+    const [player] = await db
+      .insert(players)
+      .values(insertPlayer)
+      .returning();
     return player;
   }
 
   async updatePlayer(id: number, playerUpdate: Partial<InsertPlayer>): Promise<Player | undefined> {
-    const existing = this.players.get(id);
-    if (!existing) return undefined;
-    
-    const updated: Player = { ...existing, ...playerUpdate };
-    this.players.set(id, updated);
-    return updated;
+    const [player] = await db
+      .update(players)
+      .set(playerUpdate)
+      .where(eq(players.id, id))
+      .returning();
+    return player || undefined;
   }
 
   async searchPlayers(filters: SearchFilters): Promise<Player[]> {
-    let results = Array.from(this.players.values());
+    let query = db.select().from(players);
+    const conditions = [];
 
     if (filters.name) {
-      const searchTerm = filters.name.toLowerCase();
-      results = results.filter(player => 
-        player.name.toLowerCase().includes(searchTerm)
-      );
+      conditions.push(like(players.name, `%${filters.name}%`));
     }
 
     if (filters.position) {
-      results = results.filter(player => 
-        player.sub_position === filters.position || player.position === filters.position
+      conditions.push(
+        or(
+          eq(players.sub_position, filters.position),
+          eq(players.position, filters.position)
+        )
       );
     }
 
     if (filters.team) {
-      results = results.filter(player => 
-        player.current_club_name?.toLowerCase().includes(filters.team.toLowerCase())
-      );
+      conditions.push(like(players.current_club_name, `%${filters.team}%`));
     }
 
     if (filters.ageMin !== undefined) {
-      results = results.filter(player => 
-        player.age !== null && player.age >= filters.ageMin!
-      );
+      conditions.push(gte(players.age, filters.ageMin));
     }
 
     if (filters.ageMax !== undefined) {
-      results = results.filter(player => 
-        player.age !== null && player.age <= filters.ageMax!
-      );
+      conditions.push(lte(players.age, filters.ageMax));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
     // Sort results
     if (filters.sortBy) {
-      results.sort((a, b) => {
-        switch (filters.sortBy) {
-          case "overall":
-            return (b.ovr || 0) - (a.ovr || 0);
-          case "age":
-            return (a.age || 0) - (b.age || 0);
-          case "market_value":
-            return (b.market_value_in_eur || 0) - (a.market_value_in_eur || 0);
-          default:
-            return 0;
-        }
-      });
+      switch (filters.sortBy) {
+        case "overall":
+          query = query.orderBy(desc(players.ovr));
+          break;
+        case "age":
+          query = query.orderBy(asc(players.age));
+          break;
+        case "market_value":
+          query = query.orderBy(desc(players.market_value_in_eur));
+          break;
+      }
     }
 
-    return results;
+    return await query;
   }
 
   async getAllPlayers(): Promise<Player[]> {
-    return Array.from(this.players.values());
+    return await db.select().from(players);
   }
 
   async bulkCreatePlayers(playersData: InsertPlayer[]): Promise<Player[]> {
-    const created: Player[] = [];
-    for (const playerData of playersData) {
-      const player = await this.createPlayer(playerData);
-      created.push(player);
-    }
+    if (playersData.length === 0) return [];
+    
+    const created = await db
+      .insert(players)
+      .values(playersData)
+      .returning();
     return created;
   }
 
   // Clubs
   async getClub(id: number): Promise<Club | undefined> {
-    return this.clubs.get(id);
+    const [club] = await db.select().from(clubs).where(eq(clubs.id, id));
+    return club || undefined;
   }
 
   async getClubByClubId(clubId: number): Promise<Club | undefined> {
-    return Array.from(this.clubs.values()).find(club => club.club_id === clubId);
+    const [club] = await db.select().from(clubs).where(eq(clubs.club_id, clubId));
+    return club || undefined;
   }
 
   async getAllClubs(): Promise<Club[]> {
-    return Array.from(this.clubs.values());
+    return await db.select().from(clubs);
   }
 
   async createClub(insertClub: InsertClub): Promise<Club> {
-    const id = this.currentClubId++;
-    const club: Club = { ...insertClub, id };
-    this.clubs.set(id, club);
+    const [club] = await db
+      .insert(clubs)
+      .values(insertClub)
+      .returning();
     return club;
   }
 
   async bulkCreateClubs(clubsData: InsertClub[]): Promise<Club[]> {
-    const created: Club[] = [];
-    for (const clubData of clubsData) {
-      const club = await this.createClub(clubData);
-      created.push(club);
-    }
+    if (clubsData.length === 0) return [];
+    
+    const created = await db
+      .insert(clubs)
+      .values(clubsData)
+      .returning();
     return created;
   }
 
   async getPlayersByClub(clubName: string): Promise<Player[]> {
-    return Array.from(this.players.values()).filter(player =>
-      player.current_club_name?.toLowerCase() === clubName.toLowerCase()
-    );
+    return await db.select().from(players).where(eq(players.current_club_name, clubName));
   }
 
   // Position Compatibility
   async getPositionCompatibility(playerId: number): Promise<PositionCompatibility | undefined> {
-    return Array.from(this.positionCompatibilities.values()).find(
-      pc => pc.player_id === playerId
-    );
+    const [compatibility] = await db.select().from(position_compatibility).where(eq(position_compatibility.player_id, playerId));
+    return compatibility || undefined;
   }
 
   async createPositionCompatibility(compatibility: InsertPositionCompatibility): Promise<PositionCompatibility> {
-    const id = this.currentCompatibilityId++;
-    const positionCompatibility: PositionCompatibility = {
-      ...compatibility,
-      id,
-      created_at: new Date(),
-    };
-    this.positionCompatibilities.set(id, positionCompatibility);
-    return positionCompatibility;
+    const [created] = await db
+      .insert(position_compatibility)
+      .values(compatibility)
+      .returning();
+    return created;
   }
 
   async updatePositionCompatibility(playerId: number, compatibilityUpdate: Partial<InsertPositionCompatibility>): Promise<PositionCompatibility | undefined> {
-    const existing = Array.from(this.positionCompatibilities.values()).find(
-      pc => pc.player_id === playerId
-    );
-    if (!existing) return undefined;
-
-    const updated: PositionCompatibility = { ...existing, ...compatibilityUpdate };
-    this.positionCompatibilities.set(existing.id, updated);
-    return updated;
+    const [updated] = await db
+      .update(position_compatibility)
+      .set(compatibilityUpdate)
+      .where(eq(position_compatibility.player_id, playerId))
+      .returning();
+    return updated || undefined;
   }
 
   async bulkCreatePositionCompatibility(compatibilities: InsertPositionCompatibility[]): Promise<PositionCompatibility[]> {
-    const created: PositionCompatibility[] = [];
-    for (const compatibility of compatibilities) {
-      const pc = await this.createPositionCompatibility(compatibility);
-      created.push(pc);
-    }
+    if (compatibilities.length === 0) return [];
+    
+    const created = await db
+      .insert(position_compatibility)
+      .values(compatibilities)
+      .returning();
     return created;
   }
 
   // ML Analysis Cache
   async getMlAnalysisCache(cacheKey: string): Promise<MlAnalysisCache | undefined> {
-    return Array.from(this.mlCache.values()).find(cache => cache.cache_key === cacheKey);
+    const [cache] = await db.select().from(ml_analysis_cache).where(eq(ml_analysis_cache.cache_key, cacheKey));
+    return cache || undefined;
   }
 
   async createMlAnalysisCache(cache: InsertMlAnalysisCache): Promise<MlAnalysisCache> {
-    const id = this.currentCacheId++;
-    const mlCache: MlAnalysisCache = {
-      ...cache,
-      id,
-      created_at: new Date(),
-    };
-    this.mlCache.set(id, mlCache);
-    return mlCache;
+    const [created] = await db
+      .insert(ml_analysis_cache)
+      .values(cache)
+      .returning();
+    return created;
   }
 
   // Analytics
@@ -327,4 +304,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
