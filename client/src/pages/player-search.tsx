@@ -193,7 +193,7 @@ export default function PlayerSearch() {
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2">
-                ליגות לפי מדינה
+                Leagues by Country
               </Label>
               <Select
                 onValueChange={(value) => handleFilterChange("country", value)}
