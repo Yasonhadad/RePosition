@@ -24,9 +24,9 @@ export function Sidebar() {
         {/* RePosition Logo */}
         <div className="flex items-center mb-8">
           <img 
-            src="/attached_assets/reposition-logo.png" 
+            src="/attached_assets/reposition-logo-final.png" 
             alt="RePosition Logo" 
-            className="w-32 h-auto"
+            className="w-40 h-auto"
           />
         </div>
 
