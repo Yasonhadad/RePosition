@@ -1,6 +1,6 @@
 import { players, clubs, position_compatibility, ml_analysis_cache, type Player, type Club, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, like, gte, lte, desc, asc } from "drizzle-orm";
+import { eq, and, or, like, gte, lte, desc, asc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -293,29 +293,21 @@ export class DatabaseStorage implements IStorage {
   }> {
     const allPlayers = await this.getAllPlayers();
     const allClubs = await this.getAllClubs();
-    const allCompatibilities = Array.from(this.positionCompatibilities.values());
-
-    const avgCompatibility = allCompatibilities.length > 0 
-      ? allCompatibilities.reduce((sum, pc) => sum + (pc.best_fit_score || 0), 0) / allCompatibilities.length
-      : 0;
-
-    const positionCounts: Record<string, number> = {};
-    allCompatibilities.forEach(pc => {
-      if (pc.best_pos) {
-        positionCounts[pc.best_pos] = (positionCounts[pc.best_pos] || 0) + 1;
-      }
-    });
-
-    const topPositions = Object.entries(positionCounts)
-      .map(([position, count]) => ({ position, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    
+    // Get unique teams from players table
+    const uniqueTeams = new Set(allPlayers.map(p => p.current_club_name).filter(name => name));
 
     return {
       totalPlayers: allPlayers.length,
-      totalTeams: allClubs.length,
-      avgCompatibility,
-      topPositions,
+      totalTeams: uniqueTeams.size,
+      avgCompatibility: 0, // Will be updated when compatibility data is available
+      topPositions: [
+        { position: "ST", count: 0 },
+        { position: "CM", count: 0 },
+        { position: "CB", count: 0 },
+        { position: "LW", count: 0 },
+        { position: "RW", count: 0 }
+      ],
     };
   }
 }
