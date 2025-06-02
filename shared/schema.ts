@@ -78,6 +78,21 @@ export const players = pgTable("players", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+export const competitions = pgTable("competitions", {
+  id: serial("id").primaryKey(),
+  competition_id: text("competition_id").notNull().unique(),
+  competition_code: text("competition_code"),
+  name: text("name").notNull(),
+  sub_type: text("sub_type"),
+  type: text("type"),
+  country_id: integer("country_id"),
+  country_name: text("country_name"),
+  domestic_league_code: text("domestic_league_code"),
+  confederation: text("confederation"),
+  url: text("url"),
+  is_major_national_league: text("is_major_national_league"),
+});
+
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   club_id: integer("club_id").notNull().unique(),
