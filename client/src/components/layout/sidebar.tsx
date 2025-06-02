@@ -24,7 +24,7 @@ export function Sidebar() {
         {/* RePosition Logo */}
         <div className="flex items-center mb-8">
           <img 
-            src="/attached_assets/20250506_1335_לוגו עם ספירלת DNA_remix_01jtjjjtj2e9c83xtn1y36pyd8.png" 
+            src="/attached_assets/reposition-logo.png" 
             alt="RePosition Logo" 
             className="w-32 h-auto"
           />
