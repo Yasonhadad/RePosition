@@ -149,6 +149,10 @@ export const insertPlayerSchema = createInsertSchema(players).omit({
   created_at: true,
 });
 
+export const insertCompetitionSchema = createInsertSchema(competitions).omit({
+  id: true,
+});
+
 export const insertClubSchema = createInsertSchema(clubs).omit({
   id: true,
 });
@@ -167,6 +171,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
+export type InsertCompetition = z.infer<typeof insertCompetitionSchema>;
+export type Competition = typeof competitions.$inferSelect;
 export type InsertClub = z.infer<typeof insertClubSchema>;
 export type Club = typeof clubs.$inferSelect;
 export type InsertPositionCompatibility = z.infer<typeof insertPositionCompatibilitySchema>;

@@ -1,4 +1,4 @@
-import { players, clubs, position_compatibility, ml_analysis_cache, type Player, type Club, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
+import { players, clubs, competitions, position_compatibility, ml_analysis_cache, type Player, type Club, type Competition, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertCompetition, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull } from "drizzle-orm";
 
@@ -12,6 +12,12 @@ export interface IStorage {
   getAllPlayers(): Promise<Player[]>;
   bulkCreatePlayers(players: InsertPlayer[]): Promise<Player[]>;
 
+  // Competitions
+  getCompetition(id: number): Promise<Competition | undefined>;
+  getAllCompetitions(): Promise<Competition[]>;
+  createCompetition(competition: InsertCompetition): Promise<Competition>;
+  bulkCreateCompetitions(competitions: InsertCompetition[]): Promise<Competition[]>;
+
   // Clubs
   getClub(id: number): Promise<Club | undefined>;
   getClubByClubId(clubId: number): Promise<Club | undefined>;
@@ -19,6 +25,7 @@ export interface IStorage {
   createClub(club: InsertClub): Promise<Club>;
   bulkCreateClubs(clubs: InsertClub[]): Promise<Club[]>;
   getPlayersByClub(clubName: string): Promise<Player[]>;
+  getClubsByCompetition(competitionId: string): Promise<Club[]>;
 
   // Leagues
   getAllLeagues(): Promise<string[]>;
@@ -199,6 +206,38 @@ export class DatabaseStorage implements IStorage {
 
   async getPlayersByClub(clubName: string): Promise<Player[]> {
     return await db.select().from(players).where(eq(players.current_club_name, clubName));
+  }
+
+  async getClubsByCompetition(competitionId: string): Promise<Club[]> {
+    return await db.select().from(clubs).where(eq(clubs.domestic_competition_id, competitionId));
+  }
+
+  // Competitions
+  async getCompetition(id: number): Promise<Competition | undefined> {
+    const [competition] = await db.select().from(competitions).where(eq(competitions.id, id));
+    return competition || undefined;
+  }
+
+  async getAllCompetitions(): Promise<Competition[]> {
+    return await db.select().from(competitions);
+  }
+
+  async createCompetition(insertCompetition: InsertCompetition): Promise<Competition> {
+    const [competition] = await db
+      .insert(competitions)
+      .values(insertCompetition)
+      .returning();
+    return competition;
+  }
+
+  async bulkCreateCompetitions(competitionsData: InsertCompetition[]): Promise<Competition[]> {
+    if (competitionsData.length === 0) return [];
+    
+    const created = await db
+      .insert(competitions)
+      .values(competitionsData)
+      .returning();
+    return created;
   }
 
   // Leagues
