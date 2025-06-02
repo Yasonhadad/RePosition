@@ -137,13 +137,13 @@ export function PlayerProfile({ player }: PlayerProfileProps) {
             className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200"
             variant="default"
           >
-            פרופיל מפורט של השחקן
+            View Detailed Profile
           </Button>
           <Button 
             className="w-full border-green-600 text-green-600 hover:bg-green-50 font-medium py-2.5 rounded-lg transition-colors duration-200" 
             variant="outline"
           >
-            השווה עמדות
+            Compare Positions
           </Button>
         </div>
       </CardContent>
