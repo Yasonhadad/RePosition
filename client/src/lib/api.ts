@@ -1,14 +1,16 @@
 import { apiRequest } from "./queryClient";
+import type { SearchFilters } from "@shared/schema";
 
-export interface SearchFilters {
-  name?: string;
-  position?: string;
-  team?: string;
-  league?: string;
-  ageMin?: number;
-  ageMax?: number;
-  sortBy?: "compatibility" | "overall" | "age" | "market_value";
-}
+// Remove local interface since we import it from shared schema
+// export interface SearchFilters {
+//   name?: string;
+//   position?: string;
+//   team?: string;
+//   league?: string;
+//   ageMin?: number;
+//   ageMax?: number;
+//   sortBy?: "compatibility" | "overall" | "age" | "market_value";
+// }
 
 export async function searchPlayers(filters: SearchFilters) {
   const params = new URLSearchParams();
