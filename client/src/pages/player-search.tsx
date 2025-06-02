@@ -63,58 +63,6 @@ export default function PlayerSearch() {
   const clubs = Array.isArray(clubsData) ? clubsData : [];
   const leagues = Array.isArray(leaguesData) ? leaguesData : [];
 
-  // Create league code to name mapping
-  const leagueMapping: Record<string, string> = {
-    'ES1': 'LALIGA EA SPORTS',
-    'IT1': 'Serie A Enilive',
-    'GB1': 'Premier League',
-    'DE1': 'Bundesliga',
-    'FR1': 'Ligue 1 McDonald\'s',
-    'NL1': 'Eredivisie',
-    'PT1': 'Liga Portugal Betclic',
-    'TR1': 'Trendyol Süper Lig',
-    'GR1': 'Hellas Liga',
-    'SC1': 'Scottish Prem',
-    'BE1': 'Jupiler Pro League',
-    'L1': 'Österreichische Bundesliga',
-    'DK1': 'Danish Superliga',
-    'NO1': 'Eliteserien',
-    'SE1': 'Allsvenskan',
-    'CH1': 'Credit Suisse Super League',
-    'RU1': 'Russian Premier League',
-    'UA1': 'Ukrainian Premier League',
-    'PL1': 'PKO Ekstraklasa',
-    'CZ1': 'Česká Liga',
-    'HR1': 'SuperSport HNL',
-    'RS1': 'Mozzart Bet SuperLiga',
-    'BG1': 'A Professional Football Group',
-    'RO1': 'Liga I',
-    'SK1': 'Niké Liga',
-    'SI1': 'Prva Liga Telemach',
-    'EE1': 'Meistriliiga',
-    'LV1': 'Optibet Virslīga',
-    'LT1': 'A lyga',
-    'FI1': 'Veikkausliiga',
-    'IS1': 'Besta-deild karla',
-    'FO1': 'Effodeildin',
-    'AD1': 'Primera Divisió',
-    'MT1': 'BOV Premier League',
-    'CY1': 'Cyprus League',
-    'LU1': 'BGL Ligue',
-    'LI1': 'FL1.Liechtenstein',
-    'SM1': 'Campionato Sammarinese',
-    'MC1': 'Championnat de Monaco',
-    'VA1': 'Vatican League'
-  };
-
-  // Filter clubs based on selected league
-  const filteredClubs = filters.league && filters.league !== "" 
-    ? clubs.filter(club => {
-        const clubLeague = leagueMapping[club.domestic_competition_id || ''];
-        return clubLeague === filters.league;
-      })
-    : clubs;
-
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
   const ageRanges = [
     { label: "All Ages", min: undefined, max: undefined },
@@ -242,7 +190,7 @@ export default function PlayerSearch() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  {filteredClubs.filter(club => club.name && club.name.trim() !== "").map((club, index) => (
+                  {clubs.filter(club => club.name && club.name.trim() !== "").map((club, index) => (
                     <SelectItem key={club.name || index} value={club.name}>
                       {club.name}
                     </SelectItem>
