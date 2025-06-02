@@ -132,12 +132,18 @@ export function PlayerProfile({ player }: PlayerProfileProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-2">
-          <Button className="w-full" variant="default">
-            View Detailed Profile
+        <div className="space-y-3">
+          <Button 
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200"
+            variant="default"
+          >
+            פרופיל מפורט של השחקן
           </Button>
-          <Button className="w-full" variant="outline">
-            Compare Positions
+          <Button 
+            className="w-full border-green-600 text-green-600 hover:bg-green-50 font-medium py-2.5 rounded-lg transition-colors duration-200" 
+            variant="outline"
+          >
+            השווה עמדות
           </Button>
         </div>
       </CardContent>
