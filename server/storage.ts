@@ -1,6 +1,6 @@
 import { players, clubs, position_compatibility, ml_analysis_cache, type Player, type Club, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, like, gte, lte, desc, asc, sql } from "drizzle-orm";
+import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -19,6 +19,9 @@ export interface IStorage {
   createClub(club: InsertClub): Promise<Club>;
   bulkCreateClubs(clubs: InsertClub[]): Promise<Club[]>;
   getPlayersByClub(clubName: string): Promise<Player[]>;
+
+  // Leagues
+  getAllLeagues(): Promise<string[]>;
 
   // Position Compatibility
   getPositionCompatibility(playerId: number): Promise<PositionCompatibility | undefined>;
@@ -95,6 +98,10 @@ export class DatabaseStorage implements IStorage {
 
     if (filters.team) {
       conditions.push(like(players.current_club_name, `%${filters.team}%`));
+    }
+
+    if (filters.league) {
+      conditions.push(like(players.league, `%${filters.league}%`));
     }
 
     if (filters.ageMin !== undefined) {
@@ -192,6 +199,12 @@ export class DatabaseStorage implements IStorage {
 
   async getPlayersByClub(clubName: string): Promise<Player[]> {
     return await db.select().from(players).where(eq(players.current_club_name, clubName));
+  }
+
+  // Leagues
+  async getAllLeagues(): Promise<string[]> {
+    const result = await db.selectDistinct({ league: players.league }).from(players).where(sql`${players.league} IS NOT NULL AND ${players.league} != ''`);
+    return result.map(row => row.league).filter((league): league is string => league !== null && league.trim() !== "");
   }
 
   // Position Compatibility

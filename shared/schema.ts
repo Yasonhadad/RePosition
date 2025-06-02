@@ -168,6 +168,7 @@ export const searchFiltersSchema = z.object({
   name: z.string().optional(),
   position: z.string().optional(),
   team: z.string().optional(),
+  league: z.string().optional(),
   ageMin: z.number().optional(),
   ageMax: z.number().optional(),
   minCompatibility: z.number().optional(),
