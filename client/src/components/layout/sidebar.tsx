@@ -23,9 +23,11 @@ export function Sidebar() {
       <div className="p-6">
         {/* RePosition Logo */}
         <div className="flex items-center mb-8">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3">
-            <Dna className="text-white h-6 w-6" />
-          </div>
+          <img 
+            src="/attached_assets/20250506_1331_לוגו RePosition צבעוני_simple_compose_01jtjjc083eyxsarzmrt966hah.png" 
+            alt="RePosition Logo" 
+            className="w-12 h-12 mr-3"
+          />
           <h1 className="text-xl font-bold text-dark">RePosition</h1>
         </div>
 

@@ -291,10 +291,10 @@ function parsePlayerCsvRow(row: string, header: string): InsertPlayer | null {
     ovr: safeParseInt(data.OVR),
     pac: safeParseInt(data.PAC),
     sho: safeParseInt(data.SHO),
-    pas: parseInt(data.PAS) || null,
-    dri: parseInt(data.DRI) || null,
-    def: parseInt(data.DEF) || null,
-    phy: parseInt(data.PHY) || null,
+    pas: safeParseInt(data.PAS),
+    dri: safeParseInt(data.DRI),
+    def: safeParseInt(data.DEF),
+    phy: safeParseInt(data.PHY),
     age,
     weight,
   };
@@ -311,13 +311,20 @@ function parseClubCsvRow(row: string, header: string): InsertClub | null {
     data[col.trim()] = values[index]?.trim() || '';
   });
 
+  // Helper function to safely parse numbers
+  const safeParseInt = (value: string): number | null => {
+    if (!value || value === '' || value.toLowerCase() === 'nan' || value === 'null') return null;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
   const club: InsertClub = {
-    club_id: parseInt(data.club_id) || parseInt(data['﻿club_id']) || 0,
+    club_id: safeParseInt(data.club_id) || safeParseInt(data['﻿club_id']) || 0,
     club_code: data.club_code || null,
     name: data.name || '',
     domestic_competition_id: data.domestic_competition_id || null,
-    total_market_value: parseInt(data.total_market_value) || null,
-    squad_size: parseInt(data.squad_size) || null,
+    total_market_value: safeParseInt(data.total_market_value),
+    squad_size: safeParseInt(data.squad_size),
     average_age: parseFloat(data.average_age) || null,
     foreigners_number: parseInt(data.foreigners_number) || null,
     foreigners_percentage: parseFloat(data.foreigners_percentage) || null,
