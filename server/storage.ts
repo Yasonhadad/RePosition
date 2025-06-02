@@ -134,10 +134,18 @@ export class DatabaseStorage implements IStorage {
   async bulkCreatePlayers(playersData: InsertPlayer[]): Promise<Player[]> {
     if (playersData.length === 0) return [];
     
-    const created = await db
-      .insert(players)
-      .values(playersData)
-      .returning();
+    const chunkSize = 100;
+    const created: Player[] = [];
+    
+    for (let i = 0; i < playersData.length; i += chunkSize) {
+      const chunk = playersData.slice(i, i + chunkSize);
+      const chunkResult = await db
+        .insert(players)
+        .values(chunk)
+        .returning();
+      created.push(...chunkResult);
+    }
+    
     return created;
   }
 
@@ -167,10 +175,18 @@ export class DatabaseStorage implements IStorage {
   async bulkCreateClubs(clubsData: InsertClub[]): Promise<Club[]> {
     if (clubsData.length === 0) return [];
     
-    const created = await db
-      .insert(clubs)
-      .values(clubsData)
-      .returning();
+    const chunkSize = 100;
+    const created: Club[] = [];
+    
+    for (let i = 0; i < clubsData.length; i += chunkSize) {
+      const chunk = clubsData.slice(i, i + chunkSize);
+      const chunkResult = await db
+        .insert(clubs)
+        .values(chunk)
+        .returning();
+      created.push(...chunkResult);
+    }
+    
     return created;
   }
 

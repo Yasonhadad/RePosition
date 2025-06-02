@@ -242,8 +242,21 @@ function parsePlayerCsvRow(row: string, header: string): InsertPlayer | null {
     data[col.trim()] = values[index]?.trim() || '';
   });
 
+  // Helper function to safely parse numbers
+  const safeParseInt = (value: string): number | null => {
+    if (!value || value === '' || value.toLowerCase() === 'nan' || value === 'null') return null;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  const safeParseFloat = (value: string): number | null => {
+    if (!value || value === '' || value.toLowerCase() === 'nan' || value === 'null') return null;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  };
+
   // Calculate age from date_of_birth if not provided
-  let age = parseInt(data.age) || null;
+  let age = safeParseInt(data.age);
   if (!age && data.date_of_birth) {
     try {
       const birthYear = new Date(data.date_of_birth).getFullYear();
@@ -264,20 +277,20 @@ function parsePlayerCsvRow(row: string, header: string): InsertPlayer | null {
   }
 
   const player: InsertPlayer = {
-    player_id: parseInt(data.player_id) || parseInt(data['﻿player_id']) || 0,
+    player_id: safeParseInt(data.player_id) || safeParseInt(data['﻿player_id']) || 0,
     name: data.name || '',
     country_of_citizenship: data.country_of_citizenship || null,
     date_of_birth: data.date_of_birth || null,
     sub_position: data.sub_position || null,
     position: data.position || null,
     foot: data.foot || null,
-    height_in_cm: parseInt(data.height_in_cm) || null,
+    height_in_cm: safeParseInt(data.height_in_cm),
     current_club_name: data.current_club_name || null,
-    market_value_in_eur: parseInt(data.market_value_in_eur) || null,
-    club_id: parseInt(data.club_id) || null,
-    ovr: parseInt(data.OVR) || null,
-    pac: parseInt(data.PAC) || null,
-    sho: parseInt(data.SHO) || null,
+    market_value_in_eur: safeParseInt(data.market_value_in_eur),
+    club_id: safeParseInt(data.club_id),
+    ovr: safeParseInt(data.OVR),
+    pac: safeParseInt(data.PAC),
+    sho: safeParseInt(data.SHO),
     pas: parseInt(data.PAS) || null,
     dri: parseInt(data.DRI) || null,
     def: parseInt(data.DEF) || null,
