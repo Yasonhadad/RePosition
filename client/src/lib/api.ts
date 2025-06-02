@@ -4,6 +4,7 @@ export interface SearchFilters {
   name?: string;
   position?: string;
   team?: string;
+  league?: string;
   ageMin?: number;
   ageMax?: number;
   sortBy?: "compatibility" | "overall" | "age" | "market_value";
@@ -34,6 +35,11 @@ export async function getPlayerCompatibility(playerId: number) {
 
 export async function getClubs() {
   const response = await apiRequest("GET", "/api/clubs");
+  return response.json();
+}
+
+export async function getLeagues() {
+  const response = await apiRequest("GET", "/api/leagues");
   return response.json();
 }
 

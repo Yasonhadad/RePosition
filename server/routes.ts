@@ -89,6 +89,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all leagues
+  app.get("/api/leagues", async (req, res) => {
+    try {
+      const leagues = await storage.getAllLeagues();
+      res.json(leagues);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leagues" });
+    }
+  });
+
   // Get team analysis
   app.get("/api/teams/:clubName/analysis", async (req, res) => {
     try {

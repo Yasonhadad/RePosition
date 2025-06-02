@@ -16,6 +16,7 @@ export default function PlayerSearch() {
     name: "",
     position: "",
     team: "",
+    league: "",
     ageMin: undefined,
     ageMax: undefined,
     sortBy: "compatibility",
@@ -24,6 +25,7 @@ export default function PlayerSearch() {
     name: "",
     position: "",
     team: "",
+    league: "",
     ageMin: undefined,
     ageMax: undefined,
     sortBy: "compatibility",
@@ -53,8 +55,13 @@ export default function PlayerSearch() {
     queryKey: ["/api/clubs"],
   });
 
-  // Ensure clubs is always an array
+  const { data: leaguesData = [] } = useQuery({
+    queryKey: ["/api/leagues"],
+  });
+
+  // Ensure clubs and leagues are always arrays
   const clubs = Array.isArray(clubsData) ? clubsData : [];
+  const leagues = Array.isArray(leaguesData) ? leaguesData : [];
 
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
   const ageRanges = [
@@ -69,7 +76,7 @@ export default function PlayerSearch() {
     // Handle "all" values by setting them to empty/undefined
     let actualValue = value;
     if (value === "all") {
-      actualValue = key === "position" || key === "team" ? "" : undefined;
+      actualValue = key === "position" || key === "team" || key === "league" ? "" : undefined;
     }
     setFilters(prev => ({ ...prev, [key]: actualValue }));
   };
@@ -103,7 +110,7 @@ export default function PlayerSearch() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <Label htmlFor="playerName" className="text-sm font-medium text-gray-700 mb-2">
                 Player Name
@@ -148,6 +155,25 @@ export default function PlayerSearch() {
                   {positions.map((position) => (
                     <SelectItem key={position} value={position}>
                       {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2">
+                League
+              </Label>
+              <Select onValueChange={(value) => handleFilterChange("league", value)}>
+                <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
+                  <SelectValue placeholder="All Leagues" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Leagues</SelectItem>
+                  {leagues.map((league, index) => (
+                    <SelectItem key={league || index} value={league}>
+                      {league}
                     </SelectItem>
                   ))}
                 </SelectContent>
