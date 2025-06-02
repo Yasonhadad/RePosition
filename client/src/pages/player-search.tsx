@@ -9,8 +9,7 @@ import { PlayerCard } from "@/components/player/player-card";
 import { PlayerProfile } from "@/components/player/player-profile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
-import type { Player } from "@shared/schema";
-import type { SearchFilters } from "@/types";
+import type { Player, SearchFilters } from "@shared/schema";
 
 export default function PlayerSearch() {
   const [filters, setFilters] = useState<SearchFilters>({
@@ -165,9 +164,9 @@ export default function PlayerSearch() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  {clubs.slice(0, 20).map((club, index) => (
-                    <SelectItem key={club.name || index} value={club.name || ""}>
-                      {club.name || "Unknown Team"}
+                  {clubs.filter(club => club.name && club.name.trim() !== "").map((club, index) => (
+                    <SelectItem key={club.name || index} value={club.name}>
+                      {club.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
