@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import Dashboard from "@/pages/dashboard";
 import PlayerSearch from "@/pages/player-search";
+import PlayerDetails from "@/pages/player-details";
 import TeamAnalysis from "@/pages/team-analysis";
 import DataUpload from "@/pages/data-upload";
 import NotFound from "@/pages/not-found";
@@ -21,6 +22,8 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/search" component={PlayerSearch} />
+            <Route path="/players" component={PlayerSearch} />
+            <Route path="/player/:id" component={PlayerDetails} />
             <Route path="/teams" component={TeamAnalysis} />
             <Route path="/upload" component={DataUpload} />
             <Route component={NotFound} />
