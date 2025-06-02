@@ -193,10 +193,10 @@ export default function PlayerSearch() {
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2">
-                Leageue Country
+                Country
               </Label>
               <Select
-                onValueChange={(value) => handleFilterChange("league", value)}
+                onValueChange={(value) => handleFilterChange("country", value)}
               >
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
                   <SelectValue placeholder="All Countries" />
