@@ -1,5 +1,3 @@
-import { createReadStream } from 'fs';
-import { parse } from 'csv-parse/sync';
 import { readFileSync } from 'fs';
 import { db } from '../server/db';
 import { competitions, type InsertCompetition } from '../shared/schema';
@@ -115,6 +113,4 @@ async function main() {
   }
 }
 
-if (require.main === module) {
-  main();
-}
+main();

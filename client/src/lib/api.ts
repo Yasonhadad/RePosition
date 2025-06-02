@@ -33,8 +33,14 @@ export async function getPlayerCompatibility(playerId: number) {
   return response.json();
 }
 
-export async function getClubs() {
-  const response = await apiRequest("GET", "/api/clubs");
+export async function getClubs(league?: string) {
+  const url = league && league !== 'all' ? `/api/clubs?league=${encodeURIComponent(league)}` : '/api/clubs';
+  const response = await apiRequest("GET", url);
+  return response.json();
+}
+
+export async function getCompetitions() {
+  const response = await apiRequest("GET", "/api/competitions");
   return response.json();
 }
 

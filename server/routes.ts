@@ -82,10 +82,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all clubs
   app.get("/api/clubs", async (req, res) => {
     try {
-      const clubs = await storage.getAllClubs();
+      const { league } = req.query;
+      let clubs;
+      
+      if (league && league !== 'all') {
+        // Get competition ID first, then get clubs by competition
+        const competitions = await storage.getAllCompetitions();
+        const competition = competitions.find(c => c.name === league);
+        if (competition) {
+          clubs = await storage.getClubsByCompetition(competition.competition_id);
+        } else {
+          clubs = [];
+        }
+      } else {
+        clubs = await storage.getAllClubs();
+      }
+      
       res.json(clubs);
     } catch (error) {
+      console.error("Error fetching clubs:", error);
       res.status(500).json({ error: "Failed to fetch clubs" });
+    }
+  });
+
+  // Get all competitions
+  app.get("/api/competitions", async (req, res) => {
+    try {
+      const competitions = await storage.getAllCompetitions();
+      res.json(competitions);
+    } catch (error) {
+      console.error("Error fetching competitions:", error);
+      res.status(500).json({ error: "Failed to fetch competitions" });
     }
   });
 
