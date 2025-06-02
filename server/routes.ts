@@ -23,10 +23,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all players with optional search filters
   app.get("/api/players", async (req, res) => {
     try {
-      const filters = searchFiltersSchema.parse(req.query);
+      // Convert query string parameters to appropriate types
+      const queryFilters = { ...req.query };
+      
+      // Convert numeric fields from strings to numbers
+      if (queryFilters.ageMin) {
+        queryFilters.ageMin = parseInt(queryFilters.ageMin as string);
+      }
+      if (queryFilters.ageMax) {
+        queryFilters.ageMax = parseInt(queryFilters.ageMax as string);
+      }
+      if (queryFilters.minCompatibility) {
+        queryFilters.minCompatibility = parseFloat(queryFilters.minCompatibility as string);
+      }
+      
+      const filters = searchFiltersSchema.parse(queryFilters);
       const players = await storage.searchPlayers(filters);
       res.json(players);
     } catch (error) {
+      console.error("Search filters validation error:", error);
       res.status(400).json({ error: "Invalid search parameters" });
     }
   });
