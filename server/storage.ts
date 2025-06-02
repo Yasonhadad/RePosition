@@ -22,6 +22,7 @@ export interface IStorage {
 
   // Leagues
   getAllLeagues(): Promise<string[]>;
+  getLeagueClubMapping(): Promise<Array<{ league: string; clubs: string[] }>>;
 
   // Position Compatibility
   getPositionCompatibility(playerId: number): Promise<PositionCompatibility | undefined>;
