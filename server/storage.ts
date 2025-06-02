@@ -107,8 +107,8 @@ export class DatabaseStorage implements IStorage {
       conditions.push(like(players.current_club_name, `%${filters.team}%`));
     }
 
-    if (filters.league) {
-      conditions.push(like(players.league, `%${filters.league}%`));
+    if (filters.country) {
+      conditions.push(like(players.league, `%${filters.country}%`));
     }
 
     if (filters.ageMin !== undefined) {

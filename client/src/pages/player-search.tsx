@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PlayerCard } from "@/components/player/player-card";
 import { PlayerProfile } from "@/components/player/player-profile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +23,7 @@ export default function PlayerSearch() {
     name: "",
     position: "",
     team: "",
-    league: "",
+    country: "",
     ageMin: undefined,
     ageMax: undefined,
     sortBy: "compatibility",
@@ -26,7 +32,7 @@ export default function PlayerSearch() {
     name: "",
     position: "",
     team: "",
-    league: "",
+    country: "",
     ageMin: undefined,
     ageMax: undefined,
     sortBy: "compatibility",
@@ -38,14 +44,16 @@ export default function PlayerSearch() {
     queryFn: ({ queryKey }) => {
       const [url, searchFilters] = queryKey;
       const params = new URLSearchParams();
-      
-      Object.entries(searchFilters as Record<string, any>).forEach(([key, value]) => {
-        if (value !== undefined && value !== "" && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
-      
-      return fetch(`${url}?${params}`).then(res => res.json());
+
+      Object.entries(searchFilters as Record<string, any>).forEach(
+        ([key, value]) => {
+          if (value !== undefined && value !== "" && value !== null) {
+            params.append(key, value.toString());
+          }
+        },
+      );
+
+      return fetch(`${url}?${params}`).then((res) => res.json());
     },
   });
 
@@ -57,8 +65,8 @@ export default function PlayerSearch() {
   });
 
   const { data: clubsData = [] } = useQuery({
-    queryKey: ["/api/clubs", filters.league],
-    queryFn: () => getClubs(filters.league),
+    queryKey: ["/api/clubs", filters.country],
+    queryFn: () => getClubs(filters.country),
   });
 
   const { data: leaguesData = [] } = useQuery({
@@ -69,11 +77,11 @@ export default function PlayerSearch() {
   const clubs = Array.isArray(clubsData) ? clubsData : [];
   const leagues = Array.isArray(leaguesData) ? leaguesData : [];
   const competitions = Array.isArray(competitionsData) ? competitionsData : [];
-  
+
   // Get unique country names from competitions
   const countries = competitions
-    .filter(comp => comp.country_name && comp.country_name.trim() !== "")
-    .map(comp => comp.country_name)
+    .filter((comp) => comp.country_name && comp.country_name.trim() !== "")
+    .map((comp) => comp.country_name)
     .filter((country, index, self) => self.indexOf(country) === index)
     .sort();
 
@@ -90,15 +98,18 @@ export default function PlayerSearch() {
     // Handle "all" values by setting them to empty/undefined
     let actualValue = value;
     if (value === "all") {
-      actualValue = key === "position" || key === "team" || key === "league" ? "" : undefined;
+      actualValue =
+        key === "position" || key === "team" || key === "country"
+          ? ""
+          : undefined;
     }
-    setFilters(prev => ({ ...prev, [key]: actualValue }));
+    setFilters((prev) => ({ ...prev, [key]: actualValue }));
   };
 
   const handleAgeRangeChange = (value: string) => {
-    const range = ageRanges.find(r => r.label === value);
+    const range = ageRanges.find((r) => r.label === value);
     if (range) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
         ageMin: range.min,
         ageMax: range.max,
@@ -126,7 +137,10 @@ export default function PlayerSearch() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
-              <Label htmlFor="playerName" className="text-sm font-medium text-gray-700 mb-2">
+              <Label
+                htmlFor="playerName"
+                className="text-sm font-medium text-gray-700 mb-2"
+              >
                 Player Name
               </Label>
               <Input
@@ -160,7 +174,9 @@ export default function PlayerSearch() {
               <Label className="text-sm font-medium text-gray-700 mb-2">
                 Current Position
               </Label>
-              <Select onValueChange={(value) => handleFilterChange("position", value)}>
+              <Select
+                onValueChange={(value) => handleFilterChange("position", value)}
+              >
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
                   <SelectValue placeholder="All Positions" />
                 </SelectTrigger>
@@ -177,9 +193,11 @@ export default function PlayerSearch() {
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2">
-                Country
+                Leageue Country
               </Label>
-              <Select onValueChange={(value) => handleFilterChange("league", value)}>
+              <Select
+                onValueChange={(value) => handleFilterChange("league", value)}
+              >
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
                   <SelectValue placeholder="All Countries" />
                 </SelectTrigger>
@@ -198,25 +216,29 @@ export default function PlayerSearch() {
               <Label className="text-sm font-medium text-gray-700 mb-2">
                 Team
               </Label>
-              <Select onValueChange={(value) => handleFilterChange("team", value)}>
+              <Select
+                onValueChange={(value) => handleFilterChange("team", value)}
+              >
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
                   <SelectValue placeholder="All Teams" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
-                  {clubs.filter(club => club.name && club.name.trim() !== "").map((club, index) => (
-                    <SelectItem key={club.name || index} value={club.name}>
-                      {club.name}
-                    </SelectItem>
-                  ))}
+                  {clubs
+                    .filter((club) => club.name && club.name.trim() !== "")
+                    .map((club, index) => (
+                      <SelectItem key={club.name || index} value={club.name}>
+                        {club.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          
+
           {/* Search Button */}
           <div className="flex justify-center mt-4">
-            <Button 
+            <Button
               onClick={handleSearch}
               className="bg-primary hover:bg-primary/90 text-white px-8 py-2 rounded-lg flex items-center gap-2"
             >
@@ -241,13 +263,17 @@ export default function PlayerSearch() {
                   <span className="text-sm text-gray-600">Sort by:</span>
                   <Select
                     value={filters.sortBy}
-                    onValueChange={(value) => handleFilterChange("sortBy", value)}
+                    onValueChange={(value) =>
+                      handleFilterChange("sortBy", value)
+                    }
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="compatibility">Compatibility</SelectItem>
+                      <SelectItem value="compatibility">
+                        Compatibility
+                      </SelectItem>
                       <SelectItem value="overall">Overall Rating</SelectItem>
                       <SelectItem value="age">Age</SelectItem>
                       <SelectItem value="market_value">Market Value</SelectItem>
@@ -260,7 +286,10 @@ export default function PlayerSearch() {
               {isLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="border border-gray-200 rounded-lg p-4">
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
                       <div className="flex items-center space-x-4">
                         <Skeleton className="h-16 w-16 rounded-lg" />
                         <div className="flex-1">
@@ -283,12 +312,18 @@ export default function PlayerSearch() {
                 </div>
               ) : players.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No players found matching your criteria.</p>
+                  <p className="text-gray-500">
+                    No players found matching your criteria.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {players.map((player) => (
-                    <div key={player.id} onClick={() => handlePlayerClick(player)} className="cursor-pointer">
+                    <div
+                      key={player.id}
+                      onClick={() => handlePlayerClick(player)}
+                      className="cursor-pointer"
+                    >
                       <PlayerCard
                         player={player}
                         isSelected={selectedPlayer?.id === player.id}
