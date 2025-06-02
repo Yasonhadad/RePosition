@@ -82,15 +82,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all clubs
   app.get("/api/clubs", async (req, res) => {
     try {
-      const { league } = req.query;
+      const { country } = req.query;
       let clubs;
       
-      if (league && league !== 'all') {
-        // Get competition ID first, then get clubs by competition
+      if (country && country !== 'all') {
+        // Get competitions by country name, then get clubs by those competitions
         const competitions = await storage.getAllCompetitions();
-        const competition = competitions.find(c => c.name === league);
-        if (competition) {
-          clubs = await storage.getClubsByCompetition(competition.competition_id);
+        const countryCompetitions = competitions.filter(c => c.country_name === country);
+        
+        if (countryCompetitions.length > 0) {
+          // Get clubs for all competitions from this country
+          const allClubs = await Promise.all(
+            countryCompetitions.map(comp => storage.getClubsByCompetition(comp.competition_id))
+          );
+          clubs = allClubs.flat();
+          
+          // Remove duplicates based on club_id
+          const uniqueClubs = clubs.filter((club, index, self) => 
+            index === self.findIndex(c => c.club_id === club.club_id)
+          );
+          clubs = uniqueClubs;
         } else {
           clubs = [];
         }

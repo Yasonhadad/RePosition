@@ -69,6 +69,13 @@ export default function PlayerSearch() {
   const clubs = Array.isArray(clubsData) ? clubsData : [];
   const leagues = Array.isArray(leaguesData) ? leaguesData : [];
   const competitions = Array.isArray(competitionsData) ? competitionsData : [];
+  
+  // Get unique country names from competitions
+  const countries = competitions
+    .filter(comp => comp.country_name && comp.country_name.trim() !== "")
+    .map(comp => comp.country_name)
+    .filter((country, index, self) => self.indexOf(country) === index)
+    .sort();
 
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
   const ageRanges = [
@@ -170,17 +177,17 @@ export default function PlayerSearch() {
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-2">
-                League
+                Country
               </Label>
               <Select onValueChange={(value) => handleFilterChange("league", value)}>
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
-                  <SelectValue placeholder="All Leagues" />
+                  <SelectValue placeholder="All Countries" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Leagues</SelectItem>
-                  {competitions.map((competition, index) => (
-                    <SelectItem key={competition.competition_id || index} value={competition.name}>
-                      {competition.name}
+                  <SelectItem value="all">All Countries</SelectItem>
+                  {countries.map((country, index) => (
+                    <SelectItem key={country || index} value={country}>
+                      {country}
                     </SelectItem>
                   ))}
                 </SelectContent>
