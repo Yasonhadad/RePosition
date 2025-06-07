@@ -73,8 +73,10 @@ export const players = pgTable("players", {
   // Additional info
   league: text("league"),
   team: text("team"),
-  weight: real("weight"),
+  weight_in_kg: real("weight_in_kg"),
   age: integer("age"),
+  image_url: text("image_url"),
+  league_level: integer("league_level"),
   created_at: timestamp("created_at").defaultNow(),
 });
 
