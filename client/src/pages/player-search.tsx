@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,12 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PlayerCard } from "@/components/player/player-card";
+import { PlayerProfile } from "@/components/player/player-profile";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Calculator, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import type { Player, SearchFilters } from "@shared/schema";
 import { getClubs } from "@/lib/api";
-import { apiRequest } from "@/lib/queryClient";
-
 
 export default function PlayerSearch() {
   const [filters, setFilters] = useState<SearchFilters>({
@@ -38,24 +38,6 @@ export default function PlayerSearch() {
     sortBy: "compatibility",
   });
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [calculatingPlayer, setCalculatingPlayer] = useState<number | null>(null);
-  const [compatibilityResults, setCompatibilityResults] = useState<any>(null);
-  const queryClient = useQueryClient();
-
-  // Mutation for calculating position compatibility
-  const calculateCompatibility = useMutation({
-    mutationFn: async (playerId: number) => {
-      return apiRequest(`/api/players/${playerId}/analyze`, "POST");
-    },
-    onSuccess: (data, playerId) => {
-      setCompatibilityResults(data);
-      setCalculatingPlayer(null);
-      queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}/compatibility`] });
-    },
-    onError: () => {
-      setCalculatingPlayer(null);
-    }
-  });
 
   const { data: playersData, isLoading } = useQuery<Player[]>({
     queryKey: ["/api/players", searchFilters],
@@ -139,9 +121,8 @@ export default function PlayerSearch() {
     setSearchFilters(filters);
   };
 
-  const handleCalculateCompatibility = (player: Player) => {
-    setCalculatingPlayer(player.id);
-    calculateCompatibility.mutate(player.id);
+  const handlePlayerClick = (player: Player) => {
+    setSelectedPlayer(player);
   };
 
   return (
@@ -274,15 +255,59 @@ export default function PlayerSearch() {
         <div className="lg:col-span-2">
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-dark">
-                Search Results
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-dark">
+                  Search Results
+                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Sort by:</span>
+                  <Select
+                    value={filters.sortBy}
+                    onValueChange={(value) =>
+                      handleFilterChange("sortBy", value)
+                    }
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="compatibility">
+                        Compatibility
+                      </SelectItem>
+                      <SelectItem value="overall">Overall Rating</SelectItem>
+                      <SelectItem value="age">Age</SelectItem>
+                      <SelectItem value="market_value">Market Value</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <Skeleton className="h-16 w-16 rounded-lg" />
+                        <div className="flex-1">
+                          <Skeleton className="h-4 w-32 mb-2" />
+                          <Skeleton className="h-3 w-24 mb-2" />
+                          <div className="flex space-x-2">
+                            <Skeleton className="h-6 w-8" />
+                            <Skeleton className="h-6 w-16" />
+                            <Skeleton className="h-6 w-12" />
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Skeleton className="h-6 w-12 mb-1" />
+                          <Skeleton className="h-3 w-16 mb-2" />
+                          <Skeleton className="h-2 w-20" />
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : players.length === 0 ? (
@@ -296,40 +321,13 @@ export default function PlayerSearch() {
                   {players.map((player) => (
                     <div
                       key={player.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                      onClick={() => handlePlayerClick(player)}
+                      className="cursor-pointer"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{player.name}</h3>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p>Position: {player.position || "Unknown"}</p>
-                            <p>Team: {player.current_club_name || "Unknown"}</p>
-                            <p>Age: {player.age || "Unknown"}</p>
-                            {player.country_of_citizenship && (
-                              <p>Country: {player.country_of_citizenship}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Button
-                            onClick={() => handleCalculateCompatibility(player)}
-                            disabled={calculatingPlayer === player.id}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            {calculatingPlayer === player.id ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Computing...
-                              </>
-                            ) : (
-                              <>
-                                <Calculator className="w-4 h-4 mr-2" />
-                                Calculate Compatibility
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+                      <PlayerCard
+                        player={player}
+                        isSelected={selectedPlayer?.id === player.id}
+                      />
                     </div>
                   ))}
                 </div>
@@ -338,46 +336,9 @@ export default function PlayerSearch() {
           </Card>
         </div>
 
-        {/* Compatibility Results */}
+        {/* Player Profile */}
         <div>
-          {compatibilityResults ? (
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-dark">
-                  Position Compatibility Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {compatibilityResults.positions && Object.entries(compatibilityResults.positions).map(([position, score]) => (
-                    <div key={position} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="font-medium">{position}</span>
-                      <span className="text-lg font-bold text-green-600">
-                        {typeof score === 'number' ? `${score.toFixed(1)}%` : 'N/A'}
-                      </span>
-                    </div>
-                  ))}
-                  {compatibilityResults.bestPosition && (
-                    <div className="mt-4 p-3 bg-green-100 rounded">
-                      <p className="font-semibold text-green-800">
-                        Best Position: {compatibilityResults.bestPosition} 
-                        ({compatibilityResults.bestScore?.toFixed(1)}%)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="shadow-sm">
-              <CardContent className="py-8">
-                <div className="text-center text-gray-500">
-                  <Calculator className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p>Select a player and calculate compatibility to see results</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <PlayerProfile player={selectedPlayer} />
         </div>
       </div>
     </div>
