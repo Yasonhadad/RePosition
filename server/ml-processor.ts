@@ -8,7 +8,7 @@ import type { Player, InsertPositionCompatibility, InsertPlayer, InsertClub } fr
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Path to the Python ML script
-const PYTHON_SCRIPT_PATH = path.join(__dirname, "..", "attached_assets", "Predict_Player_Positions.py");
+const PYTHON_SCRIPT_PATH = path.join(__dirname, "..", "xgboost_ml_processor.py");
 
 export interface MLAnalysisResult {
   player_id: number;
