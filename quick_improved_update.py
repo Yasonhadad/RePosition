@@ -1,19 +1,19 @@
 """
-Update players with enhanced ML methodology
+Quick update with improved XGBoost methodology
 """
 
 import psycopg2
 import os
-from enhanced_ml_processor import EnhancedMLProcessor
+from improved_xgboost_processor import ImprovedXGBoostProcessor
 
-def update_players_enhanced():
-    """Update players with enhanced ML methodology"""
+def quick_improved_update():
+    """Update sample players with improved methodology"""
     
-    processor = EnhancedMLProcessor()
+    processor = ImprovedXGBoostProcessor()
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     cursor = conn.cursor()
     
-    # Get all players with complete data
+    # Get sample players
     cursor.execute("""
         SELECT player_id, pac, sho, pas, dri, def, phy, ovr, sub_position, position, name
         FROM players 
@@ -25,11 +25,11 @@ def update_players_enhanced():
         AND def IS NOT NULL 
         AND phy IS NOT NULL
         ORDER BY player_id
-        LIMIT 200
+        LIMIT 100
     """)
     
     players = cursor.fetchall()
-    print(f"Processing {len(players)} players with enhanced ML methodology...")
+    print(f"Processing {len(players)} players with improved methodology...")
     
     for i, row in enumerate(players):
         player_id, pac, sho, pas, dri, def_stat, phy, ovr, sub_position, position, name = row
@@ -85,12 +85,12 @@ def update_players_enhanced():
             player_id
         ))
         
-        if i % 50 == 0:
+        if i % 25 == 0:
             print(f"Processed {i+1}/{len(players)} players")
             conn.commit()
     
     conn.commit()
-    print(f"Successfully updated {len(players)} players with enhanced ML methodology")
+    print(f"Successfully updated {len(players)} players with improved methodology")
     
     # Show improved results
     cursor.execute("""
@@ -99,13 +99,13 @@ def update_players_enhanced():
                pc.cdm_fit, pc.lb_fit, pc.rb_fit, pc.cb_fit
         FROM players p
         JOIN position_compatibility pc ON p.player_id = pc.player_id
-        WHERE p.player_id IN (SELECT player_id FROM players ORDER BY player_id LIMIT 200)
+        WHERE p.player_id IN (SELECT player_id FROM players ORDER BY player_id LIMIT 100)
         ORDER BY pc.best_fit_score DESC
-        LIMIT 10
+        LIMIT 8
     """)
     
     results = cursor.fetchall()
-    print("\nTop 10 players with enhanced methodology:")
+    print("\nTop players with improved methodology:")
     for row in results:
         player_id, name, natural_pos, best_pos, best_score = row[:5]
         scores = row[5:]
@@ -117,27 +117,23 @@ def update_players_enhanced():
             line = "  " + " | ".join([f"{pos}: {score:.1f}%" for pos, score in zip(line_positions, line_scores)])
             print(line)
     
-    # Statistics comparison
+    # Show statistics
     cursor.execute("""
         SELECT 
-            COUNT(*) as total_players,
-            AVG(best_fit_score) as avg_best_score,
-            MAX(best_fit_score) as max_score,
+            AVG(best_fit_score) as avg_score,
             MIN(best_fit_score) as min_score,
+            MAX(best_fit_score) as max_score,
             STDDEV(best_fit_score) as std_dev
         FROM position_compatibility 
         WHERE best_fit_score IS NOT NULL
     """)
     
     stats = cursor.fetchone()
-    print(f"\nEnhanced Methodology Statistics:")
-    print(f"Total players: {stats[0]}")
-    print(f"Average best score: {stats[1]:.2f}%")
-    print(f"Score range: {stats[3]:.2f}% - {stats[2]:.2f}%")
-    print(f"Standard deviation: {stats[4]:.2f}%")
+    print(f"\nImproved Statistics:")
+    print(f"Average: {stats[0]:.1f}% | Range: {stats[1]:.1f}%-{stats[2]:.1f}% | StdDev: {stats[3]:.1f}%")
     
     cursor.close()
     conn.close()
 
 if __name__ == "__main__":
-    update_players_enhanced()
+    quick_improved_update()
