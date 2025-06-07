@@ -62,21 +62,12 @@ export const players = pgTable("players", {
   weak_foot: integer("weak_foot"),
   skill_moves: integer("skill_moves"),
   preferred_foot: text("preferred_foot"),
-  alternative_positions: text("alternative_positions"),
-  play_style: text("play_style"),
-  // Goalkeeper specific attributes
-  gk_diving: integer("gk_diving"),
-  gk_handling: integer("gk_handling"),
-  gk_kicking: integer("gk_kicking"),
-  gk_positioning: integer("gk_positioning"),
-  gk_reflexes: integer("gk_reflexes"),
   // Additional info
   league: text("league"),
   team: text("team"),
   weight_in_kg: real("weight_in_kg"),
   age: integer("age"),
   image_url: text("image_url"),
-  league_level: integer("league_level"),
   created_at: timestamp("created_at").defaultNow(),
 });
 
