@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 
-import { Header } from "@/components/layout/header";
+
 import Dashboard from "@/pages/dashboard";
 import PlayerSearch from "@/pages/player-search";
 import PlayerDetails from "@/pages/player-details";
@@ -21,7 +21,7 @@ function Router() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <Header />
+
       <main className="flex-1 overflow-y-auto">
         <Switch>
           <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
