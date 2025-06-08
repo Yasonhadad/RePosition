@@ -114,7 +114,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [];
 
     if (filters.name) {
-      conditions.push(like(players.name, `%${filters.name}%`));
+      conditions.push(sql`LOWER(${players.name}) LIKE LOWER(${'%' + filters.name + '%'})`);
     }
 
     if (filters.position) {
@@ -127,7 +127,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (filters.team) {
-      conditions.push(like(players.current_club_name, `%${filters.team}%`));
+      conditions.push(sql`LOWER(${players.current_club_name}) LIKE LOWER(${'%' + filters.team + '%'})`);
     }
 
     if (filters.country) {
@@ -234,7 +234,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubName: string): Promise<Player[]> {
-    return await db.select().from(players).where(eq(players.current_club_name, clubName));
+    return await db.select().from(players).where(sql`LOWER(${players.current_club_name}) = LOWER(${clubName})`);
   }
 
   async getClubsByCompetition(competitionId: string): Promise<Club[]> {
