@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -136,13 +142,13 @@ export default function AuthPage() {
         {/* Left side - Auth forms */}
         <div className="flex flex-col items-center space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <img 
-              src={repositionLogo} 
-              alt="REPOSITION Logo" 
+            <img
+              src={repositionLogo}
+              alt="REPOSITION Logo"
               className="h-16 w-auto"
             />
             <div className="text-center">
-              <h1 className="text-3xl font-bold">Welcome to REPOSITION</h1>
+              <h1 className="text-3xl font-bold">Welcome to RePosition</h1>
               <p className="text-muted-foreground">
                 Access advanced football analytics
               </p>
@@ -187,7 +193,10 @@ export default function AuthPage() {
                           placeholder="Your password"
                           value={loginData.password}
                           onChange={(e) =>
-                            setLoginData({ ...loginData, password: e.target.value })
+                            setLoginData({
+                              ...loginData,
+                              password: e.target.value,
+                            })
                           }
                           required
                         />
@@ -241,7 +250,10 @@ export default function AuthPage() {
                           placeholder="John"
                           value={registerData.firstName}
                           onChange={(e) =>
-                            setRegisterData({ ...registerData, firstName: e.target.value })
+                            setRegisterData({
+                              ...registerData,
+                              firstName: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -252,7 +264,10 @@ export default function AuthPage() {
                           placeholder="Doe"
                           value={registerData.lastName}
                           onChange={(e) =>
-                            setRegisterData({ ...registerData, lastName: e.target.value })
+                            setRegisterData({
+                              ...registerData,
+                              lastName: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -265,7 +280,10 @@ export default function AuthPage() {
                         placeholder="your@email.com"
                         value={registerData.email}
                         onChange={(e) =>
-                          setRegisterData({ ...registerData, email: e.target.value })
+                          setRegisterData({
+                            ...registerData,
+                            email: e.target.value,
+                          })
                         }
                         required
                       />
@@ -279,7 +297,10 @@ export default function AuthPage() {
                           placeholder="At least 6 characters"
                           value={registerData.password}
                           onChange={(e) =>
-                            setRegisterData({ ...registerData, password: e.target.value })
+                            setRegisterData({
+                              ...registerData,
+                              password: e.target.value,
+                            })
                           }
                           required
                         />
@@ -299,7 +320,9 @@ export default function AuthPage() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="register-confirmPassword">Confirm Password</Label>
+                      <Label htmlFor="register-confirmPassword">
+                        Confirm Password
+                      </Label>
                       <div className="relative">
                         <Input
                           id="register-confirmPassword"
@@ -307,7 +330,10 @@ export default function AuthPage() {
                           placeholder="Confirm your password"
                           value={registerData.confirmPassword}
                           onChange={(e) =>
-                            setRegisterData({ ...registerData, confirmPassword: e.target.value })
+                            setRegisterData({
+                              ...registerData,
+                              confirmPassword: e.target.value,
+                            })
                           }
                           required
                         />
@@ -316,7 +342,9 @@ export default function AuthPage() {
                           variant="ghost"
                           size="sm"
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -358,8 +386,8 @@ export default function AuthPage() {
               </span>
             </h2>
             <p className="text-xl text-muted-foreground">
-              Unlock the power of machine learning for player analysis, 
-              position compatibility, and team building insights.
+              Unlock the power of machine learning for player analysis, position
+              compatibility, and team building insights.
             </p>
           </div>
 

@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Users, BarChart3, Zap, Shield, TrendingUp } from "lucide-react";
-import repositionLogo from "@assets/reposition-logo-final.png";
 
 export function Landing() {
   return (
@@ -10,15 +9,8 @@ export function Landing() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <div className="flex justify-center mb-8">
-            <img 
-              src={repositionLogo} 
-              alt="REPOSITION Logo" 
-              className="h-20 w-auto"
-            />
-          </div>
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-6">
-            Welcome to REPOSITION
+            Welcome to RePosition
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Advanced football analytics platform powered by machine learning. 
