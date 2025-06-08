@@ -63,7 +63,7 @@ export async function processMLAnalysis(players: Player[]): Promise<InsertPositi
         player.def || '',
         player.phy || '',
         player.age || '',
-        player.weight || ''
+        player.weight_in_kg || ''
       ].join(',');
     });
 
