@@ -84,7 +84,7 @@ def update_players_from_csv():
             preferred_foot = safe_str(row['foot'])
             height_in_cm = safe_float(row['height_in_cm'])
             current_club_name = safe_str(row['current_club_name'])
-            current_club_id = safe_int(row['current_club_id'])
+            club_id = safe_int(row['current_club_id'])
             market_value_in_eur = safe_float(row['market_value_in_eur'])
             highest_market_value_in_eur = safe_float(row['highest_market_value_in_eur'])
             image_url = safe_str(row['image_url'])
@@ -147,7 +147,7 @@ def update_players_from_csv():
                         preferred_foot = %s,
                         height_in_cm = %s,
                         current_club_name = %s,
-                        current_club_id = %s,
+                        club_id = %s,
                         market_value_in_eur = %s,
                         highest_market_value_in_eur = %s,
                         image_url = %s,
@@ -194,7 +194,7 @@ def update_players_from_csv():
                     WHERE player_id = %s
                 """, (
                     name, country, date_of_birth, sub_position, position, preferred_foot,
-                    height_in_cm, current_club_name, current_club_id, market_value_in_eur,
+                    height_in_cm, current_club_name, club_id, market_value_in_eur,
                     highest_market_value_in_eur, image_url, age, weight_in_kg,
                     ovr, pac, sho, pas, dri, def_attr, phy,
                     acceleration, sprint_speed, positioning, finishing, shot_power,
@@ -210,7 +210,7 @@ def update_players_from_csv():
                 cursor.execute("""
                     INSERT INTO players (
                         player_id, name, country_of_citizenship, date_of_birth, sub_position,
-                        position, preferred_foot, height_in_cm, current_club_name, current_club_id,
+                        position, preferred_foot, height_in_cm, current_club_name, club_id,
                         market_value_in_eur, highest_market_value_in_eur, image_url, age, weight_in_kg,
                         ovr, pac, sho, pas, dri, def, phy,
                         acceleration, sprint_speed, positioning, finishing, shot_power,
@@ -227,7 +227,7 @@ def update_players_from_csv():
                     )
                 """, (
                     player_id, name, country, date_of_birth, sub_position, position,
-                    preferred_foot, height_in_cm, current_club_name, current_club_id,
+                    preferred_foot, height_in_cm, current_club_name, club_id,
                     market_value_in_eur, highest_market_value_in_eur, image_url, age, weight_in_kg,
                     ovr, pac, sho, pas, dri, def_attr, phy,
                     acceleration, sprint_speed, positioning, finishing, shot_power,
