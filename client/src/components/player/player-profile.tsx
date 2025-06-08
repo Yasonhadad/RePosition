@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,13 @@ interface PlayerData {
 }
 
 export function PlayerProfile({ player }: PlayerProfileProps) {
+  const [showPositionCompatibility, setShowPositionCompatibility] = useState(false);
+  
+  // Reset position compatibility when player changes
+  useEffect(() => {
+    setShowPositionCompatibility(false);
+  }, [player?.player_id]);
+  
   const { data: playerData, isLoading } = useQuery<PlayerData>({
     queryKey: ["/api/players", player?.player_id],
     queryFn: ({ queryKey }) => {
@@ -124,8 +132,8 @@ export function PlayerProfile({ player }: PlayerProfileProps) {
           </div>
         </div>
 
-        {/* Position Compatibility */}
-        {compatibility && (
+        {/* Position Compatibility - Only shown when button is clicked */}
+        {showPositionCompatibility && compatibility && (
           <div className="mb-6">
             <PositionCompatibility compatibility={compatibility} />
           </div>
@@ -167,8 +175,9 @@ export function PlayerProfile({ player }: PlayerProfileProps) {
           <Button 
             className="w-full border-green-600 text-green-600 hover:bg-green-50 font-medium py-2.5 rounded-lg transition-colors duration-200" 
             variant="outline"
+            onClick={() => setShowPositionCompatibility(!showPositionCompatibility)}
           >
-            Compare Positions
+            {showPositionCompatibility ? 'Hide Position Analysis' : 'Compare Positions'}
           </Button>
         </div>
       </CardContent>
