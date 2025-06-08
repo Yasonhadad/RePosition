@@ -136,19 +136,19 @@ export function PlayerProfile({ player }: PlayerProfileProps) {
           <h5 className="font-medium text-dark mb-3">Key Statistics</h5>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-dark">{currentPlayer.pac || "N/A"}</div>
+              <div className="text-lg font-bold text-gray-800">{currentPlayer.pac || "N/A"}</div>
               <div className="text-xs text-gray-600">PACE</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-dark">{currentPlayer.sho || "N/A"}</div>
+              <div className="text-lg font-bold text-gray-800">{currentPlayer.sho || "N/A"}</div>
               <div className="text-xs text-gray-600">SHOOTING</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-dark">{currentPlayer.dri || "N/A"}</div>
+              <div className="text-lg font-bold text-gray-800">{currentPlayer.dri || "N/A"}</div>
               <div className="text-xs text-gray-600">DRIBBLING</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-dark">{currentPlayer.ovr || "N/A"}</div>
+              <div className="text-lg font-bold text-gray-800">{currentPlayer.ovr || "N/A"}</div>
               <div className="text-xs text-gray-600">OVERALL</div>
             </div>
           </div>
