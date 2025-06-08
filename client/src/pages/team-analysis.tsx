@@ -62,12 +62,11 @@ export default function TeamAnalysis() {
 
   const { data: clubs = [], isLoading: clubsLoading } = useQuery<Club[]>({
     queryKey: ["/api/clubs/country", selectedCountry],
-    queryFn: ({ queryKey }) => {
-      const [, , country] = queryKey;
-      console.log("Fetching clubs for country:", country);
-      return fetch(`/api/clubs/country/${encodeURIComponent(country as string)}`).then(res => res.json());
+    queryFn: () => {
+      console.log("Fetching clubs for country:", selectedCountry);
+      return fetch(`/api/clubs/country/${encodeURIComponent(selectedCountry)}`).then(res => res.json());
     },
-    enabled: !!selectedCountry,
+    enabled: !!selectedCountry && selectedCountry !== "",
   });
 
   const { data: teamAnalysis, isLoading: analysisLoading } = useQuery<TeamAnalysis>({
