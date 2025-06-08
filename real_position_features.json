@@ -1,0 +1,470 @@
+{
+  "ST": {
+    "features": [
+      "sho",
+      "shot_power",
+      "finishing",
+      "penalties",
+      "volleys",
+      "long_shots",
+      "positioning",
+      "acceleration",
+      "pac",
+      "sprint_speed"
+    ],
+    "weights": [
+      3.0,
+      2.977121878974881,
+      2.9764722755913695,
+      2.9752781202821206,
+      2.9738597887825353,
+      2.951650829597324,
+      2.904436741837939,
+      1.091340659039072,
+      1.0344461537611829,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "sho": 56.8,
+        "shot_power": 56.8,
+        "finishing": 56.8,
+        "penalties": 56.7,
+        "volleys": 56.7,
+        "long_shots": 56.8,
+        "positioning": 56.8,
+        "acceleration": 68.5,
+        "pac": 68.6,
+        "sprint_speed": 68.5
+      },
+      "std": {
+        "sho": 14.8,
+        "shot_power": 14.9,
+        "finishing": 14.9,
+        "penalties": 14.9,
+        "volleys": 14.9,
+        "long_shots": 15.0,
+        "positioning": 15.1,
+        "acceleration": 11.1,
+        "pac": 10.8,
+        "sprint_speed": 11.1
+      }
+    }
+  },
+  "LW": {
+    "features": [
+      "pac",
+      "sprint_speed",
+      "acceleration",
+      "reactions",
+      "dribbling",
+      "dri",
+      "composure",
+      "ball_control",
+      "agility",
+      "balance"
+    ],
+    "weights": [
+      3.0,
+      2.8039844939116394,
+      2.5372679716183106,
+      1.340348160475805,
+      1.148069138414675,
+      1.148069138414675,
+      1.1185145271761987,
+      1.1042249364787675,
+      1.0386158687876836,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "pac": 68.6,
+        "sprint_speed": 68.5,
+        "acceleration": 68.5,
+        "reactions": 67.0,
+        "dribbling": 67.0,
+        "dri": 67.0,
+        "composure": 67.0,
+        "ball_control": 67.0,
+        "agility": 67.0,
+        "balance": 66.9
+      },
+      "std": {
+        "pac": 10.8,
+        "sprint_speed": 11.1,
+        "acceleration": 11.1,
+        "reactions": 9.5,
+        "dribbling": 9.3,
+        "dri": 9.3,
+        "composure": 9.5,
+        "ball_control": 9.4,
+        "agility": 9.5,
+        "balance": 9.4
+      }
+    }
+  },
+  "RW": {
+    "features": [
+      "pac",
+      "sprint_speed",
+      "acceleration",
+      "ball_control",
+      "dribbling",
+      "dri",
+      "balance",
+      "agility",
+      "composure",
+      "reactions"
+    ],
+    "weights": [
+      3.0,
+      2.6971187011868674,
+      2.5208556665627775,
+      1.8868621764964426,
+      1.8853597422214556,
+      1.8853597422214556,
+      1.8835969799471606,
+      1.7026325170636536,
+      1.6466676984226742,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "pac": 68.6,
+        "sprint_speed": 68.5,
+        "acceleration": 68.5,
+        "ball_control": 67.0,
+        "dribbling": 67.0,
+        "dri": 67.0,
+        "balance": 66.9,
+        "agility": 67.0,
+        "composure": 67.0,
+        "reactions": 67.0
+      },
+      "std": {
+        "pac": 10.8,
+        "sprint_speed": 11.1,
+        "acceleration": 11.1,
+        "ball_control": 9.4,
+        "dribbling": 9.3,
+        "dri": 9.3,
+        "balance": 9.4,
+        "agility": 9.5,
+        "composure": 9.5,
+        "reactions": 9.5
+      }
+    }
+  },
+  "CM": {
+    "features": [
+      "pas",
+      "short_passing",
+      "free_kick_accuracy",
+      "vision",
+      "curve",
+      "long_passing",
+      "crossing",
+      "reactions",
+      "dri",
+      "dribbling"
+    ],
+    "weights": [
+      3.0,
+      3.0,
+      2.8963216968943586,
+      2.877661373780724,
+      2.873420536165856,
+      2.865764899036656,
+      2.7918271040836684,
+      1.0222677192806775,
+      1.0,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "pas": 62.1,
+        "short_passing": 62.1,
+        "free_kick_accuracy": 62.2,
+        "vision": 62.0,
+        "curve": 62.1,
+        "long_passing": 62.1,
+        "crossing": 62.1,
+        "reactions": 67.0,
+        "dri": 67.0,
+        "dribbling": 67.0
+      },
+      "std": {
+        "pas": 9.8,
+        "short_passing": 9.8,
+        "free_kick_accuracy": 9.9,
+        "vision": 10.1,
+        "curve": 10.0,
+        "long_passing": 9.9,
+        "crossing": 10.0,
+        "reactions": 9.5,
+        "dri": 9.3,
+        "dribbling": 9.3
+      }
+    }
+  },
+  "CDM": {
+    "features": [
+      "def_awareness",
+      "standing_tackle",
+      "def",
+      "sliding_tackle",
+      "interceptions",
+      "heading_accuracy",
+      "aggression",
+      "stamina",
+      "strength",
+      "phy"
+    ],
+    "weights": [
+      3.0,
+      2.991236825252016,
+      2.991236825252016,
+      2.974499680844514,
+      2.9546965360234405,
+      2.9254547454359248,
+      1.0217692276876666,
+      1.0169698448881295,
+      1.0,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "def_awareness": 55.1,
+        "standing_tackle": 55.1,
+        "def": 55.1,
+        "sliding_tackle": 55.1,
+        "interceptions": 55.2,
+        "heading_accuracy": 55.1,
+        "aggression": 68.6,
+        "stamina": 68.6,
+        "strength": 68.6,
+        "phy": 68.6
+      },
+      "std": {
+        "def_awareness": 17.6,
+        "standing_tackle": 17.6,
+        "def": 17.6,
+        "sliding_tackle": 17.7,
+        "interceptions": 17.7,
+        "heading_accuracy": 17.7,
+        "aggression": 9.0,
+        "stamina": 9.0,
+        "strength": 8.8,
+        "phy": 8.8
+      }
+    }
+  },
+  "CAM": {
+    "features": [
+      "pas",
+      "short_passing",
+      "vision",
+      "curve",
+      "free_kick_accuracy",
+      "long_passing",
+      "crossing",
+      "balance",
+      "dribbling",
+      "dri"
+    ],
+    "weights": [
+      3.0,
+      3.0,
+      2.9741712500111595,
+      2.6200397174607355,
+      2.5920353445845095,
+      2.3696135178204685,
+      1.3911546728332884,
+      1.2042202425161115,
+      1.0,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "pas": 62.1,
+        "short_passing": 62.1,
+        "vision": 62.0,
+        "curve": 62.1,
+        "free_kick_accuracy": 62.2,
+        "long_passing": 62.1,
+        "crossing": 62.1,
+        "balance": 66.9,
+        "dribbling": 67.0,
+        "dri": 67.0
+      },
+      "std": {
+        "pas": 9.8,
+        "short_passing": 9.8,
+        "vision": 10.1,
+        "curve": 10.0,
+        "free_kick_accuracy": 9.9,
+        "long_passing": 9.9,
+        "crossing": 10.0,
+        "balance": 9.4,
+        "dribbling": 9.3,
+        "dri": 9.3
+      }
+    }
+  },
+  "LB": {
+    "features": [
+      "pac",
+      "sprint_speed",
+      "def",
+      "standing_tackle",
+      "def_awareness",
+      "interceptions",
+      "acceleration",
+      "heading_accuracy",
+      "sliding_tackle",
+      "vision"
+    ],
+    "weights": [
+      3.0,
+      2.9257439634964912,
+      2.8844017472151937,
+      2.8844017472151937,
+      2.8809998121237577,
+      2.873823756268779,
+      2.867252853887732,
+      2.849292985923232,
+      2.842251323357689,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "pac": 68.6,
+        "sprint_speed": 68.5,
+        "def": 55.1,
+        "standing_tackle": 55.1,
+        "def_awareness": 55.1,
+        "interceptions": 55.2,
+        "acceleration": 68.5,
+        "heading_accuracy": 55.1,
+        "sliding_tackle": 55.1,
+        "vision": 62.0
+      },
+      "std": {
+        "pac": 10.8,
+        "sprint_speed": 11.1,
+        "def": 17.6,
+        "standing_tackle": 17.6,
+        "def_awareness": 17.6,
+        "interceptions": 17.7,
+        "acceleration": 11.1,
+        "heading_accuracy": 17.7,
+        "sliding_tackle": 17.7,
+        "vision": 10.1
+      }
+    }
+  },
+  "RB": {
+    "features": [
+      "interceptions",
+      "sliding_tackle",
+      "def",
+      "standing_tackle",
+      "def_awareness",
+      "heading_accuracy",
+      "pac",
+      "sprint_speed",
+      "acceleration",
+      "ball_control"
+    ],
+    "weights": [
+      3.0,
+      2.990752544946413,
+      2.9817109642057322,
+      2.9817109642057322,
+      2.9598987879332532,
+      2.958241086823847,
+      2.846188045865065,
+      2.8299737122472806,
+      2.736887776130642,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "interceptions": 55.2,
+        "sliding_tackle": 55.1,
+        "def": 55.1,
+        "standing_tackle": 55.1,
+        "def_awareness": 55.1,
+        "heading_accuracy": 55.1,
+        "pac": 68.6,
+        "sprint_speed": 68.5,
+        "acceleration": 68.5,
+        "ball_control": 67.0
+      },
+      "std": {
+        "interceptions": 17.7,
+        "sliding_tackle": 17.7,
+        "def": 17.6,
+        "standing_tackle": 17.6,
+        "def_awareness": 17.6,
+        "heading_accuracy": 17.7,
+        "pac": 10.8,
+        "sprint_speed": 11.1,
+        "acceleration": 11.1,
+        "ball_control": 9.4
+      }
+    }
+  },
+  "CB": {
+    "features": [
+      "def",
+      "standing_tackle",
+      "def_awareness",
+      "heading_accuracy",
+      "interceptions",
+      "sliding_tackle",
+      "height_in_cm",
+      "phy",
+      "strength",
+      "stamina"
+    ],
+    "weights": [
+      3.0,
+      3.0,
+      2.9804757931012182,
+      2.9790741134363454,
+      2.959813272741145,
+      2.9587848335914217,
+      1.1634972160839927,
+      1.0384074501875669,
+      1.0384074501875669,
+      1.0
+    ],
+    "stats": {
+      "mean": {
+        "def": 55.1,
+        "standing_tackle": 55.1,
+        "def_awareness": 55.1,
+        "heading_accuracy": 55.1,
+        "interceptions": 55.2,
+        "sliding_tackle": 55.1,
+        "height_in_cm": 184.1,
+        "phy": 68.6,
+        "strength": 68.6,
+        "stamina": 68.6
+      },
+      "std": {
+        "def": 17.6,
+        "standing_tackle": 17.6,
+        "def_awareness": 17.6,
+        "heading_accuracy": 17.7,
+        "interceptions": 17.7,
+        "sliding_tackle": 17.7,
+        "height_in_cm": 7.7,
+        "phy": 8.8,
+        "strength": 8.8,
+        "stamina": 9.0
+      }
+    }
+  }
+}
