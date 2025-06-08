@@ -71,11 +71,11 @@ export default function TeamAnalysis() {
 
   const { data: teamAnalysis, isLoading: analysisLoading } = useQuery<TeamAnalysis>({
     queryKey: ["/api/teams", selectedClub, "analysis"],
-    queryFn: ({ queryKey }) => {
-      const [, , clubName] = queryKey;
-      return fetch(`/api/teams/${encodeURIComponent(clubName as string)}/analysis`).then(res => res.json());
+    queryFn: () => {
+      console.log("Fetching team analysis for club:", selectedClub);
+      return fetch(`/api/teams/${encodeURIComponent(selectedClub)}/analysis`).then(res => res.json());
     },
-    enabled: !!selectedClub,
+    enabled: !!selectedClub && selectedClub !== "",
   });
 
   // Function to get position compatibility score for a player
@@ -87,8 +87,7 @@ export default function TeamAnalysis() {
 
   // Filter players by selected position
   const filteredPlayers = teamAnalysis?.players.filter(player => {
-    if (selectedPosition === "all") return true;
-    return getPositionScore(player, selectedPosition) > 50; // Show only players with good fit
+    return true; // Show all players regardless of position
   }).sort((a, b) => {
     if (selectedPosition === "all") {
       return (b.compatibility?.best_fit_score || 0) - (a.compatibility?.best_fit_score || 0);
@@ -310,7 +309,7 @@ export default function TeamAnalysis() {
                 </CardTitle>
                 {selectedPosition !== "all" && (
                   <p className="text-sm text-gray-600">
-                    Showing players with 50%+ compatibility for {POSITIONS.find(p => p.value === selectedPosition)?.label}
+                    Showing all players with their compatibility scores for {POSITIONS.find(p => p.value === selectedPosition)?.label}
                   </p>
                 )}
               </CardHeader>
