@@ -27,59 +27,68 @@ class AdvancedPositionProcessor:
         self.feat_info = self._initialize_position_metadata()
     
     def _initialize_position_metadata(self):
-        """Initialize position-specific metadata with realistic features and statistics"""
+        """Initialize position-specific metadata with REAL features from your XGBoost models"""
         
-        # Position-specific features based on your XGBoost analysis
+        # Real position-specific features extracted from your XGBoost correlation analysis
         position_features = {
             'ST': {
-                'features': ['finishing', 'shot_power', 'positioning', 'strength', 'heading_accuracy', 'volleys', 'penalties'],
-                'weights': [2.5, 2.0, 2.2, 1.5, 1.8, 1.3, 1.0]
+                'features': ['sho', 'shot_power', 'finishing', 'penalties', 'volleys', 'long_shots', 'positioning', 'acceleration', 'pac', 'sprint_speed'],
+                'weights': [3.0, 2.977, 2.976, 2.975, 2.974, 2.952, 2.904, 1.091, 1.034, 1.0]
             },
             'LW': {
-                'features': ['acceleration', 'sprint_speed', 'dribbling', 'crossing', 'agility', 'ball_control', 'curve'],
-                'weights': [2.3, 2.1, 2.4, 2.0, 2.2, 1.8, 1.2]
+                'features': ['pac', 'sprint_speed', 'acceleration', 'reactions', 'dribbling', 'dri', 'composure', 'ball_control', 'agility', 'balance'],
+                'weights': [3.0, 2.804, 2.537, 1.340, 1.148, 1.148, 1.119, 1.104, 1.039, 1.0]
             },
             'RW': {
-                'features': ['acceleration', 'sprint_speed', 'dribbling', 'crossing', 'agility', 'ball_control', 'curve'],
-                'weights': [2.3, 2.1, 2.4, 2.0, 2.2, 1.8, 1.2]
+                'features': ['pac', 'sprint_speed', 'acceleration', 'ball_control', 'dribbling', 'dri', 'balance', 'agility', 'composure', 'reactions'],
+                'weights': [3.0, 2.697, 2.521, 1.887, 1.885, 1.885, 1.884, 1.703, 1.647, 1.0]
             },
             'CM': {
-                'features': ['short_passing', 'long_passing', 'vision', 'ball_control', 'stamina', 'composure', 'reactions'],
-                'weights': [2.5, 2.0, 2.3, 2.1, 2.0, 1.7, 1.5]
+                'features': ['pas', 'short_passing', 'free_kick_accuracy', 'vision', 'curve', 'long_passing', 'crossing', 'reactions', 'dri', 'dribbling'],
+                'weights': [3.0, 3.0, 2.896, 2.878, 2.873, 2.866, 2.792, 1.022, 1.0, 1.0]
             },
             'CDM': {
-                'features': ['interceptions', 'standing_tackle', 'strength', 'aggression', 'def_awareness', 'short_passing', 'stamina'],
-                'weights': [2.8, 2.5, 2.0, 1.8, 2.6, 1.9, 2.2]
+                'features': ['def_awareness', 'standing_tackle', 'def', 'sliding_tackle', 'interceptions', 'heading_accuracy', 'aggression', 'stamina', 'strength', 'phy'],
+                'weights': [3.0, 2.991, 2.991, 2.974, 2.955, 2.925, 1.022, 1.017, 1.0, 1.0]
             },
             'CAM': {
-                'features': ['vision', 'short_passing', 'dribbling', 'finishing', 'long_shots', 'free_kick_accuracy', 'composure'],
-                'weights': [2.7, 2.3, 2.1, 2.0, 1.8, 1.5, 1.9]
+                'features': ['pas', 'short_passing', 'vision', 'curve', 'free_kick_accuracy', 'long_passing', 'crossing', 'balance', 'dribbling', 'dri'],
+                'weights': [3.0, 3.0, 2.974, 2.620, 2.592, 2.370, 1.391, 1.204, 1.0, 1.0]
             },
             'LB': {
-                'features': ['acceleration', 'crossing', 'standing_tackle', 'stamina', 'interceptions', 'def_awareness', 'strength'],
-                'weights': [2.2, 1.9, 2.4, 2.3, 2.1, 2.0, 1.7]
+                'features': ['pac', 'sprint_speed', 'def', 'standing_tackle', 'def_awareness', 'interceptions', 'acceleration', 'heading_accuracy', 'sliding_tackle', 'vision'],
+                'weights': [3.0, 2.926, 2.884, 2.884, 2.881, 2.874, 2.867, 2.849, 2.842, 1.0]
             },
             'RB': {
-                'features': ['acceleration', 'crossing', 'standing_tackle', 'stamina', 'interceptions', 'def_awareness', 'strength'],
-                'weights': [2.2, 1.9, 2.4, 2.3, 2.1, 2.0, 1.7]
+                'features': ['interceptions', 'sliding_tackle', 'def', 'standing_tackle', 'def_awareness', 'heading_accuracy', 'pac', 'sprint_speed', 'acceleration', 'ball_control'],
+                'weights': [3.0, 2.991, 2.982, 2.982, 2.960, 2.958, 2.846, 2.830, 2.737, 1.0]
             },
             'CB': {
-                'features': ['heading_accuracy', 'standing_tackle', 'strength', 'jumping', 'def_awareness', 'composure', 'aggression'],
-                'weights': [2.6, 2.8, 2.5, 2.3, 2.9, 1.8, 2.0]
+                'features': ['def', 'standing_tackle', 'def_awareness', 'heading_accuracy', 'interceptions', 'sliding_tackle', 'height_in_cm', 'phy', 'strength', 'stamina'],
+                'weights': [3.0, 3.0, 2.980, 2.979, 2.960, 2.959, 1.163, 1.038, 1.038, 1.0]
             }
         }
         
-        # Realistic statistics based on FIFA player database analysis
+        # Real statistics from your dataset analysis
         position_stats = {
-            'ST': {'mu': [78, 75, 82, 77, 73, 68, 70], 'sigma': [12, 10, 8, 11, 13, 14, 15]},
-            'LW': {'mu': [82, 80, 78, 68, 79, 75, 65], 'sigma': [8, 9, 11, 13, 10, 12, 14]},
-            'RW': {'mu': [82, 80, 78, 68, 79, 75, 65], 'sigma': [8, 9, 11, 13, 10, 12, 14]},
-            'CM': {'mu': [76, 72, 78, 76, 81, 73, 74], 'sigma': [9, 11, 10, 11, 8, 12, 11]},
-            'CDM': {'mu': [74, 78, 79, 72, 77, 73, 81], 'sigma': [11, 9, 10, 13, 10, 12, 8]},
-            'CAM': {'mu': [79, 77, 76, 71, 69, 67, 74], 'sigma': [9, 10, 12, 13, 14, 15, 11]},
-            'LB': {'mu': [78, 65, 72, 80, 71, 69, 74], 'sigma': [10, 13, 11, 8, 12, 13, 12]},
-            'RB': {'mu': [78, 65, 72, 80, 71, 69, 74], 'sigma': [10, 13, 11, 8, 12, 13, 12]},
-            'CB': {'mu': [76, 80, 83, 78, 81, 71, 76], 'sigma': [11, 8, 9, 10, 8, 13, 11]}
+            'ST': {'mu': [56.8, 56.8, 56.8, 56.7, 56.7, 56.8, 56.8, 68.5, 68.6, 68.5], 
+                   'sigma': [14.8, 14.9, 14.9, 14.9, 14.9, 15.0, 15.1, 11.1, 10.8, 11.1]},
+            'LW': {'mu': [68.6, 68.5, 68.5, 67.0, 67.0, 67.0, 67.0, 67.0, 67.0, 66.9], 
+                   'sigma': [10.8, 11.1, 11.1, 9.5, 9.3, 9.3, 9.5, 9.4, 9.5, 9.4]},
+            'RW': {'mu': [68.6, 68.5, 68.5, 67.0, 67.0, 67.0, 66.9, 67.0, 67.0, 67.0], 
+                   'sigma': [10.8, 11.1, 11.1, 9.4, 9.3, 9.3, 9.4, 9.5, 9.5, 9.5]},
+            'CM': {'mu': [62.1, 62.1, 62.2, 62.0, 62.1, 62.1, 62.1, 67.0, 67.0, 67.0], 
+                   'sigma': [9.8, 9.8, 9.9, 10.1, 10.0, 9.9, 10.0, 9.5, 9.3, 9.3]},
+            'CDM': {'mu': [55.1, 55.1, 55.1, 55.1, 55.2, 55.1, 68.6, 68.6, 68.6, 68.6], 
+                    'sigma': [17.6, 17.6, 17.6, 17.7, 17.7, 17.7, 9.0, 9.0, 8.8, 8.8]},
+            'CAM': {'mu': [62.1, 62.1, 62.0, 62.1, 62.2, 62.1, 62.1, 66.9, 67.0, 67.0], 
+                    'sigma': [9.8, 9.8, 10.1, 10.0, 9.9, 9.9, 10.0, 9.4, 9.3, 9.3]},
+            'LB': {'mu': [68.6, 68.5, 55.1, 55.1, 55.1, 55.2, 68.5, 55.1, 55.1, 62.0], 
+                   'sigma': [10.8, 11.1, 17.6, 17.6, 17.6, 17.7, 11.1, 17.7, 17.7, 10.1]},
+            'RB': {'mu': [55.2, 55.1, 55.1, 55.1, 55.1, 55.1, 68.6, 68.5, 68.5, 67.0], 
+                   'sigma': [17.7, 17.7, 17.6, 17.6, 17.6, 17.7, 10.8, 11.1, 11.1, 9.4]},
+            'CB': {'mu': [55.1, 55.1, 55.1, 55.1, 55.2, 55.1, 184.1, 68.6, 68.6, 68.6], 
+                   'sigma': [17.6, 17.6, 17.6, 17.7, 17.7, 17.7, 7.7, 8.8, 8.8, 9.0]}
         }
         
         feat_info = {}
