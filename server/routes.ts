@@ -333,6 +333,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Player Favorites API endpoints
+  app.post("/api/favorites/:playerId", requireAuth, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const userId = req.user!.id;
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ error: "Invalid player ID" });
+      }
+
+      // Check if player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: "Player not found" });
+      }
+
+      const favorite = await storage.addPlayerToFavorites(userId, playerId);
+      res.json({ message: "Player added to favorites", favorite });
+    } catch (error) {
+      console.error("Add favorite error:", error);
+      res.status(500).json({ error: "Failed to add player to favorites" });
+    }
+  });
+
+  app.delete("/api/favorites/:playerId", requireAuth, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const userId = req.user!.id;
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ error: "Invalid player ID" });
+      }
+
+      await storage.removePlayerFromFavorites(userId, playerId);
+      res.json({ message: "Player removed from favorites" });
+    } catch (error) {
+      console.error("Remove favorite error:", error);
+      res.status(500).json({ error: "Failed to remove player from favorites" });
+    }
+  });
+
+  app.get("/api/favorites", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const favorites = await storage.getUserFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Get favorites error:", error);
+      res.status(500).json({ error: "Failed to get user favorites" });
+    }
+  });
+
+  app.get("/api/favorites/:playerId/status", requireAuth, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const userId = req.user!.id;
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ error: "Invalid player ID" });
+      }
+
+      const isFavorited = await storage.isPlayerFavorited(userId, playerId);
+      res.json({ isFavorited });
+    } catch (error) {
+      console.error("Check favorite status error:", error);
+      res.status(500).json({ error: "Failed to check favorite status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
