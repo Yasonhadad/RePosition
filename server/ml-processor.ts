@@ -8,7 +8,7 @@ import type { Player, InsertPositionCompatibility, InsertPlayer, InsertClub } fr
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Path to the Python ML script
-const PYTHON_SCRIPT_PATH = path.join(__dirname, "..", "improved_xgboost_processor.py");
+const PYTHON_SCRIPT_PATH = path.join(__dirname, "..", "ml_position_processor.py");
 
 export interface MLAnalysisResult {
   player_id: number;
@@ -39,7 +39,7 @@ export async function processMLAnalysis(players: Player[]): Promise<InsertPositi
 
   try {
     // Convert players to CSV format
-    const csvHeader = "player_id,name,country_of_citizenship,date_of_birth,sub_position,position,foot,height_in_cm,current_club_name,market_value_in_eur,highest_market_value_in_eur,club_id,OVR,PAC,SHO,PAS,DRI,DEF,PHY,age,Weight";
+    const csvHeader = "player_id,name,country_of_citizenship,date_of_birth,sub_position,position,foot,height_in_cm,current_club_name,market_value_in_eur,highest_market_value_in_eur,club_id,ovr,pac,sho,pas,dri,def,phy,age,weight_in_kg";
     
     const csvRows = players.map(player => {
       return [
