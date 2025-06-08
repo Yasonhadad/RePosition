@@ -64,6 +64,7 @@ export default function TeamAnalysis() {
     queryKey: ["/api/clubs/country", selectedCountry],
     queryFn: ({ queryKey }) => {
       const [, , country] = queryKey;
+      console.log("Fetching clubs for country:", country);
       return fetch(`/api/clubs/country/${encodeURIComponent(country as string)}`).then(res => res.json());
     },
     enabled: !!selectedCountry,
@@ -120,6 +121,7 @@ export default function TeamAnalysis() {
                 Country
               </label>
               <Select value={selectedCountry} onValueChange={(value) => {
+                console.log("Selected country:", value);
                 setSelectedCountry(value);
                 setSelectedClub(""); // Reset club selection
               }}>
