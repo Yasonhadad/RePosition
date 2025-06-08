@@ -9,6 +9,7 @@ import type { Player, PositionCompatibility as PositionCompatibilityType } from 
 
 interface PlayerProfileProps {
   player: Player | null;
+  showCompatibilityByDefault?: boolean;
 }
 
 interface PlayerData {

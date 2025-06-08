@@ -1,17 +1,19 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Player } from "@shared/schema";
 
 interface PlayerCardProps {
   player: Player;
   isSelected?: boolean;
   onClick?: () => void;
+  onComparePositions?: () => void;
   compatibility?: {
     best_pos: string;
     best_fit_score: number;
   };
 }
 
-export function PlayerCard({ player, isSelected, onClick, compatibility }: PlayerCardProps) {
+export function PlayerCard({ player, isSelected, onClick, onComparePositions, compatibility }: PlayerCardProps) {
   const getPlayerInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
@@ -97,9 +99,15 @@ export function PlayerCard({ player, isSelected, onClick, compatibility }: Playe
               </div>
             </>
           ) : (
-            <div className="text-sm text-gray-400">
-              No analysis
-            </div>
+            <Button 
+              className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                onComparePositions?.();
+              }}
+            >
+              Compare Positions
+            </Button>
           )}
         </div>
       </div>

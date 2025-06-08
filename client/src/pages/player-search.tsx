@@ -38,6 +38,7 @@ export default function PlayerSearch() {
     sortBy: "compatibility",
   });
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showCompatibilityForPlayer, setShowCompatibilityForPlayer] = useState<number | null>(null);
 
   const { data: playersData, isLoading } = useQuery<Player[]>({
     queryKey: ["/api/players", searchFilters],
@@ -123,6 +124,11 @@ export default function PlayerSearch() {
 
   const handlePlayerClick = (player: Player) => {
     setSelectedPlayer(player);
+  };
+
+  const handleComparePositions = (player: Player) => {
+    setSelectedPlayer(player);
+    setShowCompatibilityForPlayer(player.player_id);
   };
 
   return (
@@ -327,6 +333,7 @@ export default function PlayerSearch() {
                       <PlayerCard
                         player={player}
                         isSelected={selectedPlayer?.id === player.id}
+                        onComparePositions={() => handleComparePositions(player)}
                       />
                     </div>
                   ))}
