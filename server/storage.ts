@@ -385,12 +385,10 @@ export class DatabaseStorage implements IStorage {
     const allClubs = await this.getAllClubs();
     const allCompetitions = await this.getAllCompetitions();
     
-    // Get unique teams from players table
-    const uniqueTeams = new Set(allPlayers.map(p => p.current_club_name).filter(name => name));
-
+    // Use actual clubs count from clubs table
     return {
       totalPlayers: allPlayers.length,
-      totalTeams: uniqueTeams.size,
+      totalTeams: allClubs.length,
       totalCompetitions: allCompetitions.length,
       avgCompatibility: 0, // Will be updated when compatibility data is available
       topPositions: [
