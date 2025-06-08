@@ -11,6 +11,7 @@ import PlayerSearch from "@/pages/player-search";
 import PlayerDetails from "@/pages/player-details";
 import TeamAnalysis from "@/pages/team-analysis";
 import DataUpload from "@/pages/data-upload";
+import Favorites from "@/pages/favorites";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
@@ -30,6 +31,7 @@ function Router() {
               <Route path="/search" component={PlayerSearch} />
               <Route path="/players" component={PlayerSearch} />
               <Route path="/player/:id" component={PlayerDetails} />
+              <Route path="/favorites" component={Favorites} />
               <Route path="/teams" component={TeamAnalysis} />
               <Route path="/upload" component={DataUpload} />
             </>

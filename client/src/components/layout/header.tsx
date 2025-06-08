@@ -52,6 +52,12 @@ export function Header() {
       current: location === "/search" || location === "/players"
     },
     {
+      name: "Favorites",
+      href: "/favorites",
+      icon: User,
+      current: location === "/favorites"
+    },
+    {
       name: "Team Analysis",
       href: "/teams",
       icon: Users,

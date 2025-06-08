@@ -81,35 +81,43 @@ export function PlayerCard({ player, isSelected, onClick, onComparePositions, co
             </div>
           </div>
         </div>
-        <div className="text-right">
-          {compatibility ? (
-            <>
-              <div className="text-lg font-bold text-primary">
-                {compatibility.best_fit_score.toFixed(1)}%
-              </div>
-              <p className="text-xs text-gray-500">
-                {compatibility.best_pos} Compatibility
-              </p>
-              <div className="flex items-center mt-2">
-                <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                  <div
-                    className="bg-primary h-2 rounded-full"
-                    style={{ width: `${Math.min(compatibility.best_fit_score, 100)}%` }}
-                  />
+        <div className="text-right flex items-start space-x-2">
+          <StarButton 
+            playerId={player.id} 
+            size="icon" 
+            variant="ghost" 
+            className="mt-1"
+          />
+          <div>
+            {compatibility ? (
+              <>
+                <div className="text-lg font-bold text-primary">
+                  {compatibility.best_fit_score.toFixed(1)}%
                 </div>
-              </div>
-            </>
-          ) : (
-            <Button 
-              className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
-              onClick={(e) => {
-                e.stopPropagation();
-                onComparePositions?.();
-              }}
-            >
-              Compare Positions
-            </Button>
-          )}
+                <p className="text-xs text-gray-500">
+                  {compatibility.best_pos} Compatibility
+                </p>
+                <div className="flex items-center mt-2">
+                  <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                    <div
+                      className="bg-primary h-2 rounded-full"
+                      style={{ width: `${Math.min(compatibility.best_fit_score, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Button 
+                className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onComparePositions?.();
+                }}
+              >
+                Compare Positions
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
