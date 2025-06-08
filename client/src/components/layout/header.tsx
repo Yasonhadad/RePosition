@@ -1,16 +1,41 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { CircleDot, User, BarChart3, Search, Users, Upload, LogOut, LogIn } from "lucide-react";
 import { Link } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
   const [location] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   const { data: stats } = useQuery({
     queryKey: ["/api/stats"],
     refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/logout");
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(["/api/user"], null);
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const navigation = [
@@ -89,15 +114,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
-                  {isAuthenticated && user?.profileImageUrl ? (
-                    <img 
-                      src={user.profileImageUrl} 
-                      alt="Profile" 
-                      className="w-8 h-8 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <User className="text-white h-5 w-5" />
-                  )}
+                  <User className="text-white h-5 w-5" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -109,16 +126,18 @@ export function Header() {
                         <div className="text-muted-foreground truncate">{user.email}</div>
                       </div>
                     )}
-                    <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+                    <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <DropdownMenuItem onClick={() => window.location.href = '/api/login'}>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Sign In
-                  </DropdownMenuItem>
+                  <Link href="/auth">
+                    <DropdownMenuItem>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Sign In
+                    </DropdownMenuItem>
+                  </Link>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
