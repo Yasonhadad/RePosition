@@ -16,6 +16,24 @@ export function PlayerCard({ player, isSelected, onClick, compatibility }: Playe
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const PlayerImage = ({ player, size = "w-16 h-16" }: { player: Player, size?: string }) => {
+    if (player.image_url) {
+      return (
+        <img
+          src={player.image_url}
+          alt={player.name}
+          className={`${size} rounded-lg object-cover border-2 border-white shadow-sm`}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            target.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      );
+    }
+    return null;
+  };
+
   const getCompatibilityColor = (score?: number) => {
     if (!score) return "from-gray-400 to-gray-500";
     if (score >= 90) return "from-primary to-success";
@@ -36,10 +54,13 @@ export function PlayerCard({ player, isSelected, onClick, compatibility }: Playe
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className={`w-16 h-16 bg-gradient-to-br ${getCompatibilityColor(compatibilityScore)} rounded-lg flex items-center justify-center`}>
-            <span className="text-white font-bold text-lg">
-              {getPlayerInitials(player.name)}
-            </span>
+          <div className="relative">
+            <PlayerImage player={player} />
+            <div className={`w-16 h-16 bg-gradient-to-br ${getCompatibilityColor(compatibilityScore)} rounded-lg flex items-center justify-center hidden`}>
+              <span className="text-white font-bold text-lg">
+                {getPlayerInitials(player.name)}
+              </span>
+            </div>
           </div>
           <div>
             <h4 className="font-semibold text-dark">{player.name}</h4>

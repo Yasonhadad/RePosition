@@ -34,6 +34,24 @@ export default function PlayerDetails() {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const PlayerImage = ({ player, size = "w-24 h-24" }: { player: Player, size?: string }) => {
+    if (player.image_url) {
+      return (
+        <img
+          src={player.image_url}
+          alt={player.name}
+          className={`${size} rounded-full object-cover border-4 border-white shadow-lg`}
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            target.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      );
+    }
+    return null;
+  };
+
   const formatCurrency = (value: number | null) => {
     if (!value) return "N/A";
     if (value >= 1000000) {
@@ -173,10 +191,13 @@ export default function PlayerDetails() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-6 mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">
-                    {getPlayerInitials(player.name)}
-                  </span>
+                <div className="relative">
+                  <PlayerImage player={player} />
+                  <div className="w-24 h-24 bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center hidden">
+                    <span className="text-white font-bold text-2xl">
+                      {getPlayerInitials(player.name)}
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-dark mb-2">{player.name}</h1>
@@ -208,7 +229,7 @@ export default function PlayerDetails() {
                   <User className="w-4 h-4 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Height/Weight</p>
-                    <p className="font-medium">{player.height_in_cm || "N/A"}cm / {player.weight || "N/A"}kg</p>
+                    <p className="font-medium">{player.height_in_cm || "N/A"}cm / {player.weight_in_kg || "N/A"}kg</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
