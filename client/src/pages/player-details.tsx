@@ -315,10 +315,7 @@ export default function PlayerDetails() {
                 <span className="text-gray-600">Foot:</span>
                 <span className="font-medium">{player.preferred_foot || player.foot || "N/A"}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Play Style:</span>
-                <span className="font-medium">{player.play_style || "N/A"}</span>
-              </div>
+
             </CardContent>
           </Card>
 
