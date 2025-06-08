@@ -204,59 +204,7 @@ export default function TeamAnalysis() {
             </CardContent>
           </Card>
 
-          {/* Team Statistics */}
-          {analysisLoading ? (
-            <Card className="shadow-sm mb-6">
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="text-center p-4 bg-gray-50 rounded-lg">
-                      <Skeleton className="h-8 w-16 mx-auto mb-2" />
-                      <Skeleton className="h-4 w-24 mx-auto" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : teamAnalysis ? (
-            <Card className="shadow-sm mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-dark">
-                  Team Statistics - {teamAnalysis.clubName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">
-                      {teamAnalysis.analytics.avgCompatibility.toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-gray-600">Avg Compatibility</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-analytics">
-                      {teamAnalysis.analytics.bestPosition}
-                    </div>
-                    <div className="text-sm text-gray-600">Strongest Position</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-accent">
-                      {teamAnalysis.analytics.playerCount}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Players</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">
-                      {filteredPlayers.length}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {selectedPosition === "all" ? "All Players" : `Suitable for ${POSITIONS.find(p => p.value === selectedPosition)?.label}`}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
+
 
 
 
