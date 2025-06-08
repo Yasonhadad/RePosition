@@ -35,6 +35,7 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status"] });
       queryClient.setQueryData(["favorites", playerId, "status"], { isFavorited: true });
       toast({
         title: "Player starred",
@@ -56,6 +57,7 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status"] });
       queryClient.setQueryData(["favorites", playerId, "status"], { isFavorited: false });
       toast({
         title: "Player unstarred",
@@ -108,7 +110,7 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
       title={isFavorited ? "Remove from favorites" : "Add to favorites"}
     >
       <Star
-        className={`${iconSize} ${isFavorited ? "fill-current" : ""} transition-colors`}
+        className={`${iconSize} transition-colors ${isFavorited ? "fill-yellow-500 text-yellow-500" : "fill-none text-gray-400 hover:text-yellow-500"}`}
       />
     </Button>
   );
