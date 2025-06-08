@@ -47,7 +47,7 @@ export function Header() {
               <img 
                 src="/attached_assets/reposition-logo-final.png" 
                 alt="RePosition Logo" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
             </div>
             
