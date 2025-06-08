@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { searchFiltersSchema, insertPlayerSchema, insertClubSchema } from "@shared/schema";
 import { processMLAnalysis, processCsvData } from "./ml-processor";
-import { setupAuth, requireAuth } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Player Favorites API endpoints
-  app.post("/api/favorites/:playerId", requireAuth, async (req, res) => {
+  app.post("/api/favorites/:playerId", isAuthenticated, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
@@ -357,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/favorites/:playerId", requireAuth, async (req, res) => {
+  app.delete("/api/favorites/:playerId", isAuthenticated, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/favorites", requireAuth, async (req, res) => {
+  app.get("/api/favorites", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
       const favorites = await storage.getUserFavorites(userId);
@@ -385,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/favorites/:playerId/status", requireAuth, async (req, res) => {
+  app.get("/api/favorites/:playerId/status", isAuthenticated, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
