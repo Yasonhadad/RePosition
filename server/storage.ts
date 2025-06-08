@@ -24,6 +24,11 @@ import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull, inArray } from 
 import { getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
   // Players
   getPlayer(id: number): Promise<Player | undefined>;
   getPlayerByPlayerId(playerId: number): Promise<Player | undefined>;
@@ -83,6 +88,28 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   constructor() {}
+
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
 
   // Players
   async getPlayer(id: number): Promise<Player | undefined> {
