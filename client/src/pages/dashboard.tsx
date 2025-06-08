@@ -69,8 +69,8 @@ export default function Dashboard() {
 
   return (
     <div className="main-content p-6">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold gradient-text mb-3">
+      <div className="mb-8 text-center">
+        <h2 className="text-4xl font-bold gradient-text mb-3">
           Football Analytics Dashboard
         </h2>
       </div>
@@ -79,16 +79,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {statCards.map((stat, index) => (
           <Card key={index} className="stat-card hover-lift modern-shadow">
-            <CardContent className="p-6">
+            <CardContent className="p-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
+                  <p className="text-lg font-medium text-muted-foreground mb-3">
                     {stat.title}
                   </p>
-                  <p className="text-4xl font-bold stat-number">{stat.value}</p>
+                  <p className="text-5xl font-bold stat-number">{stat.value}</p>
                 </div>
-                <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                  <stat.icon className="h-7 w-7 text-primary" />
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                  <stat.icon className="h-10 w-10 text-primary" />
                 </div>
               </div>
             </CardContent>
