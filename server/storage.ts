@@ -4,7 +4,8 @@ import {
   clubs, 
   competitions, 
   position_compatibility, 
-  ml_analysis_cache, 
+  ml_analysis_cache,
+  player_favorites,
   type User,
   type InsertUser,
   type Player, 
@@ -16,7 +17,9 @@ import {
   type InsertCompetition, 
   type InsertPositionCompatibility, 
   type InsertMlAnalysisCache, 
-  type MlAnalysisCache, 
+  type MlAnalysisCache,
+  type InsertPlayerFavorite,
+  type PlayerFavorite,
   type SearchFilters 
 } from "@shared/schema";
 import { db } from "./db";
@@ -71,6 +74,12 @@ export interface IStorage {
   getMlAnalysisCache(cacheKey: string): Promise<MlAnalysisCache | undefined>;
   createMlAnalysisCache(cache: InsertMlAnalysisCache): Promise<MlAnalysisCache>;
   
+  // Player Favorites
+  addPlayerToFavorites(userId: number, playerId: number): Promise<PlayerFavorite>;
+  removePlayerFromFavorites(userId: number, playerId: number): Promise<void>;
+  getUserFavorites(userId: number): Promise<Player[]>;
+  isPlayerFavorited(userId: number, playerId: number): Promise<boolean>;
+
   // Analytics
   getTeamAnalytics(clubName: string): Promise<{
     avgCompatibility: number;
@@ -390,6 +399,49 @@ export class DatabaseStorage implements IStorage {
       .values(cache)
       .returning();
     return created;
+  }
+
+  // Player Favorites
+  async addPlayerToFavorites(userId: number, playerId: number): Promise<PlayerFavorite> {
+    const [favorite] = await db
+      .insert(player_favorites)
+      .values({ user_id: userId, player_id: playerId })
+      .onConflictDoNothing()
+      .returning();
+    return favorite;
+  }
+
+  async removePlayerFromFavorites(userId: number, playerId: number): Promise<void> {
+    await db
+      .delete(player_favorites)
+      .where(and(
+        eq(player_favorites.user_id, userId),
+        eq(player_favorites.player_id, playerId)
+      ));
+  }
+
+  async getUserFavorites(userId: number): Promise<Player[]> {
+    const favorites = await db
+      .select(getTableColumns(players))
+      .from(players)
+      .innerJoin(player_favorites, eq(players.id, player_favorites.player_id))
+      .where(eq(player_favorites.user_id, userId))
+      .orderBy(desc(player_favorites.created_at));
+    
+    return favorites;
+  }
+
+  async isPlayerFavorited(userId: number, playerId: number): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(player_favorites)
+      .where(and(
+        eq(player_favorites.user_id, userId),
+        eq(player_favorites.player_id, playerId)
+      ))
+      .limit(1);
+    
+    return !!favorite;
   }
 
   // Analytics

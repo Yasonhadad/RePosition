@@ -147,6 +147,15 @@ export const ml_analysis_cache = pgTable("ml_analysis_cache", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+export const player_favorites = pgTable("player_favorites", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  player_id: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  unique_user_player: index("unique_user_player_idx").on(table.user_id, table.player_id),
+}));
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -189,6 +198,11 @@ export const insertMlAnalysisCacheSchema = createInsertSchema(ml_analysis_cache)
   created_at: true,
 });
 
+export const insertPlayerFavoriteSchema = createInsertSchema(player_favorites).omit({
+  id: true,
+  created_at: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginData = z.infer<typeof loginSchema>;
@@ -203,6 +217,8 @@ export type InsertPositionCompatibility = z.infer<typeof insertPositionCompatibi
 export type PositionCompatibility = typeof position_compatibility.$inferSelect;
 export type InsertMlAnalysisCache = z.infer<typeof insertMlAnalysisCacheSchema>;
 export type MlAnalysisCache = typeof ml_analysis_cache.$inferSelect;
+export type InsertPlayerFavorite = z.infer<typeof insertPlayerFavoriteSchema>;
+export type PlayerFavorite = typeof player_favorites.$inferSelect;
 
 // Football positions
 export const POSITIONS = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"] as const;
