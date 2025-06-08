@@ -18,9 +18,10 @@ export function PositionCompatibility({ compatibility }: PositionCompatibilityPr
   ].filter(pos => pos.value !== null);
 
   const getCompatibilityColor = (value: number) => {
-    if (value >= 80) return "bg-blue-500";
-    if (value >= 70) return "bg-orange-500";
+    if (value >= 80) return "bg-green-500";
+    if (value >= 70) return "bg-blue-500";
     if (value >= 60) return "bg-yellow-500";
+    if (value >= 50) return "bg-orange-500";
     return "bg-gray-400";
   };
 
