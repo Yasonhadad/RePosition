@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Users, BarChart3, Zap, Shield, TrendingUp } from "lucide-react";
 import repositionLogo from "@assets/reposition-logo-final.png";
@@ -24,13 +25,11 @@ export function Landing() {
             Discover player insights, position compatibility, and build winning teams with data-driven decisions.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="text-lg px-8 py-3"
-              onClick={() => window.location.href = '/api/login'}
-            >
-              Sign In to Get Started
-            </Button>
+            <Link href="/auth">
+              <Button size="lg" className="text-lg px-8 py-3">
+                Sign In to Get Started
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -103,14 +102,15 @@ export function Landing() {
           <p className="text-muted-foreground mb-8">
             Join REPOSITION and unlock the power of football analytics
           </p>
-          <Button 
-            size="lg" 
-            variant="outline"
-            className="text-lg px-8 py-3"
-            onClick={() => window.location.href = '/api/login'}
-          >
-            Sign In Now
-          </Button>
+          <Link href="/auth">
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-lg px-8 py-3"
+            >
+              Sign In Now
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

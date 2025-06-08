@@ -13,6 +13,7 @@ import TeamAnalysis from "@/pages/team-analysis";
 import DataUpload from "@/pages/data-upload";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/pages/landing";
+import AuthPage from "@/pages/auth-page";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,7 +24,10 @@ function Router() {
       <main className="flex-1 overflow-y-auto">
         <Switch>
           {isLoading || !isAuthenticated ? (
-            <Route path="/" component={Landing} />
+            <>
+              <Route path="/" component={Landing} />
+              <Route path="/auth" component={AuthPage} />
+            </>
           ) : (
             <>
               <Route path="/" component={Dashboard} />
