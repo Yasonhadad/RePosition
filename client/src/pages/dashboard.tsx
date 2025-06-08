@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Trophy, Shield } from "lucide-react";
+import { Users, Trophy, Shield, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface GlobalStats {
@@ -190,7 +190,7 @@ export default function Dashboard() {
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-accent bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-accent group-hover:bg-opacity-20 transition-colors">
-                    <TrendingUp className="h-5 w-5 text-accent" />
+                    <Upload className="h-5 w-5 text-accent" />
                   </div>
                   <div>
                     <h4 className="font-medium text-dark">Upload Data</h4>
