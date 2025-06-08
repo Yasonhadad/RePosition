@@ -17,13 +17,13 @@ interface PlayerData {
   compatibility?: PositionCompatibilityType;
 }
 
-export function PlayerProfile({ player }: PlayerProfileProps) {
-  const [showPositionCompatibility, setShowPositionCompatibility] = useState(false);
+export function PlayerProfile({ player, showCompatibilityByDefault = false }: PlayerProfileProps) {
+  const [showPositionCompatibility, setShowPositionCompatibility] = useState(showCompatibilityByDefault);
   
-  // Reset position compatibility when player changes
+  // Reset position compatibility when player changes or update based on prop
   useEffect(() => {
-    setShowPositionCompatibility(false);
-  }, [player?.player_id]);
+    setShowPositionCompatibility(showCompatibilityByDefault);
+  }, [player?.player_id, showCompatibilityByDefault]);
   
   const { data: playerData, isLoading } = useQuery<PlayerData>({
     queryKey: ["/api/players", player?.player_id],

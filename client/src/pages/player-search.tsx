@@ -345,7 +345,10 @@ export default function PlayerSearch() {
 
         {/* Player Profile */}
         <div>
-          <PlayerProfile player={selectedPlayer} />
+          <PlayerProfile 
+            player={selectedPlayer} 
+            showCompatibilityByDefault={showCompatibilityForPlayer === selectedPlayer?.player_id}
+          />
         </div>
       </div>
     </div>
