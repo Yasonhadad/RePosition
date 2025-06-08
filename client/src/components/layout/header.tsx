@@ -53,7 +53,7 @@ export function Header() {
             
             <div>
               <h1 className="text-xl font-bold gradient-text">
-                Football Analytics
+                REPOSITION
               </h1>
               <p className="text-sm text-muted-foreground">
                 AI-powered position compatibility analysis
