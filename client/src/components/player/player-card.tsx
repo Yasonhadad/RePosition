@@ -84,7 +84,7 @@ export function PlayerCard({ player, isSelected, onClick, onComparePositions, co
         </div>
         <div className="text-right flex items-start space-x-2">
           <StarButton 
-            playerId={player.id} 
+            playerId={player.player_id} 
             size="icon" 
             variant="ghost" 
             className="mt-1"

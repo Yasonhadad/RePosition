@@ -100,10 +100,10 @@ export default function Favorites() {
                   player={player}
                   showProfileButton={true}
                   onClick={() => {
-                    window.location.href = `/player/${player.id}`;
+                    window.location.href = `/player/${player.player_id}`;
                   }}
                   onComparePositions={() => {
-                    window.location.href = `/player/${player.id}`;
+                    window.location.href = `/player/${player.player_id}`;
                   }}
                 />
               ))}
