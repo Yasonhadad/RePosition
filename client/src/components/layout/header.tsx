@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { CircleDot, User, BarChart3, Search, Users, Upload } from "lucide-react";
+import { CircleDot, User, BarChart3, Search, Users, Upload, LogOut, LogIn } from "lucide-react";
 import { Link } from "wouter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const [location] = useLocation();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { data: stats } = useQuery({
     queryKey: ["/api/stats"],
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -83,9 +86,42 @@ export function Header() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
-              <User className="text-white h-5 w-5" />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
+                  {isAuthenticated && user?.profileImageUrl ? (
+                    <img 
+                      src={user.profileImageUrl} 
+                      alt="Profile" 
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <User className="text-white h-5 w-5" />
+                  )}
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {isAuthenticated ? (
+                  <>
+                    {user && (
+                      <div className="px-2 py-1.5 text-sm">
+                        <div className="font-medium">{user.firstName || user.email}</div>
+                        <div className="text-muted-foreground truncate">{user.email}</div>
+                      </div>
+                    )}
+                    <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem onClick={() => window.location.href = '/api/login'}>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
