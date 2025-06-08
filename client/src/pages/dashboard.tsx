@@ -70,7 +70,7 @@ export default function Dashboard() {
     <div className="main-content p-6">
       <div className="mb-8">
         <h2 className="text-3xl font-bold gradient-text mb-3">
-          Football Analytics Dashboard
+          REPOSITION
         </h2>
         <p className="text-muted-foreground text-lg">
           AI-powered position compatibility analysis for strategic team building
