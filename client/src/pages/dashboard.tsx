@@ -98,48 +98,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Top Positions Chart */}
-      {stats?.topPositions && stats.topPositions.length > 0 && (
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-dark">
-              Most Compatible Positions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.topPositions.map((position, index) => (
-                <div key={position.position} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">
-                        {position.position}
-                      </span>
-                    </div>
-                    <span className="font-medium text-dark">
-                      {position.position}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full"
-                        style={{
-                          width: `${(position.count / stats.topPositions[0].count) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium text-dark w-12 text-right">
-                      {position.count}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Quick Actions */}
       <div className="mt-6">
         <Card className="shadow-sm">
