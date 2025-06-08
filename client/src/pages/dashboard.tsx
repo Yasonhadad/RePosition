@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Trophy, Shield, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "wouter";
 
 interface GlobalStats {
   totalPlayers: number;
@@ -105,56 +106,53 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a
-                href="/search"
-                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-accent/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
-                    <Users className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Search Players</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Find and analyze player compatibility
-                    </p>
+              <Link href="/search">
+                <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-accent/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                      <Users className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Search Players</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Find and analyze player compatibility
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </a>
+              </Link>
 
-              <a
-                href="/teams"
-                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
-                    <Shield className="h-6 w-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Team Analysis</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Analyze team formation and compatibility
-                    </p>
+              <Link href="/teams">
+                <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                      <Shield className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Team Analysis</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Analyze team formation and compatibility
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </a>
+              </Link>
 
-              <a
-                href="/upload"
-                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
-                    <Upload className="h-6 w-6 text-orange-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-1">Upload Data</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Import new player and team data
-                    </p>
+              <Link href="/upload">
+                <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                      <Upload className="h-6 w-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">Upload Data</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Import new player and team data
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>
