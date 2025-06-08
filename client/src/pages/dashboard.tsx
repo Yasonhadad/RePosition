@@ -72,9 +72,6 @@ export default function Dashboard() {
         <h2 className="text-3xl font-bold gradient-text mb-3">
           Football Analytics Dashboard
         </h2>
-        <p className="text-muted-foreground text-lg">
-          AI-powered position compatibility analysis for strategic team building
-        </p>
       </div>
 
       {/* Analytics Overview Cards */}
