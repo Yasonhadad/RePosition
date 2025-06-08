@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlayerCard } from "@/components/player/player-card";
+import { FavoritePlayerCard } from "@/components/player/favorite-player-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Heart } from "lucide-react";
 import type { Player } from "@shared/schema";
@@ -95,16 +95,9 @@ export default function Favorites() {
           ) : (
             <div className="space-y-4">
               {favorites.map((player) => (
-                <PlayerCard
+                <FavoritePlayerCard
                   key={player.id}
                   player={player}
-                  showProfileButton={true}
-                  onClick={() => {
-                    window.location.href = `/player/${player.player_id}`;
-                  }}
-                  onComparePositions={() => {
-                    window.location.href = `/player/${player.player_id}`;
-                  }}
                 />
               ))}
             </div>
