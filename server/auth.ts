@@ -81,22 +81,37 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("Registration attempt:", { email: req.body.email, firstName: req.body.firstName, lastName: req.body.lastName });
+      
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
         return res.status(400).json({ message: "משתמש עם מייל זה כבר קיים" });
       }
 
-      const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
-      });
+      const hashedPassword = await hashPassword(req.body.password);
+      console.log("Password hashed successfully");
+
+      const userData = {
+        email: req.body.email,
+        password: hashedPassword,
+        firstName: req.body.firstName || null,
+        lastName: req.body.lastName || null,
+      };
+      console.log("Creating user with data:", { ...userData, password: "[HIDDEN]" });
+
+      const user = await storage.createUser(userData);
+      console.log("User created successfully:", { id: user.id, email: user.email });
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
         res.status(201).json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
       });
     } catch (error) {
-      res.status(500).json({ message: "שגיאה ביצירת המשתמש" });
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "שגיאה ביצירת המשתמש", error: error.message });
     }
   });
 
