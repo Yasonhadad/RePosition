@@ -30,6 +30,10 @@ export interface IStorage {
   // Leagues
   getAllLeagues(): Promise<string[]>;
 
+  // Countries
+  getAllCountries(): Promise<string[]>;
+  getClubsByCountry(country: string): Promise<Club[]>;
+
   // Position Compatibility
   getPositionCompatibility(playerId: number): Promise<PositionCompatibility | undefined>;
   createPositionCompatibility(compatibility: InsertPositionCompatibility): Promise<PositionCompatibility>;
@@ -250,6 +254,16 @@ export class DatabaseStorage implements IStorage {
   async getAllLeagues(): Promise<string[]> {
     const result = await db.selectDistinct({ league: players.league }).from(players).where(sql`${players.league} IS NOT NULL AND ${players.league} != ''`);
     return result.map(row => row.league).filter((league): league is string => league !== null && league.trim() !== "");
+  }
+
+  // Countries
+  async getAllCountries(): Promise<string[]> {
+    const result = await db.selectDistinct({ country: clubs.country }).from(clubs).where(sql`${clubs.country} IS NOT NULL AND ${clubs.country} != ''`);
+    return result.map(row => row.country).filter((country): country is string => country !== null && country.trim() !== "").sort();
+  }
+
+  async getClubsByCountry(country: string): Promise<Club[]> {
+    return await db.select().from(clubs).where(eq(clubs.country, country)).orderBy(asc(clubs.name));
   }
 
   // Position Compatibility

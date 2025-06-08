@@ -152,6 +152,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all countries
+  app.get("/api/countries", async (req, res) => {
+    try {
+      const countries = await storage.getAllCountries();
+      res.json(countries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch countries" });
+    }
+  });
+
+  // Get clubs by country
+  app.get("/api/clubs/country/:country", async (req, res) => {
+    try {
+      const country = decodeURIComponent(req.params.country);
+      const clubs = await storage.getClubsByCountry(country);
+      res.json(clubs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch clubs by country" });
+    }
+  });
+
   // Get team analysis
   app.get("/api/teams/:clubName/analysis", async (req, res) => {
     try {

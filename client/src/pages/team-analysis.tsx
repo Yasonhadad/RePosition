@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormationView } from "@/components/team/formation-view";
 import { PlayerCard } from "@/components/player/player-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import type { Club } from "@shared/schema";
 
 interface TeamAnalysis {
@@ -24,15 +25,48 @@ interface TeamAnalysis {
     compatibility?: {
       best_pos: string;
       best_fit_score: number;
+      st_fit?: number;
+      lw_fit?: number;
+      rw_fit?: number;
+      cm_fit?: number;
+      cdm_fit?: number;
+      cam_fit?: number;
+      lb_fit?: number;
+      rb_fit?: number;
+      cb_fit?: number;
     };
   }>;
 }
 
+const POSITIONS = [
+  { value: "all", label: "כל העמדות" },
+  { value: "ST", label: "חלוץ מרכז (ST)" },
+  { value: "LW", label: "חלוץ שמאל (LW)" },
+  { value: "RW", label: "חלוץ ימין (RW)" },
+  { value: "CAM", label: "קשר התקפי (CAM)" },
+  { value: "CM", label: "קשר מרכז (CM)" },
+  { value: "CDM", label: "קשר הגנתי (CDM)" },
+  { value: "LB", label: "בק שמאל (LB)" },
+  { value: "RB", label: "בק ימין (RB)" },
+  { value: "CB", label: "מגן מרכז (CB)" }
+];
+
 export default function TeamAnalysis() {
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedClub, setSelectedClub] = useState<string>("");
+  const [selectedPosition, setSelectedPosition] = useState<string>("all");
+
+  const { data: countries = [], isLoading: countriesLoading } = useQuery<string[]>({
+    queryKey: ["/api/countries"],
+  });
 
   const { data: clubs = [], isLoading: clubsLoading } = useQuery<Club[]>({
-    queryKey: ["/api/clubs"],
+    queryKey: ["/api/clubs/country", selectedCountry],
+    queryFn: ({ queryKey }) => {
+      const [, , country] = queryKey;
+      return fetch(`/api/clubs/country/${encodeURIComponent(country)}`).then(res => res.json());
+    },
+    enabled: !!selectedCountry,
   });
 
   const { data: teamAnalysis, isLoading: analysisLoading } = useQuery<TeamAnalysis>({
