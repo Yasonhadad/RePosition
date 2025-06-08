@@ -256,14 +256,14 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => row.league).filter((league): league is string => league !== null && league.trim() !== "");
   }
 
-  // Countries
+  // Countries (using competitions as regions)
   async getAllCountries(): Promise<string[]> {
-    const result = await db.selectDistinct({ country: clubs.country }).from(clubs).where(sql`${clubs.country} IS NOT NULL AND ${clubs.country} != ''`);
-    return result.map(row => row.country).filter((country): country is string => country !== null && country.trim() !== "").sort();
+    const result = await db.selectDistinct({ competition: clubs.domestic_competition_id }).from(clubs).where(sql`${clubs.domestic_competition_id} IS NOT NULL AND ${clubs.domestic_competition_id} != ''`);
+    return result.map(row => row.competition).filter((competition): competition is string => competition !== null && competition.trim() !== "").sort();
   }
 
-  async getClubsByCountry(country: string): Promise<Club[]> {
-    return await db.select().from(clubs).where(eq(clubs.country, country)).orderBy(asc(clubs.name));
+  async getClubsByCountry(competition: string): Promise<Club[]> {
+    return await db.select().from(clubs).where(eq(clubs.domestic_competition_id, competition)).orderBy(asc(clubs.name));
   }
 
   // Position Compatibility
