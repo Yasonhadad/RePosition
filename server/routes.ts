@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { searchFiltersSchema, insertPlayerSchema, insertClubSchema } from "@shared/schema";
 import { processMLAnalysis, processCsvData } from "./ml-processor";
-import { setupAuth } from "./auth";
+import { setupAuth, requireAuth } from "./auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -19,17 +19,11 @@ const upload = multer({
   }
 });
 
-// Middleware to check authentication
-function isAuthenticated(req: any, res: any, next: any) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ error: "Unauthorized" });
-}
-
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   setupAuth(app);
+
+  // Auth routes - handled by auth.ts
   
   // Get all players with optional search filters
   app.get("/api/players", async (req, res) => {
@@ -340,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Player Favorites API endpoints
-  app.post("/api/favorites/:playerId", isAuthenticated, async (req, res) => {
+  app.post("/api/favorites/:playerId", requireAuth, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
@@ -363,7 +357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/favorites/:playerId", isAuthenticated, async (req, res) => {
+  app.delete("/api/favorites/:playerId", requireAuth, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
@@ -380,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/favorites", isAuthenticated, async (req, res) => {
+  app.get("/api/favorites", requireAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
       const favorites = await storage.getUserFavorites(userId);
@@ -391,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/favorites/:playerId/status", isAuthenticated, async (req, res) => {
+  app.get("/api/favorites/:playerId/status", requireAuth, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const userId = req.user!.id;
