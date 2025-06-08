@@ -106,7 +106,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Link href="/search">
+              <Link to="/search">
                 <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-accent/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
@@ -122,7 +122,7 @@ export default function Dashboard() {
                 </div>
               </Link>
 
-              <Link href="/teams">
+              <Link to="/teams">
                 <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
@@ -138,7 +138,7 @@ export default function Dashboard() {
                 </div>
               </Link>
 
-              <Link href="/upload">
+              <Link to="/upload">
                 <div className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
