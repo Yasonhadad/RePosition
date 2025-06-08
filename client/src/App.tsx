@@ -23,26 +23,18 @@ function Router() {
       <Header />
       <main className="flex-1 overflow-y-auto">
         <Switch>
-          {isLoading || !isAuthenticated ? (
+          <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
+          <Route path="/auth" component={isAuthenticated ? () => <Redirect to="/" /> : AuthPage} />
+          {isAuthenticated && (
             <>
-              <Route path="/" component={Landing} />
-              <Route path="/auth" component={AuthPage} />
-              <Route component={NotFound} />
-            </>
-          ) : (
-            <>
-              <Route path="/" component={Dashboard} />
-              <Route path="/auth">
-                <Redirect to="/" />
-              </Route>
               <Route path="/search" component={PlayerSearch} />
               <Route path="/players" component={PlayerSearch} />
               <Route path="/player/:id" component={PlayerDetails} />
               <Route path="/teams" component={TeamAnalysis} />
               <Route path="/upload" component={DataUpload} />
-              <Route component={NotFound} />
             </>
           )}
+          <Route component={NotFound} />
         </Switch>
       </main>
     </div>
