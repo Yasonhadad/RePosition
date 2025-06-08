@@ -15,7 +15,7 @@
   --card-foreground: 210 40% 98%;
   --border: 217 32% 17.5%;
   --input: 217 32% 17.5%;
-  --primary: 142 70% 45%; /* #22C55E Modern green */
+  --primary: 135 80% 45%; /* #16A34A RePosition logo green */
   --primary-foreground: 355.7 100% 97.3%;
   --secondary: 217 32% 17.5%;
   --secondary-foreground: 210 40% 98%;
@@ -23,15 +23,15 @@
   --accent-foreground: 26 83.3% 14.1%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --ring: 142 70% 45%;
+  --ring: 135 80% 45%;
   --radius: 0.75rem;
   
   /* Custom football analytics colors */
   --analytics: 217 91% 60%; /* #3B82F6 Modern blue */
-  --success: 142 70% 45%; /* #22C55E */
+  --success: 135 80% 45%; /* RePosition logo green */
   --warning: 47 96% 53%; /* #F59E0B */
   --info: 199 89% 48%; /* #0EA5E9 */
-  --gradient-start: 142 70% 45%;
+  --gradient-start: 135 80% 45%;
   --gradient-end: 217 91% 60%;
 }
 
