@@ -3,39 +3,18 @@ import { useLocation } from "wouter";
 import { CircleDot, User, BarChart3, Search, Users, Upload, LogOut, LogIn } from "lucide-react";
 import { Link } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
   const [location] = useLocation();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const { user, logoutMutation } = useAuth();
+  const isAuthenticated = !!user;
   
   const { data: stats } = useQuery({
     queryKey: ["/api/stats"],
     refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
   });
 
   const navigation = [
