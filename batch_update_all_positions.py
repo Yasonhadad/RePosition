@@ -113,26 +113,16 @@ def batch_update_all_positions():
         
         # Batch insert/update
         if batch_inserts:
-            cursor.executemany('''
-                INSERT INTO position_compatibility 
-                (player_id, natural_pos, st_fit, lw_fit, rw_fit, cm_fit, cdm_fit, cam_fit, lb_fit, rb_fit, cb_fit, best_pos, best_fit_score, best_fit_pct, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                ON CONFLICT (player_id) DO UPDATE SET
-                    natural_pos = EXCLUDED.natural_pos,
-                    st_fit = EXCLUDED.st_fit,
-                    lw_fit = EXCLUDED.lw_fit,
-                    rw_fit = EXCLUDED.rw_fit,
-                    cm_fit = EXCLUDED.cm_fit,
-                    cdm_fit = EXCLUDED.cdm_fit,
-                    cam_fit = EXCLUDED.cam_fit,
-                    lb_fit = EXCLUDED.lb_fit,
-                    rb_fit = EXCLUDED.rb_fit,
-                    cb_fit = EXCLUDED.cb_fit,
-                    best_pos = EXCLUDED.best_pos,
-                    best_fit_score = EXCLUDED.best_fit_score,
-                    best_fit_pct = EXCLUDED.best_fit_pct,
-                    created_at = NOW()
-            ''', batch_inserts)
+            for insert_data in batch_inserts:
+                cursor.execute('''
+                    DELETE FROM position_compatibility WHERE player_id = %s
+                ''', (insert_data[0],))
+                
+                cursor.execute('''
+                    INSERT INTO position_compatibility 
+                    (player_id, natural_pos, st_fit, lw_fit, rw_fit, cm_fit, cdm_fit, cam_fit, lb_fit, rb_fit, cb_fit, best_pos, best_fit_score, best_fit_pct, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                ''', insert_data)
         
         conn.commit()
         total_processed += len(batch_inserts)
