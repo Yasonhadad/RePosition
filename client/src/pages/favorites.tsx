@@ -98,9 +98,12 @@ export default function Favorites() {
                 <PlayerCard
                   key={player.id}
                   player={player}
+                  showProfileButton={true}
                   onClick={() => {
-                    // Navigate to player details if needed
-                    window.location.href = `/players/${player.id}`;
+                    window.location.href = `/player/${player.id}`;
+                  }}
+                  onComparePositions={() => {
+                    window.location.href = `/player/${player.id}`;
                   }}
                 />
               ))}

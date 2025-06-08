@@ -12,9 +12,10 @@ interface PlayerCardProps {
     best_pos: string;
     best_fit_score: number;
   };
+  showProfileButton?: boolean;
 }
 
-export function PlayerCard({ player, isSelected, onClick, onComparePositions, compatibility }: PlayerCardProps) {
+export function PlayerCard({ player, isSelected, onClick, onComparePositions, compatibility, showProfileButton }: PlayerCardProps) {
   const getPlayerInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
@@ -114,7 +115,7 @@ export function PlayerCard({ player, isSelected, onClick, onComparePositions, co
                   onComparePositions?.();
                 }}
               >
-                Compare Positions
+                {showProfileButton ? "View Profile" : "Compare Positions"}
               </Button>
             )}
           </div>
