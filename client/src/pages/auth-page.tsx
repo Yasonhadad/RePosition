@@ -47,14 +47,14 @@ export default function AuthPage() {
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "התחברות בוצעה בהצלחה",
-        description: `ברוך הבא, ${user.firstName || user.email}!`,
+        title: "Login successful",
+        description: `Welcome back, ${user.firstName || user.email}!`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "שגיאה בהתחברות",
-        description: error.message || "מייל או סיסמא שגויים",
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     },
@@ -73,14 +73,14 @@ export default function AuthPage() {
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "הרישום בוצע בהצלחה",
-        description: `ברוך הבא, ${user.firstName || user.email}!`,
+        title: "Registration successful",
+        description: `Welcome to REPOSITION, ${user.firstName || user.email}!`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "שגיאה ברישום",
-        description: error.message || "שגיאה ביצירת החשבון",
+        title: "Registration failed",
+        description: error.message || "Failed to create account",
         variant: "destructive",
       });
     },
