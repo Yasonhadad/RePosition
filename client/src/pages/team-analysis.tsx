@@ -39,16 +39,16 @@ interface TeamAnalysis {
 }
 
 const POSITIONS = [
-  { value: "all", label: "כל העמדות" },
-  { value: "ST", label: "חלוץ מרכז (ST)" },
-  { value: "LW", label: "חלוץ שמאל (LW)" },
-  { value: "RW", label: "חלוץ ימין (RW)" },
-  { value: "CAM", label: "קשר התקפי (CAM)" },
-  { value: "CM", label: "קשר מרכז (CM)" },
-  { value: "CDM", label: "קשר הגנתי (CDM)" },
-  { value: "LB", label: "בק שמאל (LB)" },
-  { value: "RB", label: "בק ימין (RB)" },
-  { value: "CB", label: "מגן מרכז (CB)" }
+  { value: "all", label: "All Positions" },
+  { value: "ST", label: "Striker (ST)" },
+  { value: "LW", label: "Left Winger (LW)" },
+  { value: "RW", label: "Right Winger (RW)" },
+  { value: "CAM", label: "Attacking Midfielder (CAM)" },
+  { value: "CM", label: "Central Midfielder (CM)" },
+  { value: "CDM", label: "Defensive Midfielder (CDM)" },
+  { value: "LB", label: "Left Back (LB)" },
+  { value: "RB", label: "Right Back (RB)" },
+  { value: "CB", label: "Center Back (CB)" }
 ];
 
 export default function TeamAnalysis() {
@@ -99,9 +99,9 @@ export default function TeamAnalysis() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-dark mb-2">ניתוח קבוצה</h2>
+        <h2 className="text-2xl font-bold text-dark mb-2">Team Analysis</h2>
         <p className="text-gray-600">
-          נתח הרכב קבוצה והתאמת שחקנים לעמדות
+          Analyze team formation and player position compatibility
         </p>
       </div>
 
@@ -109,32 +109,32 @@ export default function TeamAnalysis() {
       <Card className="shadow-sm mb-6">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-dark">
-            בחירת קבוצה
+            Select Team
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* League Selection */}
+            {/* Country Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                ליגה
+                Country
               </label>
               <Select value={selectedCountry} onValueChange={(value) => {
                 setSelectedCountry(value);
                 setSelectedClub(""); // Reset club selection
               }}>
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
-                  <SelectValue placeholder="בחר ליגה..." />
+                  <SelectValue placeholder="Select country..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {leaguesLoading ? (
+                  {countriesLoading ? (
                     <div className="p-2">
                       <Skeleton className="h-8 w-32" />
                     </div>
                   ) : (
-                    leagues.map((league) => (
-                      <SelectItem key={league} value={league}>
-                        {league}
+                    countries.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        {country}
                       </SelectItem>
                     ))
                   )}
@@ -145,7 +145,7 @@ export default function TeamAnalysis() {
             {/* Club Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                קבוצה
+                Club
               </label>
               <Select 
                 value={selectedClub} 
@@ -153,7 +153,7 @@ export default function TeamAnalysis() {
                 disabled={!selectedCountry}
               >
                 <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
-                  <SelectValue placeholder={selectedCountry ? "בחר קבוצה..." : "בחר ליגה תחילה"} />
+                  <SelectValue placeholder={selectedCountry ? "Select club..." : "Select country first"} />
                 </SelectTrigger>
                 <SelectContent>
                   {clubsLoading ? (
@@ -183,14 +183,14 @@ export default function TeamAnalysis() {
           <Card className="shadow-sm mb-6">
             <CardHeader>
               <CardTitle className="text-lg font-semibold text-dark">
-                סינון לפי עמדה
+                Filter by Position
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="max-w-md">
                 <Select value={selectedPosition} onValueChange={setSelectedPosition}>
                   <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary">
-                    <SelectValue placeholder="בחר עמדה לבדיקה..." />
+                    <SelectValue placeholder="Select position to analyze..." />
                   </SelectTrigger>
                   <SelectContent>
                     {POSITIONS.map((position) => (
@@ -222,7 +222,7 @@ export default function TeamAnalysis() {
             <Card className="shadow-sm mb-6">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-dark">
-                  סטטיסטיקות קבוצה - {teamAnalysis.clubName}
+                  Team Statistics - {teamAnalysis.clubName}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -231,26 +231,26 @@ export default function TeamAnalysis() {
                     <div className="text-2xl font-bold text-primary">
                       {teamAnalysis.analytics.avgCompatibility.toFixed(1)}%
                     </div>
-                    <div className="text-sm text-gray-600">ממוצע התאמה</div>
+                    <div className="text-sm text-gray-600">Avg Compatibility</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-analytics">
                       {teamAnalysis.analytics.bestPosition}
                     </div>
-                    <div className="text-sm text-gray-600">עמדה חזקה ביותר</div>
+                    <div className="text-sm text-gray-600">Strongest Position</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-accent">
                       {teamAnalysis.analytics.playerCount}
                     </div>
-                    <div className="text-sm text-gray-600">סה״כ שחקנים</div>
+                    <div className="text-sm text-gray-600">Total Players</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <div className="text-2xl font-bold text-primary">
                       {filteredPlayers.length}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {selectedPosition === "all" ? "כל השחקנים" : `מתאימים ל-${POSITIONS.find(p => p.value === selectedPosition)?.label}`}
+                      {selectedPosition === "all" ? "All Players" : `Suitable for ${POSITIONS.find(p => p.value === selectedPosition)?.label}`}
                     </div>
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export default function TeamAnalysis() {
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-dark">
-                  שחקני הקבוצה
+                  Team Players
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -305,11 +305,11 @@ export default function TeamAnalysis() {
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-dark">
-                  שחקני הקבוצה ({filteredPlayers.length} מתוך {teamAnalysis.players.length})
+                  Team Players ({filteredPlayers.length} of {teamAnalysis.players.length})
                 </CardTitle>
                 {selectedPosition !== "all" && (
                   <p className="text-sm text-gray-600">
-                    מציג שחקנים עם התאמה מעל 50% ל{POSITIONS.find(p => p.value === selectedPosition)?.label}
+                    Showing players with 50%+ compatibility for {POSITIONS.find(p => p.value === selectedPosition)?.label}
                   </p>
                 )}
               </CardHeader>
@@ -318,8 +318,8 @@ export default function TeamAnalysis() {
                   <div className="text-center py-8">
                     <p className="text-gray-500">
                       {selectedPosition === "all" 
-                        ? "לא נמצאו שחקנים בקבוצה זו."
-                        : `לא נמצאו שחקנים מתאימים לעמדת ${POSITIONS.find(p => p.value === selectedPosition)?.label}.`
+                        ? "No players found in this team."
+                        : `No suitable players found for ${POSITIONS.find(p => p.value === selectedPosition)?.label} position.`
                       }
                     </p>
                   </div>
