@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { StarButton } from "@/components/ui/star-button";
 import { ArrowLeft, Star, TrendingUp, User, MapPin, Calendar, DollarSign } from "lucide-react";
 import { Link } from "wouter";
 import { PositionCompatibility } from "@/components/player/position-compatibility";
@@ -199,8 +200,15 @@ export default function PlayerDetails() {
                     </span>
                   </div>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-dark mb-2">{player.name}</h1>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-3xl font-bold text-dark">{player.name}</h1>
+                    <StarButton 
+                      playerId={player.player_id} 
+                      size="md" 
+                      variant="outline"
+                    />
+                  </div>
                   <p className="text-lg text-gray-600 mb-3">{player.current_club_name}</p>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="default" className="bg-primary">
