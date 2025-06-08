@@ -353,7 +353,7 @@ export default function TeamAnalysis() {
                                     {player.sub_position}
                                   </Badge>
                                   <span className="text-xs text-gray-500">
-                                    {player.age} שנים
+                                    {player.age} years
                                   </span>
                                   <span className="text-xs text-gray-500">
                                     OVR {player.ovr}
@@ -372,7 +372,7 @@ export default function TeamAnalysis() {
                                     {positionScore?.toFixed(1)}%
                                   </div>
                                   <p className="text-xs text-gray-500">
-                                    {selectedPosition === "all" ? "הטוב ביותר: " : "התאמה ל"}{positionLabel}
+                                    {selectedPosition === "all" ? "Best: " : "Fit for "}{positionLabel}
                                   </p>
                                   {selectedPosition !== "all" && (
                                     <div className="flex gap-1 mt-2">
