@@ -56,15 +56,15 @@ export default function TeamAnalysis() {
   const [selectedClub, setSelectedClub] = useState<string>("");
   const [selectedPosition, setSelectedPosition] = useState<string>("all");
 
-  const { data: leagues = [], isLoading: leaguesLoading } = useQuery<string[]>({
+  const { data: countries = [], isLoading: countriesLoading } = useQuery<string[]>({
     queryKey: ["/api/countries"],
   });
 
   const { data: clubs = [], isLoading: clubsLoading } = useQuery<Club[]>({
     queryKey: ["/api/clubs/country", selectedCountry],
     queryFn: ({ queryKey }) => {
-      const [, , league] = queryKey;
-      return fetch(`/api/clubs/country/${encodeURIComponent(league as string)}`).then(res => res.json());
+      const [, , country] = queryKey;
+      return fetch(`/api/clubs/country/${encodeURIComponent(country as string)}`).then(res => res.json());
     },
     enabled: !!selectedCountry,
   });

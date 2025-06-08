@@ -33,6 +33,7 @@ export interface IStorage {
   // Countries
   getAllCountries(): Promise<string[]>;
   getClubsByCountry(country: string): Promise<Club[]>;
+  getLeaguesByCountry(country: string): Promise<string[]>;
 
   // Position Compatibility
   getPositionCompatibility(playerId: number): Promise<PositionCompatibility | undefined>;
@@ -256,14 +257,30 @@ export class DatabaseStorage implements IStorage {
     return result.map(row => row.league).filter((league): league is string => league !== null && league.trim() !== "");
   }
 
-  // Countries (using competitions as regions)
+  // Countries (using competitions table)
   async getAllCountries(): Promise<string[]> {
-    const result = await db.selectDistinct({ competition: clubs.domestic_competition_id }).from(clubs).where(sql`${clubs.domestic_competition_id} IS NOT NULL AND ${clubs.domestic_competition_id} != ''`);
-    return result.map(row => row.competition).filter((competition): competition is string => competition !== null && competition.trim() !== "").sort();
+    const result = await db.selectDistinct({ country: competitions.country_name }).from(competitions).where(sql`${competitions.country_name} IS NOT NULL AND ${competitions.country_name} != ''`);
+    return result.map(row => row.country).filter((country): country is string => country !== null && country.trim() !== "").sort();
   }
 
-  async getClubsByCountry(competition: string): Promise<Club[]> {
-    return await db.select().from(clubs).where(eq(clubs.domestic_competition_id, competition)).orderBy(asc(clubs.name));
+  async getClubsByCountry(country: string): Promise<Club[]> {
+    // Get competitions for the country first
+    const countryCompetitions = await db.select().from(competitions).where(eq(competitions.country_name, country));
+    
+    if (countryCompetitions.length === 0) {
+      return [];
+    }
+    
+    // Get clubs for all competitions from this country
+    const competitionIds = countryCompetitions.map(c => c.competition_id);
+    const clubs_result = await db.select().from(clubs).where(inArray(clubs.domestic_competition_id, competitionIds)).orderBy(asc(clubs.name));
+    
+    return clubs_result;
+  }
+
+  async getLeaguesByCountry(country: string): Promise<string[]> {
+    const countryCompetitions = await db.select().from(competitions).where(eq(competitions.country_name, country));
+    return countryCompetitions.map(c => c.name).filter(name => name && name.trim() !== "").sort();
   }
 
   // Position Compatibility

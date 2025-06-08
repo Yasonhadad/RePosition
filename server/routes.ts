@@ -173,6 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get leagues by country
+  app.get("/api/leagues/country/:country", async (req, res) => {
+    try {
+      const country = decodeURIComponent(req.params.country);
+      const leagues = await storage.getLeaguesByCountry(country);
+      res.json(leagues);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leagues by country" });
+    }
+  });
+
   // Get team analysis
   app.get("/api/teams/:clubName/analysis", async (req, res) => {
     try {
