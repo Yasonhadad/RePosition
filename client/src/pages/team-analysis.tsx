@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { Link } from "wouter";
 import { PlayerCard } from "@/components/player/player-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ interface TeamAnalysis {
   };
   players: Array<{
     id: number;
+    player_id: number;
     name: string;
     sub_position: string;
     age: number;
@@ -271,74 +272,77 @@ export default function TeamAnalysis() {
                         : POSITIONS.find(p => p.value === selectedPosition)?.label;
 
                       return (
-                        <div
+                        <Link 
                           key={player.id}
-                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                          href={`/player/${player.player_id}`}
+                          className="block"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-gradient-to-br from-primary to-analytics rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">
-                                  {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                </span>
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-dark">{player.name}</h4>
-                                <div className="flex items-center space-x-4 mt-1">
-                                  <Badge variant="secondary">
-                                    {player.sub_position}
-                                  </Badge>
-                                  <span className="text-xs text-gray-500">
-                                    {player.age} years
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    OVR {player.ovr}
+                          <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-16 h-16 bg-gradient-to-br from-primary to-analytics rounded-lg flex items-center justify-center">
+                                  <span className="text-white font-bold text-lg">
+                                    {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                   </span>
                                 </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              {player.compatibility ? (
-                                <>
-                                  <div className={`text-lg font-bold ${
-                                    (positionScore || 0) >= 80 ? 'text-green-600' :
-                                    (positionScore || 0) >= 60 ? 'text-yellow-600' :
-                                    'text-red-600'
-                                  }`}>
-                                    {positionScore?.toFixed(1)}%
+                                <div>
+                                  <h4 className="font-semibold text-dark hover:text-primary transition-colors">{player.name}</h4>
+                                  <div className="flex items-center space-x-4 mt-1">
+                                    <Badge variant="secondary">
+                                      {player.sub_position}
+                                    </Badge>
+                                    <span className="text-xs text-gray-500">
+                                      {player.age} years
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      OVR {player.ovr}
+                                    </span>
                                   </div>
-                                  <p className="text-xs text-gray-500">
-                                    {selectedPosition === "all" ? "Best: " : "Fit for "}{positionLabel}
-                                  </p>
-                                  {selectedPosition !== "all" && (
-                                    <div className="flex gap-1 mt-2">
-                                      {POSITIONS.slice(1).map((pos) => {
-                                        const score = getPositionScore(player, pos.value);
-                                        return (
-                                          <div
-                                            key={pos.value}
-                                            className={`text-xs px-1 py-0.5 rounded ${
-                                              score >= 70 ? 'bg-green-100 text-green-800' :
-                                              score >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                              'bg-gray-100 text-gray-600'
-                                            }`}
-                                            title={`${pos.label}: ${score.toFixed(1)}%`}
-                                          >
-                                            {pos.value}
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </>
-                              ) : (
-                                <div className="text-sm text-gray-400">
-                                  ללא ניתוח
                                 </div>
-                              )}
+                              </div>
+                              <div className="text-right">
+                                {player.compatibility ? (
+                                  <>
+                                    <div className={`text-lg font-bold ${
+                                      (positionScore || 0) >= 80 ? 'text-green-600' :
+                                      (positionScore || 0) >= 60 ? 'text-yellow-600' :
+                                      'text-red-600'
+                                    }`}>
+                                      {positionScore?.toFixed(1)}%
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                      {selectedPosition === "all" ? "Best: " : "Fit for "}{positionLabel}
+                                    </p>
+                                    {selectedPosition !== "all" && (
+                                      <div className="flex gap-1 mt-2">
+                                        {POSITIONS.slice(1).map((pos) => {
+                                          const score = getPositionScore(player, pos.value);
+                                          return (
+                                            <div
+                                              key={pos.value}
+                                              className={`text-xs px-1 py-0.5 rounded ${
+                                                score >= 70 ? 'bg-green-100 text-green-800' :
+                                                score >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-gray-100 text-gray-600'
+                                              }`}
+                                              title={`${pos.label}: ${score.toFixed(1)}%`}
+                                            >
+                                              {pos.value}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-gray-400">
+                                    ללא ניתוח
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })}
                   </div>
