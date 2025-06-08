@@ -12,6 +12,17 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table for simple auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 // User storage table for simple email/password authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -163,15 +174,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("אנא הכנס כתובת מייל תקינה"),
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const registerSchema = insertUserSchema.extend({
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "הסיסמאות לא תואמות",
+  message: "Passwords do not match",
   path: ["confirmPassword"],
 });
 
