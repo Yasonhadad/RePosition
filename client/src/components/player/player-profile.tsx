@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StarButton } from "@/components/ui/star-button";
 import { PositionCompatibility } from "./position-compatibility";
 import { Link } from "wouter";
 import type { Player, PositionCompatibility as PositionCompatibilityType } from "@shared/schema";
@@ -121,7 +122,14 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
               </span>
             </div>
           </div>
-          <h4 className="font-bold text-dark">{currentPlayer.name}</h4>
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <h4 className="font-bold text-dark">{currentPlayer.name}</h4>
+            <StarButton 
+              playerId={currentPlayer.player_id} 
+              size="sm" 
+              variant="ghost"
+            />
+          </div>
           <p className="text-sm text-gray-600">{currentPlayer.current_club_name}</p>
           <div className="flex items-center justify-center space-x-4 mt-2">
             <span className="text-xs bg-primary text-white px-2 py-1 rounded">

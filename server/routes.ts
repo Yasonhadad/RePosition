@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if player exists
-      const player = await storage.getPlayer(playerId);
+      const player = await storage.getPlayerByPlayerId(playerId);
       if (!player) {
         return res.status(404).json({ error: "Player not found" });
       }
