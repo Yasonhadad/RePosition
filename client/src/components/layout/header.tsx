@@ -38,7 +38,7 @@ export function Header() {
   ];
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="nav-modern glass-effect border-b border-white/10">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
@@ -52,26 +52,26 @@ export function Header() {
             </div>
             
             <div>
-              <h1 className="text-xl font-bold text-dark">
-                Player Analysis Dashboard
+              <h1 className="text-xl font-bold gradient-text">
+                Football Analytics
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 AI-powered position compatibility analysis
               </p>
             </div>
             
             {/* Navigation Links */}
-            <nav className="hidden md:flex space-x-6">
+            <nav className="hidden md:flex space-x-2">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                       item.current
-                        ? "bg-primary text-white"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+                        ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
+                        : "text-foreground hover:bg-white/10 hover:backdrop-blur-sm border border-transparent hover:border-white/20"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -84,11 +84,11 @@ export function Header() {
           
           <div className="flex items-center space-x-4">
             {/* Real-time data refresh indicator */}
-            <div className="flex items-center text-success">
-              <CircleDot className="h-3 w-3 mr-2" />
-              <span className="text-sm">Models Active</span>
+            <div className="flex items-center text-primary bg-primary/10 px-3 py-1 rounded-full backdrop-blur-sm border border-primary/20">
+              <CircleDot className="h-3 w-3 mr-2 animate-pulse" />
+              <span className="text-sm font-medium">Live Models</span>
             </div>
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
               <User className="text-white h-5 w-5" />
             </div>
           </div>

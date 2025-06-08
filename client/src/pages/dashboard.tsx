@@ -67,30 +67,30 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-dark mb-2">
-          Player Analysis Dashboard
+    <div className="main-content p-6">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold gradient-text mb-3">
+          Football Analytics Dashboard
         </h2>
-        <p className="text-gray-600">
-          AI-powered position compatibility analysis
+        <p className="text-muted-foreground text-lg">
+          AI-powered position compatibility analysis for strategic team building
         </p>
       </div>
 
       {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {statCards.map((stat, index) => (
-          <Card key={index} className="shadow-sm">
+          <Card key={index} className="stat-card hover-lift modern-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">
                     {stat.title}
                   </p>
-                  <p className="text-2xl font-bold text-dark">{stat.value}</p>
+                  <p className="text-4xl font-bold stat-number">{stat.value}</p>
                 </div>
-                <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                  <stat.icon className={`${stat.iconColor} h-6 w-6`} />
+                <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                  <stat.icon className="h-7 w-7 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -99,26 +99,26 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-6">
-        <Card className="shadow-sm">
+      <div className="mt-8">
+        <Card className="stat-card hover-lift modern-shadow">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-dark">
+            <CardTitle className="text-xl font-bold gradient-text">
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <a
                 href="/search"
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer group"
+                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:bg-opacity-20 transition-colors">
-                    <Users className="h-5 w-5 text-primary" />
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary/30 to-accent/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                    <Users className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-dark">Search Players</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-semibold text-foreground mb-1">Search Players</h4>
+                    <p className="text-sm text-muted-foreground">
                       Find and analyze player compatibility
                     </p>
                   </div>
@@ -127,15 +127,15 @@ export default function Dashboard() {
 
               <a
                 href="/teams"
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer group"
+                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-analytics bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-analytics group-hover:bg-opacity-20 transition-colors">
-                    <Shield className="h-5 w-5 text-analytics" />
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                    <Shield className="h-6 w-6 text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-dark">Team Analysis</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-semibold text-foreground mb-1">Team Analysis</h4>
+                    <p className="text-sm text-muted-foreground">
                       Analyze team formation and compatibility
                     </p>
                   </div>
@@ -144,15 +144,15 @@ export default function Dashboard() {
 
               <a
                 href="/upload"
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow cursor-pointer group"
+                className="p-6 glass-effect rounded-xl hover-lift transition-all duration-300 cursor-pointer group border border-white/10"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-accent bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-accent group-hover:bg-opacity-20 transition-colors">
-                    <Upload className="h-5 w-5 text-accent" />
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 group-hover:scale-110 transition-transform">
+                    <Upload className="h-6 w-6 text-orange-400" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-dark">Upload Data</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-semibold text-foreground mb-1">Upload Data</h4>
+                    <p className="text-sm text-muted-foreground">
                       Import new player and team data
                     </p>
                   </div>
