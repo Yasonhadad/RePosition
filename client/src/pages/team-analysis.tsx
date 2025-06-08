@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormationView } from "@/components/team/formation-view";
+
 import { PlayerCard } from "@/components/player/player-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -258,19 +258,7 @@ export default function TeamAnalysis() {
             </Card>
           ) : null}
 
-          {/* Formation View */}
-          {teamAnalysis && (
-            <Card className="shadow-sm mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-dark">
-                  Formation Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormationView players={teamAnalysis.players} />
-              </CardContent>
-            </Card>
-          )}
+
 
           {/* Player List */}
           {analysisLoading ? (
