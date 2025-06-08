@@ -272,14 +272,14 @@ export default function PlayerDetails() {
           {/* Detailed Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Detailed Attributes</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Detailed Attributes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {detailedStats.filter(stat => stat.value !== null && stat.value !== undefined).map((stat) => (
-                  <div key={stat.label} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium">{stat.label}</span>
-                    <span className="font-bold text-primary">{stat.value}</span>
+                  <div key={stat.label} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{stat.label}</span>
+                    <span className="font-bold text-primary dark:text-primary">{stat.value}</span>
                   </div>
                 ))}
               </div>
