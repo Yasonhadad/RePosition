@@ -42,6 +42,15 @@ export function Header() {
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
+            {/* RePosition Logo */}
+            <div className="flex items-center">
+              <img 
+                src="/attached_assets/reposition-logo-final.png" 
+                alt="RePosition Logo" 
+                className="h-12 w-auto"
+              />
+            </div>
+            
             <div>
               <h1 className="text-xl font-bold text-dark">
                 Player Analysis Dashboard
