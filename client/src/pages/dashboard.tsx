@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Brain, TrendingUp, Shield } from "lucide-react";
+import { Users, Trophy, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface GlobalStats {
   totalPlayers: number;
   totalTeams: number;
+  totalCompetitions: number;
   avgCompatibility: number;
   topPositions: Array<{ position: string; count: number }>;
 }
@@ -22,8 +23,8 @@ export default function Dashboard() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -50,25 +51,18 @@ export default function Dashboard() {
       iconColor: "text-primary",
     },
     {
-      title: "Active Models",
-      value: "9",
-      icon: Brain,
-      bgColor: "bg-analytics bg-opacity-10",
-      iconColor: "text-analytics",
-    },
-    {
-      title: "Avg Accuracy",
-      value: `${stats?.avgCompatibility?.toFixed(1) || "0.0"}%`,
-      icon: TrendingUp,
-      bgColor: "bg-success bg-opacity-10",
-      iconColor: "text-success",
-    },
-    {
-      title: "Teams Analyzed",
+      title: "Total Teams",
       value: stats?.totalTeams?.toLocaleString() || "0",
       icon: Shield,
       bgColor: "bg-accent bg-opacity-10",
       iconColor: "text-accent",
+    },
+    {
+      title: "Total Competitions",
+      value: stats?.totalCompetitions?.toLocaleString() || "0",
+      icon: Trophy,
+      bgColor: "bg-success bg-opacity-10",
+      iconColor: "text-success",
     },
   ];
 
@@ -84,7 +78,7 @@ export default function Dashboard() {
       </div>
 
       {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {statCards.map((stat, index) => (
           <Card key={index} className="shadow-sm">
             <CardContent className="p-6">

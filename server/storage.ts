@@ -377,11 +377,13 @@ export class DatabaseStorage implements IStorage {
   async getGlobalStats(): Promise<{
     totalPlayers: number;
     totalTeams: number;
+    totalCompetitions: number;
     avgCompatibility: number;
     topPositions: Array<{ position: string; count: number }>;
   }> {
     const allPlayers = await this.getAllPlayers();
     const allClubs = await this.getAllClubs();
+    const allCompetitions = await this.getAllCompetitions();
     
     // Get unique teams from players table
     const uniqueTeams = new Set(allPlayers.map(p => p.current_club_name).filter(name => name));
@@ -389,6 +391,7 @@ export class DatabaseStorage implements IStorage {
     return {
       totalPlayers: allPlayers.length,
       totalTeams: uniqueTeams.size,
+      totalCompetitions: allCompetitions.length,
       avgCompatibility: 0, // Will be updated when compatibility data is available
       topPositions: [
         { position: "ST", count: 0 },
