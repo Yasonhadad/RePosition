@@ -55,7 +55,7 @@ export function Header() {
               <h1 className="text-xl font-bold gradient-text">
                 REPOSITION
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 AI-powered position compatibility analysis
               </p>
             </div>
@@ -71,7 +71,7 @@ export function Header() {
                     className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                       item.current
                         ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg"
-                        : "text-foreground hover:bg-white/10 hover:backdrop-blur-sm border border-transparent hover:border-white/20"
+                        : "text-gray-700 hover:bg-black/10 hover:backdrop-blur-sm border border-transparent hover:border-black/20"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
