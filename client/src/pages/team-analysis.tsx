@@ -336,7 +336,7 @@ export default function TeamAnalysis() {
                                   </>
                                 ) : (
                                   <div className="text-sm text-gray-400">
-                                    ללא ניתוח
+                                    No Analysis
                                   </div>
                                 )}
                               </div>

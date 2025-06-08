@@ -1,6 +1,7 @@
 import { players, clubs, competitions, position_compatibility, ml_analysis_cache, type Player, type Club, type Competition, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertCompetition, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull, inArray } from "drizzle-orm";
+import { getTableColumns } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -70,8 +71,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayerByPlayerId(playerId: number): Promise<Player | undefined> {
+    // First get the basic player data
     const [player] = await db.select().from(players).where(eq(players.player_id, playerId));
-    return player || undefined;
+    if (!player) return undefined;
+    
+    // Try to get league information from competitions table via clubs
+    const leagueResult = await db
+      .select({ league_name: competitions.name })
+      .from(clubs)
+      .leftJoin(competitions, eq(clubs.domestic_competition_id, competitions.competition_id))
+      .where(eq(clubs.name, player.current_club_name))
+      .limit(1);
+    
+    const leagueName = leagueResult[0]?.league_name;
+    
+    // Return player with updated league information
+    return {
+      ...player,
+      league: leagueName || player.league || null
+    };
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {

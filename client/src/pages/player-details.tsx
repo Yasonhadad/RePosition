@@ -253,16 +253,16 @@ export default function PlayerDetails() {
           {/* Main Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Main Attributes</CardTitle>
+              <CardTitle className="text-dark dark:text-white">Main Attributes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {physicalStats.map((stat) => (
-                  <div key={stat.label} className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-dark mb-1">
+                  <div key={stat.label} className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-2xl font-bold text-dark dark:text-white mb-1">
                       {stat.value || "N/A"}
                     </div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</div>
                   </div>
                 ))}
               </div>
