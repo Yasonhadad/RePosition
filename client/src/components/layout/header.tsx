@@ -83,11 +83,6 @@ export function Header() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {/* Real-time data refresh indicator */}
-            <div className="flex items-center text-primary bg-primary/10 px-3 py-1 rounded-full backdrop-blur-sm border border-primary/20">
-              <CircleDot className="h-3 w-3 mr-2 animate-pulse" />
-              <span className="text-sm font-medium">Live Models</span>
-            </div>
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
               <User className="text-white h-5 w-5" />
             </div>
