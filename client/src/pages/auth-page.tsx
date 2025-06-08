@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Redirect } from "wouter";
-import repositionLogo from "@assets/reposition-logo-final.png";
+
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
