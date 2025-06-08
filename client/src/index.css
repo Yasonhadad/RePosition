@@ -15,24 +15,24 @@
   --card-foreground: 210 40% 98%;
   --border: 217 32% 17.5%;
   --input: 217 32% 17.5%;
-  --primary: 135 80% 45%; /* #16A34A RePosition logo green */
+  --primary: 135 60% 35%; /* Darker green from RePosition logo */
   --primary-foreground: 355.7 100% 97.3%;
   --secondary: 217 32% 17.5%;
   --secondary-foreground: 210 40% 98%;
-  --accent: 47 96% 53%; /* #F59E0B Modern amber */
+  --accent: 25 85% 45%; /* Darker orange from RePosition logo */
   --accent-foreground: 26 83.3% 14.1%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --ring: 135 80% 45%;
+  --ring: 135 60% 35%;
   --radius: 0.75rem;
   
   /* Custom football analytics colors */
   --analytics: 217 91% 60%; /* #3B82F6 Modern blue */
-  --success: 135 80% 45%; /* RePosition logo green */
-  --warning: 47 96% 53%; /* #F59E0B */
+  --success: 135 60% 35%; /* Darker RePosition logo green */
+  --warning: 25 85% 45%; /* Darker RePosition logo orange */
   --info: 199 89% 48%; /* #0EA5E9 */
-  --gradient-start: 135 80% 45%;
-  --gradient-end: 217 91% 60%;
+  --gradient-start: 135 60% 35%;
+  --gradient-end: 25 85% 45%;
 }
 
 .dark {
@@ -46,11 +46,11 @@
   --card-foreground: 0 0% 98%;
   --border: 240 4% 16%;
   --input: 240 4% 16%;
-  --primary: 149 100% 33%;
+  --primary: 135 60% 35%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 4% 16%;
   --secondary-foreground: 0 0% 98%;
-  --accent: 51 100% 50%;
+  --accent: 25 85% 45%;
   --accent-foreground: 0 0% 10%;
   --destructive: 0 63% 31%;
   --destructive-foreground: 0 0% 98%;
