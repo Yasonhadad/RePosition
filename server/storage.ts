@@ -1,4 +1,24 @@
-import { players, clubs, competitions, position_compatibility, ml_analysis_cache, type Player, type Club, type Competition, type PositionCompatibility, type InsertPlayer, type InsertClub, type InsertCompetition, type InsertPositionCompatibility, type InsertMlAnalysisCache, type MlAnalysisCache, type SearchFilters } from "@shared/schema";
+import { 
+  users,
+  players, 
+  clubs, 
+  competitions, 
+  position_compatibility, 
+  ml_analysis_cache, 
+  type User,
+  type UpsertUser,
+  type Player, 
+  type Club, 
+  type Competition, 
+  type PositionCompatibility, 
+  type InsertPlayer, 
+  type InsertClub, 
+  type InsertCompetition, 
+  type InsertPositionCompatibility, 
+  type InsertMlAnalysisCache, 
+  type MlAnalysisCache, 
+  type SearchFilters 
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull, inArray } from "drizzle-orm";
 import { getTableColumns } from "drizzle-orm";
