@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { searchFiltersSchema, insertPlayerSchema, insertClubSchema } from "@shared/schema";
 import { processMLAnalysis, processCsvData } from "./ml-processor";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, requireAuth } from "./auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -21,19 +21,9 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
-  await setupAuth(app);
+  setupAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Auth routes - handled by auth.ts
   
   // Get all players with optional search filters
   app.get("/api/players", async (req, res) => {
