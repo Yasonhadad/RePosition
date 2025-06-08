@@ -403,20 +403,32 @@ export class DatabaseStorage implements IStorage {
 
   // Player Favorites
   async addPlayerToFavorites(userId: number, playerId: number): Promise<PlayerFavorite> {
+    // Get the internal ID of the player using player_id
+    const player = await this.getPlayerByPlayerId(playerId);
+    if (!player) {
+      throw new Error("Player not found");
+    }
+    
     const [favorite] = await db
       .insert(player_favorites)
-      .values({ user_id: userId, player_id: playerId })
+      .values({ user_id: userId, player_id: player.id })
       .onConflictDoNothing()
       .returning();
     return favorite;
   }
 
   async removePlayerFromFavorites(userId: number, playerId: number): Promise<void> {
+    // Get the internal ID of the player using player_id
+    const player = await this.getPlayerByPlayerId(playerId);
+    if (!player) {
+      throw new Error("Player not found");
+    }
+    
     await db
       .delete(player_favorites)
       .where(and(
         eq(player_favorites.user_id, userId),
-        eq(player_favorites.player_id, playerId)
+        eq(player_favorites.player_id, player.id)
       ));
   }
 
@@ -432,12 +444,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async isPlayerFavorited(userId: number, playerId: number): Promise<boolean> {
+    // Get the internal ID of the player using player_id
+    const player = await this.getPlayerByPlayerId(playerId);
+    if (!player) {
+      return false;
+    }
+    
     const [favorite] = await db
       .select()
       .from(player_favorites)
       .where(and(
         eq(player_favorites.user_id, userId),
-        eq(player_favorites.player_id, playerId)
+        eq(player_favorites.player_id, player.id)
       ))
       .limit(1);
     
