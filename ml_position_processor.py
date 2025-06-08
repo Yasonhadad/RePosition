@@ -169,25 +169,26 @@ class AdvancedPositionProcessor:
         
         # Calculate COMBO scores
         result = {
-            "player_id": player_data.get("player_id"),
-            "natural_pos": player_data.get("sub_position") or player_data.get("position"),
-            "ovr": player_data.get("ovr", 0)
+            "player_id": int(player_data.get("player_id", 0)),
+            "natural_pos": str(player_data.get("sub_position") or player_data.get("position", "CM")),
+            "ovr": int(player_data.get("ovr", 0))
         }
         
-        best_combo_val = -np.inf
+        best_combo_val = -999999
         best_combo_pos = None
         
         for i, pos in enumerate(self.positions):
             combo = self.fit_w * fit_vals[pos] + self.rel_w * rel_array[i]
-            result[f"{pos.lower()}_fit"] = round(combo, 1)
+            combo_val = float(combo)  # Ensure Python float, not numpy
+            result[f"{pos.lower()}_fit"] = round(combo_val, 1)
             
-            if combo > best_combo_val:
-                best_combo_val = combo
+            if combo_val > best_combo_val:
+                best_combo_val = combo_val
                 best_combo_pos = pos
         
-        result["best_pos"] = best_combo_pos
-        result["best_fit_score"] = round(best_combo_val, 1)
-        result["best_fit_pct"] = round(best_combo_val, 1)
+        result["best_pos"] = str(best_combo_pos)
+        result["best_fit_score"] = round(float(best_combo_val), 1)
+        result["best_fit_pct"] = round(float(best_combo_val), 1)
         
         return result
     
