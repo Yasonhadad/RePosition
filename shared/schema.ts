@@ -174,15 +174,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("אנא הכנס כתובת מייל תקינה"),
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const registerSchema = insertUserSchema.extend({
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "הסיסמאות לא תואמות",
+  message: "Passwords do not match",
   path: ["confirmPassword"],
 });
 
