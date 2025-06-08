@@ -102,9 +102,7 @@ export default function Dashboard() {
           Advanced Football Analytics Platform
         </h3>
         <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-          Leverage cutting-edge machine learning algorithms to analyze player compatibility, optimize team formations, 
-          and make data-driven decisions. Our platform uses XGBoost models to predict position fitness and provides 
-          comprehensive insights for strategic team building in FIFA Ultimate Team.
+          Machine-Learning Engine that scores every player's ideal position and helps you build data-driven, high-performance squads.
         </p>
       </div>
 
