@@ -205,7 +205,7 @@ export default function PlayerDetails() {
                     <h1 className="text-3xl font-bold text-dark">{player.name}</h1>
                     <StarButton 
                       playerId={player.player_id} 
-                      size="md" 
+                      size="default" 
                       variant="outline"
                     />
                   </div>
@@ -261,7 +261,7 @@ export default function PlayerDetails() {
           {/* Main Stats */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-white">Main Attributes</CardTitle>
+              <CardTitle className="text-white">Main Attributes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -280,7 +280,7 @@ export default function PlayerDetails() {
           {/* Detailed Stats */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-gray-900 dark:text-white">Detailed Attributes</CardTitle>
+              <CardTitle className="text-white">Detailed Attributes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
