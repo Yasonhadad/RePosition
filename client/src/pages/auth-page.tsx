@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Redirect } from "wouter";
-
+import repositionLogo from "@assets/reposition-logo-final.png";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
@@ -142,9 +142,11 @@ export default function AuthPage() {
         {/* Left side - Auth forms */}
         <div className="flex flex-col items-center space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <div className="h-16 w-16 bg-green-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">R</span>
-            </div>
+            <img
+              src={repositionLogo}
+              alt="REPOSITION Logo"
+              className="h-16 w-auto"
+            />
             <div className="text-center">
               <h1 className="text-3xl font-bold">Welcome to RePosition</h1>
               <p className="text-muted-foreground">
