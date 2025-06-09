@@ -1,15 +1,18 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Use local PostgreSQL database connection
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://reposition_user:1234@localhost:5432/reposition_db';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+export const pool = new Pool({ 
+  connectionString: DATABASE_URL,
+  // Additional local connection options
+  host: 'localhost',
+  port: 5432,
+  database: 'reposition_db',
+  user: 'reposition_user',
+  password: '1234'
+});
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });

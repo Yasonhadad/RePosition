@@ -37,7 +37,7 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: new PostgresSessionStore({
-      conString: process.env.DATABASE_URL,
+      conString: 'postgresql://reposition_user:1234@localhost:5432/reposition_db',
       createTableIfMissing: true,
     }),
     cookie: {
