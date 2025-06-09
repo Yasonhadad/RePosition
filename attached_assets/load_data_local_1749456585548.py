@@ -14,19 +14,13 @@ DB_CONFIG = {
     'port': 5432,
     'database': 'reposition_db',
     'user': 'reposition_user',
-    'password': 'reposition123'
+    'password': '1234'
 }
 
 def connect_db():
     """Connect to PostgreSQL database"""
     try:
-        # Use Replit's database URL
-        database_url = os.environ.get('DATABASE_URL')
-        if not database_url:
-            print("DATABASE_URL environment variable not found")
-            return None
-        
-        conn = psycopg2.connect(database_url)
+        conn = psycopg2.connect(**DB_CONFIG)
         return conn
     except Exception as e:
         print(f"Error connecting to database: {e}")
@@ -36,7 +30,7 @@ def load_competitions():
     """Load competitions data"""
     print("Loading competitions...")
     try:
-        df = pd.read_csv('attached_assets/competitions_1749456052016.csv')
+        df = pd.read_csv('attached_assets/competitions.csv')
         print(f"Found {len(df)} competitions")
         
         conn = connect_db()
@@ -81,7 +75,7 @@ def load_clubs():
     """Load clubs data"""
     print("Loading clubs...")
     try:
-        df = pd.read_csv('attached_assets/clubs_1749456052018.csv')
+        df = pd.read_csv('attached_assets/clubs.csv')
         print(f"Found {len(df)} clubs")
         
         conn = connect_db()
@@ -98,8 +92,8 @@ def load_clubs():
         for _, row in df.iterrows():
             clubs_data.append((
                 int(row['club_id']) if pd.notna(row['club_id']) else None,
-                str(row['name']) if pd.notna(row['name']) else None,
-                str(row['domestic_competition_id']) if pd.notna(row['domestic_competition_id']) else None
+                str(row['club_name']) if pd.notna(row['club_name']) else None,
+                int(row['competition_id']) if pd.notna(row['competition_id']) else None
             ))
         
         # Insert data
@@ -172,7 +166,7 @@ def load_players():
     print("Loading players...")
     try:
         # Use the updated players dataset
-        df = pd.read_csv('attached_assets/players_1749456052013.csv')
+        df = pd.read_csv('attached_assets/players.csv')
         print(f"Using updated dataset with {len(df)} players")
         
         conn = connect_db()
@@ -264,7 +258,7 @@ def load_users():
     """Load users data"""
     print("Loading users...")
     try:
-        df = pd.read_csv('attached_assets/users_1749456052020.csv')
+        df = pd.read_csv('attached_assets/users.csv')
         print(f"Found {len(df)} users")
         
         conn = connect_db()
@@ -313,7 +307,7 @@ def load_position_compatibility():
     """Load position compatibility results"""
     print("Loading position compatibility results...")
     try:
-        df = pd.read_csv('attached_assets/results_1749456111247.csv')
+        df = pd.read_csv('attached_assets/results.csv')
         print(f"Found {len(df)} compatibility records")
         
         conn = connect_db()
@@ -351,18 +345,9 @@ def load_position_compatibility():
                 compatibility_data.append((
                     player_id,
                     safe_str(row['natural_pos']),
-                    safe_float(row['ST_combo']),
-                    safe_float(row['LW_combo']),
-                    safe_float(row['RW_combo']),
-                    safe_float(row['CM_combo']),
-                    safe_float(row['CDM_combo']),
-                    safe_float(row['CAM_combo']),
-                    safe_float(row['LB_combo']),
-                    safe_float(row['RB_combo']),
-                    safe_float(row['CB_combo']),
                     safe_str(row['best_combo_pos']),
                     safe_float(row['best_combo_score']),
-                    safe_int(row['OVR'])
+                    str(compatibility_scores).replace("'", '"')  # Convert to JSON string
                 ))
                 
                 processed += 1
@@ -383,23 +368,12 @@ def load_position_compatibility():
             execute_values(
                 cur,
                 """INSERT INTO position_compatibility (
-                    player_id, natural_pos, st_fit, lw_fit, rw_fit, cm_fit, 
-                    cdm_fit, cam_fit, lb_fit, rb_fit, cb_fit, best_pos, 
-                    best_fit_score, ovr
+                    player_id, natural_position, best_position, best_score, compatibility_scores
                 ) VALUES %s ON CONFLICT (player_id) DO UPDATE SET
-                natural_pos = EXCLUDED.natural_pos,
-                st_fit = EXCLUDED.st_fit,
-                lw_fit = EXCLUDED.lw_fit,
-                rw_fit = EXCLUDED.rw_fit,
-                cm_fit = EXCLUDED.cm_fit,
-                cdm_fit = EXCLUDED.cdm_fit,
-                cam_fit = EXCLUDED.cam_fit,
-                lb_fit = EXCLUDED.lb_fit,
-                rb_fit = EXCLUDED.rb_fit,
-                cb_fit = EXCLUDED.cb_fit,
-                best_pos = EXCLUDED.best_pos,
-                best_fit_score = EXCLUDED.best_fit_score,
-                ovr = EXCLUDED.ovr""",
+                natural_position = EXCLUDED.natural_position,
+                best_position = EXCLUDED.best_position,
+                best_score = EXCLUDED.best_score,
+                compatibility_scores = EXCLUDED.compatibility_scores""",
                 batch
             )
             print(f"Inserted compatibility batch {i//batch_size + 1}")
