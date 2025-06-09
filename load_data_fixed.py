@@ -30,7 +30,7 @@ def load_competitions():
     """Load competitions data"""
     print("Loading competitions...")
     try:
-        df = pd.read_csv('attached_assets/competitions.csv')
+        df = pd.read_csv('attached_assets/competitions_1749456052016.csv')
         print(f"Found {len(df)} competitions")
         
         conn = connect_db()
@@ -75,7 +75,7 @@ def load_clubs():
     """Load clubs data"""
     print("Loading clubs...")
     try:
-        df = pd.read_csv('attached_assets/clubs.csv')
+        df = pd.read_csv('attached_assets/clubs_1749456052018.csv')
         print(f"Found {len(df)} clubs")
         
         conn = connect_db()
@@ -165,13 +165,9 @@ def load_players():
     """Load players data according to actual schema"""
     print("Loading players...")
     try:
-        # Try the cleaned dataset first
-        if os.path.exists('attached_assets/players_joined_clean.csv'):
-            df = pd.read_csv('attached_assets/players_joined_clean.csv')
-            print(f"Using cleaned dataset with {len(df)} players")
-        else:
-            df = pd.read_csv('attached_assets/players.csv')
-            print(f"Using regular dataset with {len(df)} players")
+        # Use the updated players dataset
+        df = pd.read_csv('attached_assets/players_1749456052013.csv')
+        print(f"Using updated dataset with {len(df)} players")
         
         conn = connect_db()
         if not conn:
@@ -262,7 +258,7 @@ def load_users():
     """Load users data"""
     print("Loading users...")
     try:
-        df = pd.read_csv('attached_assets/users_1749455099706.csv')
+        df = pd.read_csv('attached_assets/users_1749456052020.csv')
         print(f"Found {len(df)} users")
         
         conn = connect_db()
@@ -311,7 +307,7 @@ def load_position_compatibility():
     """Load position compatibility results"""
     print("Loading position compatibility results...")
     try:
-        df = pd.read_csv('attached_assets/results_1749455214794.csv')
+        df = pd.read_csv('attached_assets/results_1749456111247.csv')
         print(f"Found {len(df)} compatibility records")
         
         conn = connect_db()
