@@ -364,20 +364,7 @@ def load_position_compatibility():
                     player_id, natural_pos, st_fit, lw_fit, rw_fit, cm_fit, 
                     cdm_fit, cam_fit, lb_fit, rb_fit, cb_fit, best_pos, 
                     best_fit_score, ovr
-                ) VALUES %s ON CONFLICT (player_id) DO UPDATE SET
-                natural_pos = EXCLUDED.natural_pos,
-                st_fit = EXCLUDED.st_fit,
-                lw_fit = EXCLUDED.lw_fit,
-                rw_fit = EXCLUDED.rw_fit,
-                cm_fit = EXCLUDED.cm_fit,
-                cdm_fit = EXCLUDED.cdm_fit,
-                cam_fit = EXCLUDED.cam_fit,
-                lb_fit = EXCLUDED.lb_fit,
-                rb_fit = EXCLUDED.rb_fit,
-                cb_fit = EXCLUDED.cb_fit,
-                best_pos = EXCLUDED.best_pos,
-                best_fit_score = EXCLUDED.best_fit_score,
-                ovr = EXCLUDED.ovr""",
+                ) VALUES %s""",
                 batch
             )
             print(f"Inserted compatibility batch {i//batch_size + 1}")
