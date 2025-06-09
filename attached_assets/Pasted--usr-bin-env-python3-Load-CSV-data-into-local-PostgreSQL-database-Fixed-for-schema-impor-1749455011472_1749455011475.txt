@@ -258,140 +258,6 @@ def load_players():
         print(f"Error loading players: {e}")
         return False
 
-def load_users():
-    """Load users data"""
-    print("Loading users...")
-    try:
-        df = pd.read_csv('attached_assets/users_1749455099706.csv')
-        print(f"Found {len(df)} users")
-        
-        conn = connect_db()
-        if not conn:
-            return False
-            
-        cur = conn.cursor()
-        
-        # Clear existing data (keep admin user if exists)
-        cur.execute("DELETE FROM users WHERE id > 1")
-        
-        # Prepare data
-        users_data = []
-        for _, row in df.iterrows():
-            users_data.append((
-                safe_int(row['id']),
-                safe_str(row['email']),
-                safe_str(row['password']),
-                safe_str(row['first_name']),
-                safe_str(row['last_name'])
-            ))
-        
-        # Insert data
-        execute_values(
-            cur,
-            """INSERT INTO users (id, email, password, first_name, last_name) 
-               VALUES %s ON CONFLICT (id) DO UPDATE SET
-               email = EXCLUDED.email,
-               password = EXCLUDED.password,
-               first_name = EXCLUDED.first_name,
-               last_name = EXCLUDED.last_name""",
-            users_data
-        )
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        print(f"✓ Loaded {len(users_data)} users")
-        return True
-        
-    except Exception as e:
-        print(f"Error loading users: {e}")
-        return False
-
-def load_position_compatibility():
-    """Load position compatibility results"""
-    print("Loading position compatibility results...")
-    try:
-        df = pd.read_csv('attached_assets/results_1749455214794.csv')
-        print(f"Found {len(df)} compatibility records")
-        
-        conn = connect_db()
-        if not conn:
-            return False
-            
-        cur = conn.cursor()
-        
-        # Clear existing data
-        cur.execute("DELETE FROM position_compatibility")
-        
-        # Prepare data
-        compatibility_data = []
-        processed = 0
-        
-        for _, row in df.iterrows():
-            try:
-                player_id = safe_int(row['player_id'])
-                if not player_id:
-                    continue
-                
-                # Create compatibility scores object
-                compatibility_scores = {
-                    'ST': safe_float(row['ST_combo']),
-                    'LW': safe_float(row['LW_combo']),
-                    'RW': safe_float(row['RW_combo']),
-                    'CM': safe_float(row['CM_combo']),
-                    'CDM': safe_float(row['CDM_combo']),
-                    'CAM': safe_float(row['CAM_combo']),
-                    'LB': safe_float(row['LB_combo']),
-                    'RB': safe_float(row['RB_combo']),
-                    'CB': safe_float(row['CB_combo'])
-                }
-                
-                compatibility_data.append((
-                    player_id,
-                    safe_str(row['natural_pos']),
-                    safe_str(row['best_combo_pos']),
-                    safe_float(row['best_combo_score']),
-                    str(compatibility_scores).replace("'", '"')  # Convert to JSON string
-                ))
-                
-                processed += 1
-                if processed % 500 == 0:
-                    print(f"Processed {processed} compatibility records...")
-                    
-            except Exception as e:
-                print(f"Error processing compatibility for player {row.get('player_id', 'unknown')}: {e}")
-                continue
-        
-        print(f"Prepared {len(compatibility_data)} compatibility records for insertion")
-        
-        # Insert data in batches
-        batch_size = 500
-        for i in range(0, len(compatibility_data), batch_size):
-            batch = compatibility_data[i:i + batch_size]
-            
-            execute_values(
-                cur,
-                """INSERT INTO position_compatibility (
-                    player_id, natural_position, best_position, best_score, compatibility_scores
-                ) VALUES %s ON CONFLICT (player_id) DO UPDATE SET
-                natural_position = EXCLUDED.natural_position,
-                best_position = EXCLUDED.best_position,
-                best_score = EXCLUDED.best_score,
-                compatibility_scores = EXCLUDED.compatibility_scores""",
-                batch
-            )
-            print(f"Inserted compatibility batch {i//batch_size + 1}")
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        print(f"✓ Loaded {len(compatibility_data)} compatibility records")
-        return True
-        
-    except Exception as e:
-        print(f"Error loading position compatibility: {e}")
-        return False
-
 def main():
     """Main function to load all data"""
     print("=== Loading Data to Local Database (Fixed Schema) ===")
@@ -399,20 +265,14 @@ def main():
     
     success = True
     
-    # Load in order (competitions -> clubs -> users -> players -> compatibility)
+    # Load in order (competitions -> clubs -> players)
     if not load_competitions():
         success = False
     
     if not load_clubs():
         success = False
         
-    if not load_users():
-        success = False
-        
     if not load_players():
-        success = False
-        
-    if not load_position_compatibility():
         success = False
     
     if success:
