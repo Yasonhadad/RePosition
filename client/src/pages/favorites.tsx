@@ -1,33 +1,50 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FavoritePlayerCard } from "@/components/player/favorite-player-card";
+import { UnifiedPlayerCard } from "@/components/player/unified-player-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Heart } from "lucide-react";
 import type { Player } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { useLocation } from "wouter";
 
 export default function Favorites() {
   const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
+
+  // Auto-refresh favorites when page is accessed
+  useEffect(() => {
+    if (isAuthenticated && user && location === "/favorites") {
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+    }
+  }, [location, isAuthenticated, user, queryClient]);
+
+  const handlePlayerClick = (player: Player) => {
+    setLocation(`/player/${player.player_id}`);
+  };
 
   const { data: favorites = [], isLoading } = useQuery<Player[]>({
     queryKey: ["/api/favorites"],
     enabled: isAuthenticated && !!user,
+    refetchOnWindowFocus: true, // Also refresh when window gains focus
+    staleTime: 0, // Always consider data stale to force refresh
   });
 
   if (!isAuthenticated) {
     return (
-      <div className="p-6">
+      <div className="p-6 pt-8">
         <div className="text-center py-12">
           <Star className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-600 mb-2">Login Required</h2>
-          <p className="text-gray-500">Please login to view your favorite players.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Login Required</h2>
+          <p className="text-white">Please login to view your favorite players.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-8">
       <Card className="shadow-sm mb-6">
         <CardHeader>
           <div className="flex items-center space-x-3">
@@ -78,10 +95,10 @@ export default function Favorites() {
           ) : favorites.length === 0 ? (
             <div className="text-center py-12">
               <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <h3 className="text-xl font-semibold text-white mb-2">
                 No Favorite Players Yet
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-white mb-4">
                 Start exploring players and click the star icon to add them to your favorites.
               </p>
               <a 
@@ -95,9 +112,11 @@ export default function Favorites() {
           ) : (
             <div className="space-y-4">
               {favorites.map((player) => (
-                <FavoritePlayerCard
+                <UnifiedPlayerCard
                   key={player.id}
                   player={player}
+                  variant="favorite"
+                  onClick={() => handlePlayerClick(player)}
                 />
               ))}
             </div>

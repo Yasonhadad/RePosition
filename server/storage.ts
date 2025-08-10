@@ -25,6 +25,7 @@ import {
 import { db } from "./db";
 import { eq, and, or, like, gte, lte, desc, asc, sql, isNotNull, inArray } from "drizzle-orm";
 import { getTableColumns } from "drizzle-orm";
+import unidecode from "unidecode";
 
 export interface IStorage {
   // User operations for simple email/password authentication
@@ -90,6 +91,7 @@ export interface IStorage {
   getGlobalStats(): Promise<{
     totalPlayers: number;
     totalTeams: number;
+    totalCompetitions: number;
     avgCompatibility: number;
     topPositions: Array<{ position: string; count: number }>;
   }>;
@@ -133,7 +135,7 @@ export class DatabaseStorage implements IStorage {
       .select({ league_name: competitions.name })
       .from(clubs)
       .leftJoin(competitions, eq(clubs.domestic_competition_id, competitions.competition_id))
-      .where(eq(clubs.name, player.current_club_name))
+      .where(player.current_club_name ? eq(clubs.name, player.current_club_name) : undefined)
       .limit(1);
     
     const leagueName = leagueResult[0]?.league_name;
@@ -162,8 +164,8 @@ export class DatabaseStorage implements IStorage {
     return player || undefined;
   }
 
-  async searchPlayers(filters: SearchFilters): Promise<Player[]> {
-    let query = db.select().from(players);
+  async searchPlayers(filters: SearchFilters, page: number = 1, pageSize: number = 50): Promise<Player[]> {
+    console.log('filters.team:', filters.team);
     const conditions = [];
 
     if (filters.name) {
@@ -201,26 +203,49 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(players.age, filters.ageMax));
     }
 
+    // Calculate offset for pagination
+    const offset = (page - 1) * pageSize;
+
+    // Build the query based on conditions
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    // Sort results
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case "overall":
-          query = query.orderBy(desc(players.ovr));
-          break;
-        case "age":
-          query = query.orderBy(asc(players.age));
-          break;
-        case "market_value":
-          query = query.orderBy(desc(players.market_value_in_eur));
-          break;
+      let query = db.select().from(players).where(and(...conditions));
+      
+      // Apply sorting
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case "overall":
+            return await query.orderBy(desc(players.ovr)).limit(pageSize).offset(offset);
+          case "age":
+            return await query.orderBy(asc(players.age)).limit(pageSize).offset(offset);
+          case "market_value":
+            return await query.orderBy(desc(players.market_value_in_eur)).limit(pageSize).offset(offset);
+          default:
+            return await query.limit(pageSize).offset(offset);
+        }
       }
+      
+      // Apply pagination
+      return await query.limit(pageSize).offset(offset);
+    } else {
+      // No conditions, just apply sorting
+      let query = db.select().from(players);
+      
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case "overall":
+            return await query.orderBy(desc(players.ovr)).limit(pageSize).offset(offset);
+          case "age":
+            return await query.orderBy(asc(players.age)).limit(pageSize).offset(offset);
+          case "market_value":
+            return await query.orderBy(desc(players.market_value_in_eur)).limit(pageSize).offset(offset);
+          default:
+            return await query.limit(pageSize).offset(offset);
+        }
+      }
+      
+      // Apply pagination
+      return await query.limit(pageSize).offset(offset);
     }
-
-    return await query;
   }
 
   async getAllPlayers(): Promise<Player[]> {
@@ -287,7 +312,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubName: string): Promise<Player[]> {
-    return await db.select().from(players).where(sql`LOWER(${players.current_club_name}) = LOWER(${clubName})`);
+    if (!clubName) return [];
+    // נרמול שם הקבוצה שמתקבל מהפרונטנד
+    const normalizedClubName = unidecode(clubName);
+    // חיפוש מדויק על ערך מנורמל
+    let result = await db.select().from(players).where(
+      sql`${players.current_club_name} ILIKE ${normalizedClubName}`
+    );
+    if (result.length === 0) {
+      // חיפוש חלקי על ערך מנורמל
+      result = await db.select().from(players).where(
+        sql`${players.current_club_name} ILIKE ${'%' + normalizedClubName + '%'}`
+      );
+    }
+    return result;
   }
 
   async getClubsByCompetition(competitionId: string): Promise<Club[]> {
@@ -456,8 +494,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(player_favorites.user_id, userId),
         eq(player_favorites.player_id, player.id)
-      ))
-      .limit(1);
+      ));
     
     return !!favorite;
   }
@@ -513,23 +550,33 @@ export class DatabaseStorage implements IStorage {
     avgCompatibility: number;
     topPositions: Array<{ position: string; count: number }>;
   }> {
-    const allPlayers = await this.getAllPlayers();
-    const allClubs = await this.getAllClubs();
-    const allCompetitions = await this.getAllCompetitions();
+    const totalPlayersResult = await db.select({ count: sql<number>`count(*)` }).from(players);
+    const totalTeamsResult = await db.select({ count: sql<number>`count(*)` }).from(clubs);
+    const totalCompetitionsResult = await db.select({ count: sql<number>`count(*)` }).from(competitions);
+
+    const compatibilityResult = await db.select({ 
+      avg: sql<number>`avg(${position_compatibility.best_fit_score})` 
+    }).from(position_compatibility);
     
-    // Use actual clubs count from clubs table
+    const positionsResult = await db.select({
+      position: position_compatibility.best_pos,
+      count: sql<number>`count(*)`
+    })
+    .from(position_compatibility)
+    .where(sql`${position_compatibility.best_pos} IS NOT NULL`)
+    .groupBy(position_compatibility.best_pos)
+    .orderBy(desc(sql<number>`count(*)`))
+    .limit(5);
+
     return {
-      totalPlayers: allPlayers.length,
-      totalTeams: allClubs.length,
-      totalCompetitions: allCompetitions.length,
-      avgCompatibility: 0, // Will be updated when compatibility data is available
-      topPositions: [
-        { position: "ST", count: 0 },
-        { position: "CM", count: 0 },
-        { position: "CB", count: 0 },
-        { position: "LW", count: 0 },
-        { position: "RW", count: 0 }
-      ],
+      totalPlayers: totalPlayersResult[0]?.count || 0,
+      totalTeams: totalTeamsResult[0]?.count || 0,
+      totalCompetitions: totalCompetitionsResult[0]?.count || 0,
+      avgCompatibility: Math.round((compatibilityResult[0]?.avg || 0) * 100) / 100,
+      topPositions: positionsResult.map(r => ({
+        position: r.position || "Unknown",
+        count: r.count
+      }))
     };
   }
 }

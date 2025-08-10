@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { CircleDot, User, BarChart3, Search, Users, Upload, LogOut, LogIn } from "lucide-react";
+import { BarChart3, Search, Users, User, LogOut, LogIn } from "lucide-react";
 import { Link } from "wouter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user, isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -28,6 +28,8 @@ export function Header() {
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       });
+      // Navigate to home page after successful logout
+      navigate("/");
     },
     onError: (error: Error) => {
       toast({
@@ -46,6 +48,12 @@ export function Header() {
       current: location === "/"
     },
     {
+      name: "Team Analysis",
+      href: "/teams",
+      icon: Users,
+      current: location === "/teams"
+    },
+    {
       name: "Player Search",
       href: "/search",
       icon: Search,
@@ -56,43 +64,33 @@ export function Header() {
       href: "/favorites",
       icon: User,
       current: location === "/favorites"
-    },
-    {
-      name: "Team Analysis",
-      href: "/teams",
-      icon: Users,
-      current: location === "/teams"
-    },
-    {
-      name: "Data Upload",
-      href: "/upload",
-      icon: Upload,
-      current: location === "/upload"
     }
   ];
 
   return (
-    <header className="nav-modern glass-effect border-b border-white/10">
+    <header className="fixed top-0 left-0 right-0 z-50 nav-modern glass-effect border-b border-white/10 backdrop-blur-sm bg-white/95">
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            {/* RePosition Logo */}
-            <div className="flex items-center">
-              <img 
-                src="/attached_assets/reposition-logo-final.png" 
-                alt="RePosition Logo" 
-                className="h-20 w-auto"
-              />
-            </div>
-            
-            <div>
-              <h1 className="text-xl font-bold gradient-text">
-                REPOSITION
-              </h1>
-              <p className="text-sm text-gray-600">
-                AI-powered position compatibility analysis
-              </p>
-            </div>
+            {/* RePosition Logo - Clickable to home */}
+            <Link href="/" className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="flex items-center">
+                <img 
+                  src="/attached_assets/reposition-logo-final.png" 
+                  alt="RePosition Logo" 
+                  className="h-20 w-auto"
+                />
+              </div>
+              
+              <div>
+                <h1 className="text-xl font-bold gradient-text">
+                  REPOSITION
+                </h1>
+                <p className="text-sm text-gray-600">
+                  AI-powered position compatibility analysis
+                </p>
+              </div>
+            </Link>
             
             {/* Navigation Links - Only show when authenticated */}
             {isAuthenticated && (

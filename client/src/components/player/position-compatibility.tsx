@@ -31,7 +31,7 @@ export function PositionCompatibility({ compatibility }: PositionCompatibilityPr
       <div className="space-y-3">
         {positions.map((position) => (
           <div key={position.name} className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700 w-8">
+            <span className="text-sm font-medium text-white w-8">
               {position.name}
             </span>
             <div className="flex items-center space-x-2 flex-1">

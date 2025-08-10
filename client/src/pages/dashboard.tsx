@@ -68,7 +68,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="main-content p-6">
+    <div className="main-content p-6 pt-8">
       <div className="mb-8 text-center">
         <h2 className="text-4xl font-bold gradient-text mb-3">
           Football Analytics Dashboard

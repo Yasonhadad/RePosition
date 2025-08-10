@@ -168,6 +168,16 @@
   min-height: 100vh;
 }
 
+/* Ensure proper spacing from header for all pages */
+body > div > main > div {
+  padding-top: 2rem !important;
+}
+
+/* Specific overrides for auth and landing pages */
+.min-h-screen {
+  padding-top: 5rem !important;
+}
+
 @layer utilities {
   .font-roboto {
     font-family: 'Roboto', sans-serif;

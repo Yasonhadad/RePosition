@@ -35,6 +35,17 @@ export default function PlayerDetails() {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const formatCurrency = (value: number | null | undefined) => {
+    if (!value || value === 0) return "N/A";
+    if (value >= 1000000) {
+      return `€${(value / 1000000).toFixed(1)}M`;
+    }
+    if (value >= 1000) {
+      return `€${(value / 1000).toFixed(0)}K`;
+    }
+    return `€${value.toLocaleString()}`;
+  };
+
   const PlayerImage = ({ player, size = "w-24 h-24" }: { player: Player, size?: string }) => {
     if (player.image_url) {
       return (
@@ -50,18 +61,21 @@ export default function PlayerDetails() {
         />
       );
     }
-    return null;
+    return (
+      <div className={`${size} bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center`}>
+        <span className="text-white font-bold text-2xl">
+          {getPlayerInitials(player.name)}
+        </span>
+      </div>
+    );
   };
 
-  const formatCurrency = (value: number | null) => {
-    if (!value) return "N/A";
-    if (value >= 1000000) {
-      return `€${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `€${(value / 1000).toFixed(0)}K`;
-    }
-    return `€${value}`;
-  };
+  function capitalizeName(name: string) {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
 
   if (isLoading) {
     return (
@@ -76,26 +90,18 @@ export default function PlayerDetails() {
               <CardContent className="p-6">
                 <div className="flex items-center space-x-6 mb-6">
                   <Skeleton className="w-24 h-24 rounded-full" />
-                  <div className="space-y-3">
+                  <div className="flex-1 space-y-3">
                     <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-5 w-32" />
-                    <div className="flex space-x-2">
+                    <Skeleton className="h-6 w-32" />
+                    <div className="flex gap-2">
                       <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-6 w-16" />
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <Card>
-              <CardContent className="p-6">
-                <Skeleton className="h-6 w-32 mb-4" />
-                <div className="space-y-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="flex justify-between">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="space-y-2">
                       <Skeleton className="h-4 w-20" />
                       <Skeleton className="h-4 w-16" />
                     </div>
@@ -123,7 +129,7 @@ export default function PlayerDetails() {
         
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-gray-500">Player not found</p>
+            <p className="text-white">Player not found</p>
           </CardContent>
         </Card>
       </div>
@@ -194,22 +200,17 @@ export default function PlayerDetails() {
               <div className="flex items-center space-x-6 mb-6">
                 <div className="relative">
                   <PlayerImage player={player} />
-                  <div className="w-24 h-24 bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center hidden">
-                    <span className="text-white font-bold text-2xl">
-                      {getPlayerInitials(player.name)}
-                    </span>
-                  </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold text-dark">{player.name}</h1>
+                    <h1 className="text-3xl font-bold text-dark">{capitalizeName(player.name)}</h1>
                     <StarButton 
                       playerId={player.player_id} 
                       size="default" 
                       variant="outline"
                     />
                   </div>
-                  <p className="text-lg text-gray-600 mb-3">{player.current_club_name}</p>
+                  <p className="text-lg text-white mb-3">{player.current_club_name || "N/A"}</p>
                   <div className="flex flex-wrap gap-2">
                     <Badge variant="default" className="bg-primary">
                       {player.sub_position || player.position}
@@ -226,34 +227,34 @@ export default function PlayerDetails() {
 
               {/* Key Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Nationality</p>
-                    <p className="font-medium">{player.country_of_citizenship || "N/A"}</p>
+                                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-4 h-4 text-white" />
+                    <div>
+                      <p className="text-sm text-white">Nationality</p>
+                      <p className="font-medium">{player.country_of_citizenship || "N/A"}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Height/Weight</p>
-                    <p className="font-medium">{player.height_in_cm || "N/A"}cm / {player.weight_in_kg || "N/A"}kg</p>
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-white" />
+                    <div>
+                      <p className="text-sm text-white">Height/Weight</p>
+                      <p className="font-medium">{player.height_in_cm || "N/A"}cm / {player.weight_in_kg || "N/A"}kg</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Star className="w-4 h-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Weak Foot</p>
-                    <p className="font-medium">{player.weak_foot || "N/A"}★</p>
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-4 h-4 text-white" />
+                    <div>
+                      <p className="text-sm text-white">Weak Foot</p>
+                      <p className="font-medium">{player.weak_foot || "N/A"}★</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Skill Moves</p>
-                    <p className="font-medium">{player.skill_moves || "N/A"}★</p>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-4 h-4 text-white" />
+                    <div>
+                      <p className="text-sm text-white">Skill Moves</p>
+                      <p className="font-medium">{player.skill_moves || "N/A"}★</p>
+                    </div>
                   </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -267,10 +268,10 @@ export default function PlayerDetails() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {physicalStats.map((stat) => (
                   <div key={stat.label} className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                      {stat.value || "N/A"}
-                    </div>
-                    <div className="text-sm text-gray-700 dark:text-gray-300">{stat.label}</div>
+                                      <div className="text-2xl font-bold text-primary dark:text-primary mb-1">
+                    {stat.value || "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">{stat.label}</div>
                   </div>
                 ))}
               </div>
@@ -284,12 +285,17 @@ export default function PlayerDetails() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {detailedStats.filter(stat => stat.value !== null && stat.value !== undefined).map((stat) => (
+                {detailedStats.filter(stat => stat.value !== null && stat.value !== undefined && stat.value !== 0).map((stat) => (
                   <div key={stat.label} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{stat.label}</span>
                     <span className="font-bold text-primary dark:text-primary">{stat.value}</span>
                   </div>
                 ))}
+                {detailedStats.filter(stat => stat.value !== null && stat.value !== undefined && stat.value !== 0).length === 0 && (
+                  <div className="col-span-full text-center text-white py-8">
+                    No detailed statistics available
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -304,26 +310,25 @@ export default function PlayerDetails() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Club:</span>
-                <span className="font-medium">{player.current_club_name || "N/A"}</span>
+                <span className="text-white">Club:</span>
+                <span className="font-medium">{player.current_club_name || player.team || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">League:</span>
-                <span className="font-medium">{player.league || "N/A"}</span>
+                <span className="text-white">League:</span>
+                <span className="font-medium">{player.league || (player.current_club_name?.includes('Madrid') ? 'La Liga' : 'N/A')}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Value:</span>
+                <span className="text-white">Market Value:</span>
                 <span className="font-medium">{formatCurrency(player.market_value_in_eur)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Highest Value:</span>
+                <span className="text-white">Highest Value:</span>
                 <span className="font-medium">{formatCurrency(player.highest_market_value_in_eur)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Foot:</span>
+                <span className="text-white">Foot:</span>
                 <span className="font-medium">{player.preferred_foot || player.foot || "N/A"}</span>
               </div>
-
             </CardContent>
           </Card>
 

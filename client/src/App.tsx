@@ -10,7 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import PlayerSearch from "@/pages/player-search";
 import PlayerDetails from "@/pages/player-details";
 import TeamAnalysis from "@/pages/team-analysis";
-import DataUpload from "@/pages/data-upload";
+
 import Favorites from "@/pages/favorites";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/pages/landing";
@@ -20,9 +20,9 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="flex-1 overflow-y-auto">
+      <main className="pt-4">
         <Switch>
           <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
           <Route path="/auth" component={isAuthenticated ? () => <Redirect to="/" /> : AuthPage} />
@@ -33,7 +33,7 @@ function Router() {
               <Route path="/player/:id" component={PlayerDetails} />
               <Route path="/favorites" component={Favorites} />
               <Route path="/teams" component={TeamAnalysis} />
-              <Route path="/upload" component={DataUpload} />
+
             </>
           )}
           <Route component={NotFound} />

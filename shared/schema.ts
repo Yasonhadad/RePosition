@@ -230,6 +230,7 @@ export const searchFiltersSchema = z.object({
   position: z.string().optional(),
   team: z.string().optional(),
   country: z.string().optional(),
+  citizenship: z.string().optional(),
   ageMin: z.number().optional(),
   ageMax: z.number().optional(),
   minCompatibility: z.number().optional(),

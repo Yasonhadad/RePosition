@@ -58,11 +58,18 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
     return null;
   };
 
+  function capitalizeName(name: string) {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
   if (!player) {
     return (
       <Card className="shadow-sm">
         <CardContent className="p-6 text-center">
-          <p className="text-gray-500">Select a player to view their profile</p>
+          <p className="text-white">Select a player to view their profile</p>
         </CardContent>
       </Card>
     );
@@ -123,19 +130,19 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
             </div>
           </div>
           <div className="flex items-center justify-center space-x-2 mb-2">
-            <h4 className="font-bold text-dark">{currentPlayer.name}</h4>
+            <h4 className="font-bold text-dark">{capitalizeName(currentPlayer.name)}</h4>
             <StarButton 
               playerId={currentPlayer.player_id} 
               size="sm" 
               variant="ghost"
             />
           </div>
-          <p className="text-sm text-gray-600">{currentPlayer.current_club_name}</p>
+          <p className="text-sm text-white">{currentPlayer.current_club_name}</p>
           <div className="flex items-center justify-center space-x-4 mt-2">
-            <span className="text-xs bg-primary text-white px-2 py-1 rounded">
+            <span className="text-xs bg-primary text-black px-2 py-1 rounded">
               {currentPlayer.sub_position || currentPlayer.position}
             </span>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-white">
               {currentPlayer.age} years
             </span>
           </div>
@@ -153,20 +160,22 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
           <h5 className="font-medium text-dark mb-3">Key Statistics</h5>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-gray-800">{currentPlayer.pac || "N/A"}</div>
-              <div className="text-xs text-gray-600">PACE</div>
+              <div className="text-lg font-bold text-black">{currentPlayer.pac || "N/A"}</div>
+              <div className="text-xs text-black">PACE</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-gray-800">{currentPlayer.sho || "N/A"}</div>
-              <div className="text-xs text-gray-600">SHOOTING</div>
+              <div className="text-lg font-bold text-black">{currentPlayer.sho || "N/A"}</div>
+              <div className="text-xs text-black">SHOOTING</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-gray-800">{currentPlayer.dri || "N/A"}</div>
-              <div className="text-xs text-gray-600">DRIBBLING</div>
+              <div className="text-lg font-bold text-black">{currentPlayer.dri || "N/A"}</div>
+              <div className="text-xs text-black">DRIBBLING</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-lg font-bold text-gray-800">{currentPlayer.ovr || "N/A"}</div>
-              <div className="text-xs text-gray-600">OVERALL</div>
+              <div className="text-lg font-bold text-black">{currentPlayer.ovr || "N/A"}</div>
+              <div className="text-xs text-black">OVERALL</div>
+              <div className="text-lg font-bold text-white">{currentPlayer.ovr || "N/A"}</div>
+              <div className="text-xs text-white">OVERALL</div>
             </div>
           </div>
         </div>

@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User storage table for simple email/password authentication
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  playerFavorites PlayerFavorite[]
+
+  @@map("users")
+}
+
+model Player {
+  id                        Int      @id @default(autoincrement())
+  playerId                  Int      @unique @map("player_id")
+  name                      String
+  countryOfCitizenship      String?  @map("country_of_citizenship")
+  dateOfBirth               String?  @map("date_of_birth")
+  subPosition               String?  @map("sub_position")
+  position                  String?
+  foot                      String?
+  heightInCm                Int?     @map("height_in_cm")
+  currentClubName           String?  @map("current_club_name")
+  marketValueInEur          Int?     @map("market_value_in_eur")
+  highestMarketValueInEur   Int?     @map("highest_market_value_in_eur")
+  clubId                    Int?     @map("club_id")
+  ovr                       Int?
+  pac                       Int?
+  sho                       Int?
+  pas                       Int?
+  dri                       Int?
+  def                       Int?
+  phy                       Int?
+  
+  // Detailed FIFA attributes
+  acceleration              Int?
+  sprintSpeed               Int?     @map("sprint_speed")
+  positioning               Int?
+  finishing                 Int?
+  shotPower                 Int?     @map("shot_power")
+  longShots                 Int?     @map("long_shots")
+  volleys                   Int?
+  penalties                 Int?
+  vision                    Int?
+  crossing                  Int?
+  freeKickAccuracy          Int?     @map("free_kick_accuracy")
+  shortPassing              Int?     @map("short_passing")
+  longPassing               Int?     @map("long_passing")
+  curve                     Int?
+  dribbling                 Int?
+  agility                   Int?
+  balance                   Int?
+  reactions                 Int?
+  ballControl               Int?     @map("ball_control")
+  composure                 Int?
+  interceptions             Int?
+  headingAccuracy           Int?     @map("heading_accuracy")
+  defAwareness              Int?     @map("def_awareness")
+  standingTackle            Int?     @map("standing_tackle")
+  slidingTackle             Int?     @map("sliding_tackle")
+  jumping                   Int?
+  stamina                   Int?
+  strength                  Int?
+  aggression                Int?
+  weakFoot                  Int?     @map("weak_foot")
+  skillMoves                Int?     @map("skill_moves")
+  preferredFoot             String?  @map("preferred_foot")
+  
+  // Additional info
+  league                    String?
+  team                      String?
+  weightInKg                Float?   @map("weight_in_kg")
+  age                       Int?
+  imageUrl                  String?  @map("image_url")
+  createdAt                 DateTime @default(now()) @map("created_at")
+
+  // Relations
+  positionCompatibility     PositionCompatibility?
+  playerFavorites           PlayerFavorite[]
+
+  @@map("players")
+}
+
+model Competition {
+  id                      Int      @id @default(autoincrement())
+  competitionId           String   @unique @map("competition_id")
+  competitionCode         String?  @map("competition_code")
+  name                    String
+  subType                 String?  @map("sub_type")
+  type                    String?
+  countryId               Int?     @map("country_id")
+  countryName             String?  @map("country_name")
+  domesticLeagueCode      String?  @map("domestic_league_code")
+  confederation           String?
+  url                     String?
+
+  // Relations
+  clubs                   Club[]
+
+  @@map("competitions")
+}
+
+model Club {
+  id                      Int      @id @default(autoincrement())
+  clubId                  Int      @unique @map("club_id")
+  clubCode                String?  @map("club_code")
+  name                    String
+  domesticCompetitionId   String?  @map("domestic_competition_id")
+  totalMarketValue        Int?     @map("total_market_value")
+  squadSize               Int?     @map("squad_size")
+  averageAge              Float?   @map("average_age")
+  foreignersNumber        Int?     @map("foreigners_number")
+  foreignersPercentage    Float?   @map("foreigners_percentage")
+  nationalTeamPlayers     Int?     @map("national_team_players")
+  stadiumName             String?  @map("stadium_name")
+  stadiumSeats            Int?     @map("stadium_seats")
+  netTransferRecord       String?  @map("net_transfer_record")
+  coachName               String?  @map("coach_name")
+  lastSeason              Int?     @map("last_season")
+
+  // Relations
+  competition             Competition? @relation(fields: [domesticCompetitionId], references: [competitionId])
+
+  @@map("clubs")
+}
+
+model PositionCompatibility {
+  id              Int      @id @default(autoincrement())
+  playerId        Int      @unique @map("player_id")
+  naturalPos      String?  @map("natural_pos")
+  stFit           Float?   @map("st_fit")
+  lwFit           Float?   @map("lw_fit")
+  rwFit           Float?   @map("rw_fit")
+  cmFit           Float?   @map("cm_fit")
+  cdmFit          Float?   @map("cdm_fit")
+  camFit          Float?   @map("cam_fit")
+  lbFit           Float?   @map("lb_fit")
+  rbFit           Float?   @map("rb_fit")
+  cbFit           Float?   @map("cb_fit")
+  bestPos         String?  @map("best_pos")
+  bestFitScore    Float?   @map("best_fit_score")
+  bestFitPct      Float?   @map("best_fit_pct")
+  ovr             Int?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  player          Player   @relation(fields: [playerId], references: [playerId])
+
+  @@map("position_compatibility")
+}
+
+model MlAnalysisCache {
+  id           Int      @id @default(autoincrement())
+  cacheKey     String   @unique @map("cache_key")
+  analysisData Json     @map("analysis_data")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("ml_analysis_cache")
+}
+
+model PlayerFavorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  playerId  Int      @map("player_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, playerId])
+  @@map("player_favorites")
+} 

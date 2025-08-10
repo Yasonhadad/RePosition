@@ -20,7 +20,7 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
 
   // Check if player is favorited
   const { data: favoriteStatus, isLoading } = useQuery({
-    queryKey: ["favorites", playerId, "status"],
+    queryKey: ["favorites", playerId, "status", user?.id], // Include user ID in cache key
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/favorites/${playerId}/status`);
       return response.json();
@@ -34,9 +34,9 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
-      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status"] });
-      queryClient.setQueryData(["favorites", playerId, "status"], { isFavorited: true });
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status", user?.id] });
+      queryClient.setQueryData(["favorites", playerId, "status", user?.id], { isFavorited: true });
       toast({
         title: "Player starred",
         description: "Player added to your favorites.",
@@ -56,9 +56,9 @@ export function StarButton({ playerId, size = "default", variant = "ghost", clas
       await apiRequest("DELETE", `/api/favorites/${playerId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
-      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status"] });
-      queryClient.setQueryData(["favorites", playerId, "status"], { isFavorited: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites"] });
+      queryClient.invalidateQueries({ queryKey: ["favorites", playerId, "status", user?.id] });
+      queryClient.setQueryData(["favorites", playerId, "status", user?.id], { isFavorited: false });
       toast({
         title: "Player unstarred",
         description: "Player removed from your favorites.",

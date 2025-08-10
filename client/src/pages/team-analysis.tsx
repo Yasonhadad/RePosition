@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
-import { PlayerCard } from "@/components/player/player-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import type { Club } from "@shared/schema";
@@ -23,6 +22,7 @@ interface TeamAnalysis {
     sub_position: string;
     age: number;
     ovr: number;
+    image_url?: string;
     compatibility?: {
       best_pos: string;
       best_fit_score: number;
@@ -51,6 +51,13 @@ const POSITIONS = [
   { value: "RB", label: "Right Back (RB)" },
   { value: "CB", label: "Center Back (CB)" }
 ];
+
+function capitalizeName(name: string) {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
 
 export default function TeamAnalysis() {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -100,8 +107,8 @@ export default function TeamAnalysis() {
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-dark mb-2">Team Analysis</h2>
-        <p className="text-gray-600">
-          Analyze team formation and player position compatibility
+        <p className="text-white">
+          Analyze team player position compatibility
         </p>
       </div>
 
@@ -116,7 +123,7 @@ export default function TeamAnalysis() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Country Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Country
               </label>
               <Select value={selectedCountry} onValueChange={(value) => {
@@ -145,7 +152,7 @@ export default function TeamAnalysis() {
 
             {/* Club Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white mb-2">
                 Club
               </label>
               <Select 
@@ -205,10 +212,6 @@ export default function TeamAnalysis() {
             </CardContent>
           </Card>
 
-
-
-
-
           {/* Player List */}
           {analysisLoading ? (
             <Card className="shadow-sm">
@@ -245,7 +248,7 @@ export default function TeamAnalysis() {
                   Team Players ({filteredPlayers.length} of {teamAnalysis.players.length})
                 </CardTitle>
                 {selectedPosition !== "all" && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-white">
                     Showing all players with their compatibility scores for {POSITIONS.find(p => p.value === selectedPosition)?.label}
                   </p>
                 )}
@@ -253,7 +256,7 @@ export default function TeamAnalysis() {
               <CardContent>
                 {filteredPlayers.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">
+                    <p className="text-white">
                       {selectedPosition === "all" 
                         ? "No players found in this team."
                         : `No suitable players found for ${POSITIONS.find(p => p.value === selectedPosition)?.label} position.`
@@ -261,7 +264,7 @@ export default function TeamAnalysis() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     {filteredPlayers.map((player) => {
                       const positionScore = selectedPosition === "all" 
                         ? player.compatibility?.best_fit_score 
@@ -277,65 +280,95 @@ export default function TeamAnalysis() {
                           href={`/player/${player.player_id}`}
                           className="block"
                         >
-                          <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-primary to-analytics rounded-lg flex items-center justify-center">
+                          <div className="border border-gray-200 rounded-lg p-3 hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer h-full">
+                            <div className="flex flex-col items-center space-y-2 h-full">
+                              {/* Player Image */}
+                              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary to-analytics flex items-center justify-center relative">
+                                {player.image_url ? (
+                                  <>
+                                    <img 
+                                      src={player.image_url} 
+                                      alt={player.name}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const fallback = target.parentElement?.querySelector('.fallback-initials') as HTMLElement;
+                                        if (fallback) fallback.style.display = 'flex';
+                                      }}
+                                    />
+                                    <span 
+                                      className="fallback-initials absolute inset-0 text-white font-bold text-lg flex items-center justify-center"
+                                      style={{ display: 'none' }}
+                                    >
+                                      {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                    </span>
+                                  </>
+                                ) : (
                                   <span className="text-white font-bold text-lg">
                                     {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                   </span>
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-dark hover:text-primary transition-colors">{player.name}</h4>
-                                  <div className="flex items-center space-x-4 mt-1">
-                                    <Badge variant="secondary">
-                                      {player.sub_position}
-                                    </Badge>
-                                    <span className="text-xs text-gray-500">
-                                      {player.age} years
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                      OVR {player.ovr}
-                                    </span>
-                                  </div>
-                                </div>
+                                )}
                               </div>
-                              <div className="text-right">
+                              
+                              {/* Player Info */}
+                              <div className="text-center w-full flex-1">
+                                <h4 className="font-semibold text-dark hover:text-primary transition-colors text-xs mb-1 line-clamp-2">
+                                  {capitalizeName(player.name)}
+                                </h4>
+                                
+                                <div className="flex justify-center mb-1">
+                                  <Badge variant="secondary" className="text-xs px-1 py-0.5">
+                                    {player.sub_position}
+                                  </Badge>
+                                </div>
+                                
+                                <div className="flex justify-between items-center text-xs text-white mb-2">
+                                  <span>{player.age}y</span>
+                                  <span>OVR {player.ovr}</span>
+                                </div>
+                                
+                                {/* Compatibility Score */}
                                 {player.compatibility ? (
-                                  <>
-                                    <div className={`text-lg font-bold ${
+                                  <div className="text-center">
+                                    <div className={`text-lg font-bold mb-1 ${
                                       (positionScore || 0) >= 80 ? 'text-green-600' :
                                       (positionScore || 0) >= 60 ? 'text-yellow-600' :
                                       'text-red-600'
                                     }`}>
                                       {positionScore?.toFixed(1)}%
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                      {selectedPosition === "all" ? "Best: " : "Fit for "}{positionLabel}
+                                    <p className="text-xs text-white mb-1">
+                                      {selectedPosition === "all" 
+                                        ? `Best: ${POSITIONS.find(p => p.value === player.compatibility?.best_pos)?.label || player.compatibility?.best_pos}`
+                                        : positionLabel
+                                      }
                                     </p>
-                                    {selectedPosition !== "all" && (
-                                      <div className="flex gap-1 mt-2">
-                                        {POSITIONS.slice(1).map((pos) => {
-                                          const score = getPositionScore(player, pos.value);
-                                          return (
-                                            <div
-                                              key={pos.value}
-                                              className={`text-xs px-1 py-0.5 rounded ${
-                                                score >= 70 ? 'bg-green-100 text-green-800' :
-                                                score >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-gray-100 text-gray-600'
-                                              }`}
-                                              title={`${pos.label}: ${score.toFixed(1)}%`}
-                                            >
-                                              {pos.value}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </>
+                                    
+                                    <div className="flex flex-wrap justify-center gap-1">
+                                      {POSITIONS.slice(1).filter((pos) => {
+                                        const score = getPositionScore(player, pos.value);
+                                        return score > 59;
+                                      }).map((pos) => {
+                                        const score = getPositionScore(player, pos.value);
+                                        return (
+                                          <div
+                                            key={pos.value}
+                                            className={`text-xs px-1 py-0.5 rounded font-medium ${
+                                              score >= 80 ? 'bg-green-500 text-white' :
+                                              score >= 70 ? 'bg-blue-500 text-white' :
+                                              'bg-yellow-500 text-white'
+                                            }`}
+                                            title={`${pos.label}: ${score.toFixed(1)}%`}
+                                          >
+                                            {pos.value}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <div className="text-sm text-gray-400">
+                                  <div className="text-sm text-white">
                                     No Analysis
                                   </div>
                                 )}

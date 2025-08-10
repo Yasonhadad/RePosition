@@ -1,23 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { searchFiltersSchema, insertPlayerSchema, insertClubSchema } from "@shared/schema";
-import { processMLAnalysis, processCsvData } from "./ml-processor";
-import { setupAuth, requireAuth } from "./auth";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { searchFiltersSchema, insertPlayerSchema, insertClubSchema, type Club } from "@shared/schema";
 
-const upload = multer({ 
-  dest: 'uploads/',
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only CSV files are allowed'));
-    }
-  }
-});
+import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -29,7 +15,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players", async (req, res) => {
     try {
       // Convert query string parameters to appropriate types
-      const queryFilters = { ...req.query };
+      const queryFilters: any = { ...req.query };
+      
+      // Extract pagination parameters
+      const page = parseInt(queryFilters.page as string) || 1;
+      const pageSize = parseInt(queryFilters.pageSize as string) || 50;
+      
+      // Remove pagination parameters from filters
+      delete queryFilters.page;
+      delete queryFilters.pageSize;
       
       // Convert numeric fields from strings to numbers
       if (queryFilters.ageMin) {
@@ -43,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const filters = searchFiltersSchema.parse(queryFilters);
-      const players = await storage.searchPlayers(filters);
+      const players = await storage.searchPlayers(filters, page, pageSize);
       res.json(players);
     } catch (error) {
       console.error("Search filters validation error:", error);
@@ -80,16 +74,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Player not found" });
       }
 
-      // Check cache first
-      const cacheKey = `compatibility_${playerId}`;
-      let compatibility = await storage.getPositionCompatibility(playerId);
+      // Get position compatibility from database
+      const compatibility = await storage.getPositionCompatibility(playerId);
       
       if (!compatibility) {
-        // Run ML analysis
-        const analysisResult = await processMLAnalysis([player]);
-        if (analysisResult.length > 0) {
-          compatibility = await storage.createPositionCompatibility(analysisResult[0]);
-        }
+        return res.status(404).json({ 
+          error: "Position compatibility not found. Please run full analysis first." 
+        });
       }
 
       res.json(compatibility);
@@ -103,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/clubs", async (req, res) => {
     try {
       const { country } = req.query;
-      let clubs;
+      let clubs: Club[] = [];
       
       if (country && country !== 'all') {
         // Get competitions by country name, then get clubs by those competitions
@@ -122,8 +113,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             index === self.findIndex(c => c.club_id === club.club_id)
           );
           clubs = uniqueClubs;
-        } else {
-          clubs = [];
         }
       } else {
         clubs = await storage.getAllClubs();
@@ -227,112 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload and process CSV data
-  app.post("/api/upload", upload.single('csvFile'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-
-      const filePath = req.file.path;
-      const fileType = req.body.fileType; // 'players', 'clubs', or 'competitions'
-
-      try {
-        const result = await processCsvData(filePath, fileType);
-        
-        // Clean up uploaded file
-        fs.unlinkSync(filePath);
-        
-        res.json({
-          message: "File processed successfully",
-          recordsProcessed: result.recordsProcessed,
-          errors: result.errors
-        });
-      } catch (error) {
-        // Clean up uploaded file on error
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-        throw error;
-      }
-    } catch (error) {
-      console.error("File upload error:", error);
-      res.status(500).json({ error: "Failed to process uploaded file" });
-    }
-  });
-
-  // Run ML analysis for specific players
-  app.post("/api/analyze", async (req, res) => {
-    try {
-      const { playerIds } = req.body;
-      
-      if (!Array.isArray(playerIds) || playerIds.length === 0) {
-        return res.status(400).json({ error: "Player IDs array is required" });
-      }
-
-      const players = await Promise.all(
-        playerIds.map(id => storage.getPlayerByPlayerId(id))
-      );
-
-      const validPlayers = players.filter(p => p !== undefined);
-      
-      if (validPlayers.length === 0) {
-        return res.status(404).json({ error: "No valid players found" });
-      }
-
-      const analysisResults = await processMLAnalysis(validPlayers);
-      
-      // Store results in database
-      await storage.bulkCreatePositionCompatibility(analysisResults);
-
-      res.json({
-        message: "Analysis completed successfully",
-        results: analysisResults
-      });
-    } catch (error) {
-      console.error("ML analysis error:", error);
-      res.status(500).json({ error: "Failed to run ML analysis" });
-    }
-  });
-
-  // Bulk analyze all players (for initial setup)
-  app.post("/api/analyze/all", async (req, res) => {
-    try {
-      const allPlayers = await storage.getAllPlayers();
-      
-      if (allPlayers.length === 0) {
-        return res.status(400).json({ error: "No players found in database" });
-      }
-
-      // Process in batches to avoid overwhelming the system
-      const batchSize = 100;
-      let totalProcessed = 0;
-      const errors: string[] = [];
-
-      for (let i = 0; i < allPlayers.length; i += batchSize) {
-        const batch = allPlayers.slice(i, i + batchSize);
-        
-        try {
-          const analysisResults = await processMLAnalysis(batch);
-          await storage.bulkCreatePositionCompatibility(analysisResults);
-          totalProcessed += analysisResults.length;
-        } catch (error) {
-          errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error}`);
-        }
-      }
-
-      res.json({
-        message: "Bulk analysis completed",
-        totalProcessed,
-        totalPlayers: allPlayers.length,
-        errors
-      });
-    } catch (error) {
-      console.error("Bulk analysis error:", error);
-      res.status(500).json({ error: "Failed to run bulk analysis" });
-    }
-  });
-
+ 
   // Player Favorites API endpoints
   app.post("/api/favorites/:playerId", requireAuth, async (req, res) => {
     try {
