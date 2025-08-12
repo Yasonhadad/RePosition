@@ -4,7 +4,6 @@ import {
   clubs, 
   competitions, 
   position_compatibility, 
-  ml_analysis_cache,
   player_favorites,
   type User,
   type InsertUser,
@@ -16,8 +15,6 @@ import {
   type InsertClub, 
   type InsertCompetition, 
   type InsertPositionCompatibility, 
-  type InsertMlAnalysisCache, 
-  type MlAnalysisCache,
   type InsertPlayerFavorite,
   type PlayerFavorite,
   type SearchFilters 
@@ -71,9 +68,7 @@ export interface IStorage {
   updatePositionCompatibility(playerId: number, compatibility: Partial<InsertPositionCompatibility>): Promise<PositionCompatibility | undefined>;
   bulkCreatePositionCompatibility(compatibilities: InsertPositionCompatibility[]): Promise<PositionCompatibility[]>;
 
-  // ML Analysis Cache
-  getMlAnalysisCache(cacheKey: string): Promise<MlAnalysisCache | undefined>;
-  createMlAnalysisCache(cache: InsertMlAnalysisCache): Promise<MlAnalysisCache>;
+
   
   // Player Favorites
   addPlayerToFavorites(userId: number, playerId: number): Promise<PlayerFavorite>;
@@ -425,19 +420,7 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  // ML Analysis Cache
-  async getMlAnalysisCache(cacheKey: string): Promise<MlAnalysisCache | undefined> {
-    const [cache] = await db.select().from(ml_analysis_cache).where(eq(ml_analysis_cache.cache_key, cacheKey));
-    return cache || undefined;
-  }
 
-  async createMlAnalysisCache(cache: InsertMlAnalysisCache): Promise<MlAnalysisCache> {
-    const [created] = await db
-      .insert(ml_analysis_cache)
-      .values(cache)
-      .returning();
-    return created;
-  }
 
   // Player Favorites
   async addPlayerToFavorites(userId: number, playerId: number): Promise<PlayerFavorite> {

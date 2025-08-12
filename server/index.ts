@@ -7,8 +7,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve attached assets as static files
-app.use('/attached_assets', express.static(path.resolve(process.cwd(), 'attached_assets')));
+// Serve public folder for static assets (images, etc.)
+app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
+
+// Note: Removed static files for attached_assets as CSV files are only for database loading
+// Only the logo should be served, but it can be moved to a proper public folder
 
 app.use((req, res, next) => {
   const start = Date.now();

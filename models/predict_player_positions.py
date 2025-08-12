@@ -13,9 +13,12 @@ Calculates position compatibility scores for all players using ML models.
 
 from pathlib import Path
 import argparse, warnings
+import runpy
 import pandas as pd, numpy as np
 import psycopg2
 import datetime
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 
 # ────────── Configuration ──────────
 BASE         = Path(__file__).resolve().parent
@@ -24,17 +27,16 @@ DEFAULT_OUT  = Path(__file__).resolve().parent.parent / "attached_assets" / "res
 FIT_W, REL_W = 0.5, 0.5   # Combination weights
 
 # ────────── Helper Functions ──────────
-extract_weight = lambda s: pd.to_numeric(
-    s.astype(str).str.lower().str.extract(r"(\d+(?:\.\d+)?)\s*kg")[0],
-    errors="coerce")
-compute_age = lambda dob: 2025 - pd.to_datetime(dob, errors="coerce").dt.year
-raw = lambda col: col.split("__",1)[1] if "__" in col else col
 z2score = lambda z: float(np.clip(50 + 10*z, 0, 100))
 
 # ────────── CLI ──────────
 parser = argparse.ArgumentParser()
 parser.add_argument("--out", default=str(DEFAULT_OUT))
 args = parser.parse_args()
+
+# ────────── Refresh/Train Models First ──────────
+print("Refreshing position models via pos_models.py ...")
+runpy.run_path(str(BASE / "pos_models.py"), run_name="__main__")
 
 # ────────── Database Connection ──────────
 DB_HOST = "localhost"
@@ -43,23 +45,21 @@ DB_NAME = "reposition_db"
 DB_USER = "reposition_user"
 DB_PASS = "1234"
 
-conn = psycopg2.connect(
-    host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
-    user=DB_USER, password=DB_PASS
+db_url = URL.create(
+    "postgresql+psycopg2",
+    username=DB_USER,
+    password=DB_PASS,
+    host=DB_HOST,
+    port=DB_PORT,
+    database=DB_NAME,
 )
-dm = pd.read_sql("SELECT * FROM players", conn)
-conn.close()
-
-if "weight_in_kg" in dm.columns:
-    dm["Weight"] = dm["weight_in_kg"]
-elif "Weight" in dm.columns:
-    dm["Weight"] = extract_weight(dm["Weight"])
-if "age" not in dm.columns and "date_of_birth" in dm.columns:
-    dm["age"] = compute_age(dm["date_of_birth"])
+engine = create_engine(db_url)
+with engine.connect() as con:
+    dm = pd.read_sql("SELECT * FROM players", con)
 
 de = dm.copy()  # All players
 
-# ────────── Feature Metadata (Positive-only) ──────────
+# ────────── Feature Metadata ──────────
 feat_info = {}
 for pos in POSITIONS:
     gtab = pd.read_csv(BASE / f"feat_{pos}_full.csv")          # All features
@@ -67,14 +67,11 @@ for pos in POSITIONS:
 
     feats, gains, signs = [], {}, {}
     for _, row in gtab.iterrows():
-        full = row.feature
-        if full.startswith("cat__"):   # Skip one-hot encoded features
-            continue
-        base = raw(full)
-        sign_val = np.sign(corr.get(full, corr.get(base, 1.0)))
-        feats.append(base)
-        gains[base] = row.gain
-        signs[base] = sign_val
+        feat_name = row.feature
+        sign_val = np.sign(corr.get(feat_name, 1.0))
+        feats.append(feat_name)
+        gains[feat_name] = row.gain
+        signs[feat_name] = sign_val
 
     if not feats:
         warnings.warn(f"{pos}: no features - fallback to zeros")

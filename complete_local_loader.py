@@ -4,11 +4,13 @@ Complete Local Database Loader for REPOSITION Database
 ====================================================
 
 Loads all data files with correct schema mapping:
-- users.csv -> users table
 - competitions.csv -> competitions table  
 - clubs.csv -> clubs table
 - players.csv -> players table
 - results.csv -> position_compatibility table
+
+Note: Users are not loaded from CSV as they register through the web application.
+The users table is managed dynamically by the authentication system.
 
 Database: reposition_db on localhost
 User: reposition_user
@@ -35,7 +37,6 @@ def connect_db():
     """Connect to local PostgreSQL database"""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
-        print(f"OK - Connected to {DB_CONFIG['database']} on {DB_CONFIG['host']}")
         return conn
     except Exception as e:
         print(f"✗ Database connection failed: {e}")
@@ -83,52 +84,9 @@ def compute_age(dob_str):
     except:
         return None
 
-def load_users():
-    """Load users data from users.csv"""
-    csv_file = 'attached_assets/users.csv'
-    if not os.path.exists(csv_file):
-        print("✗ users.csv not found!")
-        return False
-    
-    try:
-        df = pd.read_csv(csv_file)
-        conn = connect_db()
-        cur = conn.cursor()
-        
-        # Clear existing users
-        cur.execute("DELETE FROM users")
-        
-        users_data = []
-        for _, row in df.iterrows():
-            users_data.append((
-                safe_str(row.get('email')),           # email
-                safe_str(row.get('password')),        # password
-                safe_str(row.get('first_name')),      # first_name
-                safe_str(row.get('last_name')),       # last_name
-                safe_str(row.get('created_at')) or datetime.now().isoformat(),   # created_at
-                safe_str(row.get('updated_at')) or datetime.now().isoformat()    # updated_at
-            ))
-        
-        # Insert users
-        execute_values(
-            cur,
-            """INSERT INTO users (email, password, first_name, last_name, created_at, updated_at) 
-               VALUES %s""",
-            users_data
-        )
-        
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        print(f"✅ Users loaded successfully ({len(users_data)} records)")
-        return True
-        
-    except Exception as e:
-        print(f"✗ Error loading users: {e}")
-        return False
 
-def load_competitions():
+
+def load_competitions(conn):
     """Load competitions data from competitions.csv"""
     csv_file = 'attached_assets/competitions.csv'
     if not os.path.exists(csv_file):
@@ -137,7 +95,6 @@ def load_competitions():
     
     try:
         df = pd.read_csv(csv_file)
-        conn = connect_db()
         cur = conn.cursor()
         
         # Clear existing competitions
@@ -171,7 +128,6 @@ def load_competitions():
         
         conn.commit()
         cur.close()
-        conn.close()
         
         print(f"✅ Competitions loaded successfully ({len(competitions_data)} records)")
         return True
@@ -180,7 +136,7 @@ def load_competitions():
         print(f"✗ Error loading competitions: {e}")
         return False
 
-def load_clubs():
+def load_clubs(conn):
     """Load clubs data from clubs.csv"""
     csv_file = 'attached_assets/clubs.csv'
     if not os.path.exists(csv_file):
@@ -189,7 +145,6 @@ def load_clubs():
     
     try:
         df = pd.read_csv(csv_file)
-        conn = connect_db()
         cur = conn.cursor()
         
         # Clear existing clubs
@@ -229,7 +184,6 @@ def load_clubs():
         
         conn.commit()
         cur.close()
-        conn.close()
         
         print(f"✅ Clubs loaded successfully ({len(clubs_data)} records)")
         return True
@@ -238,7 +192,7 @@ def load_clubs():
         print(f"✗ Error loading clubs: {e}")
         return False
 
-def load_players():
+def load_players(conn):
     """Load players data from players.csv"""
     csv_file = 'attached_assets/players.csv'
     if not os.path.exists(csv_file):
@@ -247,7 +201,6 @@ def load_players():
     
     try:
         df = pd.read_csv(csv_file)
-        conn = connect_db()
         cur = conn.cursor()
         
         # Clear existing players
@@ -362,7 +315,6 @@ def load_players():
         
         conn.commit()
         cur.close()
-        conn.close()
         
         print(f"✅ Players loaded successfully ({inserted_total} records)")
         return True
@@ -371,7 +323,7 @@ def load_players():
         print(f"✗ Error loading players: {e}")
         return False
 
-def load_position_compatibility():
+def load_position_compatibility(conn):
     """Calculate and load position compatibility data using ML models"""
     import subprocess
     import sys
@@ -399,7 +351,6 @@ def load_position_compatibility():
         # Check if the script was successful
         if "OK - combo results also loaded to DB table 'position_compatibility'" in result.stdout:
             # Count the records that were inserted
-            conn = connect_db()
             cur = conn.cursor()
             
             try:
@@ -410,7 +361,6 @@ def load_position_compatibility():
                 print(f"⚠️  Position compatibility calculated but couldn't verify count: {e}")
             finally:
                 cur.close()
-                conn.close()
             
             return True
         else:
@@ -421,15 +371,13 @@ def load_position_compatibility():
         print(f"✗ Error calculating position compatibility: {e}")
         return False
 
-def show_final_summary():
+def show_final_summary(conn):
     """Show comprehensive database summary"""
-    conn = connect_db()
     cur = conn.cursor()
     
     try:
-        # Count all main tables
+        # Count all main tables (excluding users as they register through the app)
         tables_info = [
-            ('users', 'Users'),
             ('competitions', 'Competitions'),
             ('clubs', 'Clubs'),
             ('players', 'Players'),
@@ -443,6 +391,7 @@ def show_final_summary():
                 cur.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cur.fetchone()[0]
                 total_records += count
+                print(f"  • {description}: {count:,} records")
             except Exception as e:
                 pass
         
@@ -452,35 +401,42 @@ def show_final_summary():
         print(f"Error generating summary: {e}")
     
     cur.close()
-    conn.close()
 
 def main():
     """Main execution function"""
     print("Loading database...")
     
-    # Execute loading sequence
-    steps = [
-        ("Users", load_users),
-        ("Competitions", load_competitions),
-        ("Clubs", load_clubs),
-        ("Players", load_players),
-        ("Position Compatibility", load_position_compatibility)
-    ]
+    # Connect to database once
+    conn = connect_db()
+    print(f"OK - Connected to {DB_CONFIG['database']} on {DB_CONFIG['host']}")
     
-    success_count = 0
-    
-    for step_name, step_function in steps:
-        if step_function():
-            success_count += 1
+    try:
+        # Execute loading sequence (removed Users as they register through the app)
+        steps = [
+            ("Competitions", load_competitions),
+            ("Clubs", load_clubs),
+            ("Players", load_players),
+            ("Position Compatibility", load_position_compatibility)
+        ]
+        
+        success_count = 0
+        
+        for step_name, step_function in steps:
+            if step_function(conn):
+                success_count += 1
+            else:
+                print(f"❌ FAILED: {step_name} loading failed!")
+                return
+        
+        # Final results
+        if success_count == len(steps):
+            show_final_summary(conn)
         else:
-            print(f"❌ FAILED: {step_name} loading failed!")
-            return
+            print(f"⚠️  PARTIAL SUCCESS: {success_count}/{len(steps)} steps completed")
     
-    # Final results
-    if success_count == len(steps):
-        show_final_summary()
-    else:
-        print(f"⚠️  PARTIAL SUCCESS: {success_count}/{len(steps)} steps completed")
+    finally:
+        conn.close()
+        print("Database connection closed")
 
 if __name__ == "__main__":
     main()
