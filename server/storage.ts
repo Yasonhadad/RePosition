@@ -162,7 +162,7 @@ export class DatabaseStorage implements IStorage {
   async searchPlayers(filters: SearchFilters, page: number = 1, pageSize: number = 0): Promise<Player[]> {
     // If pageSize is 0, return all players without pagination
     if (pageSize === 0) {
-      const conditions = [];
+      const conditions = [] as any[];
 
       if (filters.name) {
         conditions.push(sql`LOWER(${players.name}) LIKE LOWER(${'%' + filters.name + '%'})`);
@@ -199,9 +199,38 @@ export class DatabaseStorage implements IStorage {
         conditions.push(lte(players.age, filters.ageMax));
       }
 
+      // Determine if we need compatibility join
+      const compatPosition = (filters as any).compatPosition as (undefined | string);
+      const needCompat = Boolean(compatPosition) || filters.minCompatibility !== undefined;
+
       // Build the query based on conditions
       if (conditions.length > 0) {
-        let query = db.select().from(players).where(and(...conditions));
+        let query;
+        if (needCompat) {
+          // Select only player columns to preserve return type
+          query = db
+            .select(getTableColumns(players))
+            .from(players)
+            .leftJoin(position_compatibility, eq(players.player_id, position_compatibility.player_id))
+            .where(and(
+              ...conditions,
+              compatPosition
+                ? (
+                    compatPosition === 'ST' ? gte(position_compatibility.st_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'LW' ? gte(position_compatibility.lw_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'RW' ? gte(position_compatibility.rw_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'CM' ? gte(position_compatibility.cm_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'CDM' ? gte(position_compatibility.cdm_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'CAM' ? gte(position_compatibility.cam_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'LB' ? gte(position_compatibility.lb_fit, filters.minCompatibility ?? 70) :
+                    compatPosition === 'RB' ? gte(position_compatibility.rb_fit, filters.minCompatibility ?? 70) :
+                    gte(position_compatibility.cb_fit, filters.minCompatibility ?? 70)
+                  )
+                : sql`TRUE`
+            ));
+        } else {
+          query = db.select().from(players).where(and(...conditions));
+        }
         
         // Apply sorting
         if (filters.sortBy) {
@@ -212,6 +241,21 @@ export class DatabaseStorage implements IStorage {
               return await query.orderBy(asc(players.age));
             case "market_value":
               return await query.orderBy(desc(players.market_value_in_eur));
+            case "compatibility":
+              if (needCompat && compatPosition) {
+                const compatCol = compatPosition === 'ST' ? position_compatibility.st_fit
+                  : compatPosition === 'LW' ? position_compatibility.lw_fit
+                  : compatPosition === 'RW' ? position_compatibility.rw_fit
+                  : compatPosition === 'CM' ? position_compatibility.cm_fit
+                  : compatPosition === 'CDM' ? position_compatibility.cdm_fit
+                  : compatPosition === 'CAM' ? position_compatibility.cam_fit
+                  : compatPosition === 'LB' ? position_compatibility.lb_fit
+                  : compatPosition === 'RB' ? position_compatibility.rb_fit
+                  : position_compatibility.cb_fit;
+                // query is typed as any if using select(getTableColumns)
+                return await (query as any).orderBy(desc(compatCol));
+              }
+              return await query;
             default:
               return await query;
           }
@@ -220,7 +264,14 @@ export class DatabaseStorage implements IStorage {
         return await query;
       } else {
         // No conditions, just apply sorting
-        let query = db.select().from(players);
+        const compatPosition2 = (filters as any).compatPosition as (undefined | string);
+        const needCompat2 = Boolean(compatPosition2) || filters.minCompatibility !== undefined;
+        let query = needCompat2
+          ? db
+              .select(getTableColumns(players))
+              .from(players)
+              .leftJoin(position_compatibility, eq(players.player_id, position_compatibility.player_id))
+          : db.select().from(players);
         
         if (filters.sortBy) {
           switch (filters.sortBy) {
@@ -230,6 +281,20 @@ export class DatabaseStorage implements IStorage {
               return await query.orderBy(asc(players.age));
             case "market_value":
               return await query.orderBy(desc(players.market_value_in_eur));
+            case "compatibility":
+              if (needCompat2 && compatPosition2) {
+                const compatCol = compatPosition2 === 'ST' ? position_compatibility.st_fit
+                  : compatPosition2 === 'LW' ? position_compatibility.lw_fit
+                  : compatPosition2 === 'RW' ? position_compatibility.rw_fit
+                  : compatPosition2 === 'CM' ? position_compatibility.cm_fit
+                  : compatPosition2 === 'CDM' ? position_compatibility.cdm_fit
+                  : compatPosition2 === 'CAM' ? position_compatibility.cam_fit
+                  : compatPosition2 === 'LB' ? position_compatibility.lb_fit
+                  : compatPosition2 === 'RB' ? position_compatibility.rb_fit
+                  : position_compatibility.cb_fit;
+                return await (query as any).orderBy(desc(compatCol));
+              }
+              return await query;
             default:
               return await query;
           }
@@ -241,7 +306,7 @@ export class DatabaseStorage implements IStorage {
 
     // Original pagination logic for when pageSize > 0
     console.log('filters.team:', filters.team);
-    const conditions = [];
+    const conditions = [] as any[];
 
     if (filters.name) {
       conditions.push(sql`LOWER(${players.name}) LIKE LOWER(${'%' + filters.name + '%'})`);
@@ -281,9 +346,36 @@ export class DatabaseStorage implements IStorage {
     // Calculate offset for pagination
     const offset = (page - 1) * pageSize;
 
+    const compatPosition = (filters as any).compatPosition as (undefined | string);
+    const needCompat = Boolean(compatPosition) || filters.minCompatibility !== undefined;
+
     // Build the query based on conditions
     if (conditions.length > 0) {
-      let query = db.select().from(players).where(and(...conditions));
+      let query;
+      if (needCompat) {
+        query = db
+          .select(getTableColumns(players))
+          .from(players)
+          .leftJoin(position_compatibility, eq(players.player_id, position_compatibility.player_id))
+          .where(and(
+            ...conditions,
+            compatPosition
+              ? (
+                  compatPosition === 'ST' ? gte(position_compatibility.st_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'LW' ? gte(position_compatibility.lw_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'RW' ? gte(position_compatibility.rw_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'CM' ? gte(position_compatibility.cm_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'CDM' ? gte(position_compatibility.cdm_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'CAM' ? gte(position_compatibility.cam_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'LB' ? gte(position_compatibility.lb_fit, filters.minCompatibility ?? 70) :
+                  compatPosition === 'RB' ? gte(position_compatibility.rb_fit, filters.minCompatibility ?? 70) :
+                  gte(position_compatibility.cb_fit, filters.minCompatibility ?? 70)
+                )
+              : sql`TRUE`
+          ));
+      } else {
+        query = db.select().from(players).where(and(...conditions));
+      }
       
       // Apply sorting
       if (filters.sortBy) {
@@ -294,6 +386,20 @@ export class DatabaseStorage implements IStorage {
             return await query.orderBy(asc(players.age)).limit(pageSize).offset(offset);
           case "market_value":
             return await query.orderBy(desc(players.market_value_in_eur)).limit(pageSize).offset(offset);
+          case "compatibility":
+            if (needCompat && compatPosition) {
+              const compatCol = compatPosition === 'ST' ? position_compatibility.st_fit
+                : compatPosition === 'LW' ? position_compatibility.lw_fit
+                : compatPosition === 'RW' ? position_compatibility.rw_fit
+                : compatPosition === 'CM' ? position_compatibility.cm_fit
+                : compatPosition === 'CDM' ? position_compatibility.cdm_fit
+                : compatPosition === 'CAM' ? position_compatibility.cam_fit
+                : compatPosition === 'LB' ? position_compatibility.lb_fit
+                : compatPosition === 'RB' ? position_compatibility.rb_fit
+                : position_compatibility.cb_fit;
+              return await (query as any).orderBy(desc(compatCol)).limit(pageSize).offset(offset);
+            }
+            return await query.limit(pageSize).offset(offset);
           default:
             return await query.limit(pageSize).offset(offset);
         }
@@ -303,7 +409,14 @@ export class DatabaseStorage implements IStorage {
       return await query.limit(pageSize).offset(offset);
     } else {
       // No conditions, just apply sorting
-      let query = db.select().from(players);
+      const compatPosition2 = (filters as any).compatPosition as (undefined | string);
+      const needCompat2 = Boolean(compatPosition2) || filters.minCompatibility !== undefined;
+      let query = needCompat2
+        ? db
+            .select(getTableColumns(players))
+            .from(players)
+            .leftJoin(position_compatibility, eq(players.player_id, position_compatibility.player_id))
+        : db.select().from(players);
       
       if (filters.sortBy) {
         switch (filters.sortBy) {
@@ -313,6 +426,20 @@ export class DatabaseStorage implements IStorage {
             return await query.orderBy(asc(players.age)).limit(pageSize).offset(offset);
           case "market_value":
             return await query.orderBy(desc(players.market_value_in_eur)).limit(pageSize).offset(offset);
+          case "compatibility":
+            if (needCompat2 && compatPosition2) {
+              const compatCol = compatPosition2 === 'ST' ? position_compatibility.st_fit
+                : compatPosition2 === 'LW' ? position_compatibility.lw_fit
+                : compatPosition2 === 'RW' ? position_compatibility.rw_fit
+                : compatPosition2 === 'CM' ? position_compatibility.cm_fit
+                : compatPosition2 === 'CDM' ? position_compatibility.cdm_fit
+                : compatPosition2 === 'CAM' ? position_compatibility.cam_fit
+                : compatPosition2 === 'LB' ? position_compatibility.lb_fit
+                : compatPosition2 === 'RB' ? position_compatibility.rb_fit
+                : position_compatibility.cb_fit;
+              return await (query as any).orderBy(desc(compatCol)).limit(pageSize).offset(offset);
+            }
+            return await query.limit(pageSize).offset(offset);
           default:
             return await query.limit(pageSize).offset(offset);
         }

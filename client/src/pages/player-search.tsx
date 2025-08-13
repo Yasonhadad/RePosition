@@ -129,6 +129,7 @@ export default function PlayerSearch() {
   }, [competitions]);
 
   const positions = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"];
+  const compatThresholds = [50, 60, 70, 80, 90, 95];
   const ageRanges = [
     { label: "All Ages", min: undefined, max: undefined },
     { label: "18-22", min: 18, max: 22 },
@@ -137,7 +138,7 @@ export default function PlayerSearch() {
     { label: "33+", min: 33, max: undefined },
   ];
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = (key: keyof SearchFilters | 'compatPosition', value: any) => {
     // Handle "all" values by setting them to empty/undefined
     let actualValue = value;
     if (value === "all") {
@@ -146,7 +147,14 @@ export default function PlayerSearch() {
           ? ""
           : undefined;
     }
-    setFilters((prev) => ({ ...prev, [key]: actualValue }));
+    setFilters((prev) => ({
+      ...prev,
+      [key]: actualValue,
+      // If target position is cleared, also clear minCompatibility
+      ...(key === 'compatPosition' && (actualValue === undefined || actualValue === '')
+        ? { minCompatibility: undefined }
+        : {}),
+    }));
     // Reset to first page when filters change
     setCurrentPage(1);
   };
@@ -256,6 +264,49 @@ export default function PlayerSearch() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <Label className="text-sm font-medium text-white mb-2">
+                Target Position
+              </Label>
+              <Select
+                onValueChange={(value) => handleFilterChange("compatPosition" as any, value)}
+              >
+                <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary text-white">
+                  <SelectValue placeholder="Any" className="text-white" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any</SelectItem>
+                  {positions.map((position) => (
+                    <SelectItem key={position} value={position}>
+                      {position}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {filters && (filters as any).compatPosition && (
+              <div>
+                <Label className="text-sm font-medium text-white mb-2">
+                  Min compatibility score
+                </Label>
+                <Select
+                  onValueChange={(value) => handleFilterChange("minCompatibility" as any, Number(value))}
+                >
+                  <SelectTrigger className="focus:ring-2 focus:ring-primary focus:border-primary text-white">
+                    <SelectValue placeholder="50" className="text-white" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {compatThresholds.map((t) => (
+                      <SelectItem key={t} value={String(t)}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div>
               <Label className="text-sm font-medium text-white mb-2">

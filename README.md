@@ -61,14 +61,10 @@ Optional `.env` in project root:
   SESSION_SECRET=replace-with-a-long-random-secret
 ```
 
-### 3) Load base data (players, clubs, competitions)
+### 3) Load base data (players, clubs, competitions) && Compute compatibility for DB players()
+
 ```bash
 python complete_local_loader.py
-```
-
-### 4) Compute compatibility for DB players
-```bash
-python models/predict_player_positions.py
 ```
 This writes `data/result.csv` and updates the `position_compatibility` table.
 

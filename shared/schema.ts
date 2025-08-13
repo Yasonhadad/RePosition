@@ -220,6 +220,7 @@ export const searchFiltersSchema = z.object({
   ageMin: z.number().optional(),
   ageMax: z.number().optional(),
   minCompatibility: z.number().optional(),
+  compatPosition: z.enum(POSITIONS).optional(),
   sortBy: z.enum(["compatibility", "overall", "age", "market_value"]).optional(),
 });
 
