@@ -1,15 +1,17 @@
-import type { Express } from "express";
+import type { Express as ExpressApp } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { searchFiltersSchema, insertPlayerSchema, insertClubSchema, type Club } from "@shared/schema";
 
 import { setupAuth, requireAuth } from "./auth";
+import multer from "multer";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: ExpressApp): Promise<Server> {
   // Auth middleware
   setupAuth(app);
 
   // Auth routes - handled by auth.ts
+  const upload = multer({ storage: multer.memoryStorage() });
   
   // Get all players with optional search filters
   app.get("/api/players", async (req, res) => {
@@ -216,6 +218,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+  });
+
+  // Upload CSV of player data and return position compatibility for each player_id
+  app.post("/api/compatibility/upload", upload.single("csvFile"), async (req, res) => {
+    try {
+      const file = (req as any).file as Express.Multer.File | undefined;
+      if (!file) {
+        return res.status(400).json({ error: "CSV file is required under field 'csvFile'" });
+      }
+      // Persist uploaded CSV to a temp file and invoke Python script to compute scores
+      const fs = await import("fs/promises");
+      const os = await import("os");
+      const path = await import("path");
+      const { spawn } = await import("child_process");
+
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "upload-"));
+      const inPath = path.join(tmpDir, "input.csv");
+      const outPath = path.join(tmpDir, "output.csv");
+      await fs.writeFile(inPath, file.buffer);
+
+      // Build fallback maps from original input for name/sub_position by player_id
+      const inputCsvText = file.buffer.toString("utf-8");
+      const inputLines = inputCsvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const inputHeader = inputLines[0].split(",").map(h => h.trim());
+      const inMap: Record<string, number> = {};
+      inputHeader.forEach((h, idx) => (inMap[h] = idx));
+      const inputById: Record<number, { name?: string | null; natural_pos?: string | null }> = {};
+      if (inMap["player_id"] !== undefined) {
+        for (const line of inputLines.slice(1)) {
+          const cols = line.split(",");
+          const pid = parseInt((cols[inMap["player_id"]] || "").trim());
+          if (!Number.isNaN(pid)) {
+            inputById[pid] = {
+              name: inMap["name"] !== undefined ? (cols[inMap["name"]] || null) : null,
+              natural_pos: inMap["sub_position"] !== undefined ? (cols[inMap["sub_position"]] || null) : null,
+            };
+          }
+        }
+      }
+
+      const py = spawn(process.platform === "win32" ? "python" : "python3", [
+        path.join(process.cwd(), "models", "predict_from_csv.py"),
+        "--input", inPath,
+        "--out", outPath,
+      ], { stdio: "inherit" });
+
+      await new Promise<void>((resolve, reject) => {
+        py.on("exit", (code) => {
+          if (code === 0) resolve(); else reject(new Error(`Python exited with code ${code}`));
+        });
+        py.on("error", reject);
+      });
+
+      const csvOut = await fs.readFile(outPath, "utf-8");
+      // Parse the minimal columns we need to return
+      const lines = csvOut.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const header = lines[0].split(",").map(h => h.trim());
+      const map: Record<string, number> = {};
+      header.forEach((h, idx) => map[h] = idx);
+      const results = lines.slice(1).map(line => {
+        const cols = line.split(",");
+        const pid = parseInt((cols[map["player_id"]] || "0").trim());
+        const nameOut = map["name"] !== undefined ? (cols[map["name"]] || null) : null;
+        const natOut = map["natural_pos"] !== undefined ? (cols[map["natural_pos"]] || null) : null;
+        const fallback = inputById[pid] || {};
+        return {
+          player_id: pid,
+          name: nameOut || fallback.name || null,
+          natural_pos: natOut || fallback.natural_pos || null,
+          status: "ok" as const,
+          compatibility: {
+            best_pos: cols[map["best_pos"]] || null,
+            best_fit_score: cols[map["best_fit_score"]] ? parseFloat(cols[map["best_fit_score"]]) : null,
+            st_fit: cols[map["st_fit"]] ? parseFloat(cols[map["st_fit"]]) : null,
+            lw_fit: cols[map["lw_fit"]] ? parseFloat(cols[map["lw_fit"]]) : null,
+            rw_fit: cols[map["rw_fit"]] ? parseFloat(cols[map["rw_fit"]]) : null,
+            cm_fit: cols[map["cm_fit"]] ? parseFloat(cols[map["cm_fit"]]) : null,
+            cdm_fit: cols[map["cdm_fit"]] ? parseFloat(cols[map["cdm_fit"]]) : null,
+            cam_fit: cols[map["cam_fit"]] ? parseFloat(cols[map["cam_fit"]]) : null,
+            lb_fit: cols[map["lb_fit"]] ? parseFloat(cols[map["lb_fit"]]) : null,
+            rb_fit: cols[map["rb_fit"]] ? parseFloat(cols[map["rb_fit"]]) : null,
+            cb_fit: cols[map["cb_fit"]] ? parseFloat(cols[map["cb_fit"]]) : null,
+          }
+        };
+      });
+
+      res.json({ count: results.length, results });
+    } catch (error) {
+      console.error("CSV compatibility upload error:", error);
+      res.status(500).json({ error: "Failed to process CSV" });
     }
   });
 

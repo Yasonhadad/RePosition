@@ -23,7 +23,7 @@ from sqlalchemy.engine import URL
 # ────────── Configuration ──────────
 BASE         = Path(__file__).resolve().parent
 POSITIONS    = ["ST","LW","RW","CM","CDM","CAM","LB","RB","CB"]
-DEFAULT_OUT  = Path(__file__).resolve().parent.parent / "attached_assets" / "result.csv"
+DEFAULT_OUT  = Path(__file__).resolve().parent.parent / "data" / "result.csv"
 FIT_W, REL_W = 0.5, 0.5   # Combination weights
 
 # ────────── Helper Functions ──────────

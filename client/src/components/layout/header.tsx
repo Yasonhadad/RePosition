@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Upload } from "lucide-react";
 
 export function Header() {
   const [location, navigate] = useLocation();
@@ -58,6 +59,12 @@ export function Header() {
       href: "/search",
       icon: Search,
       current: location === "/search" || location === "/players"
+    },
+    {
+      name: "CSV Upload",
+      href: "/upload",
+      icon: Upload,
+      current: location === "/upload"
     },
     {
       name: "Favorites",

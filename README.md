@@ -1,113 +1,143 @@
-### Player Position Analytics – Local Setup Guide
+# RePosition – Player Position Analytics
 
-This repo contains a full‑stack app that analyzes football player position compatibility using Python (XGBoost) models and a TS/Node web app (Express + Vite + Drizzle ORM).
+Analyze football player position compatibility with Python models and a modern TypeScript/Node web app.
 
+## Table of Contents
+1. [Project Name](#project-name)
+2. [About](#about)
+3. [Features](#features)
+4. [Installation](#installation)
+5. [Usage](#usage)
+6. [Tech Stack](#tech-stack)
+7. [Project Structure](#project-structure)
+8. [License](#license)
+
+---
+
+## Project Name
+RePosition – Player Position Analytics
+
+## About
+RePosition helps analysts, scouts, and football enthusiasts evaluate how well a player fits different positions. It combines:
+- A Python-based modeling pipeline to compute position compatibility scores
+- A full-stack web application (React + Express) to search, view, analyze, and compare players
+- A CSV upload tool to score external players that are not in the database
+
+
+## Features
+- Player search, details, and favorites
+- Team analysis dashboard 
+- Global statistics (players, teams, competitions)
+- Position compatibility for DB players (stored in Postgres)
+- External CSV upload to compute compatibility 
+- Modern UI/UX with responsive design
+
+## Installation
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 18+
 - Python 3.11+
-- PostgreSQL 14+ (local)
+- PostgreSQL 14+
 
-### Database defaults
-The server is preconfigured to use a local PostgreSQL instance (see `server/db.ts`):
-
+### 1) Clone and install
+```bash
+npm install
+pip install -r requirements.txt
 ```
-DATABASE_URL=postgresql://reposition_user:1234@localhost:5432/reposition_db
-```
 
-You can either create this DB/user or set your own `DATABASE_URL` via `.env`.
-
-Create the DB/user (psql example):
+### 2) Database setup
+Default connection (see `server/db.ts`):
+```text
+postgresql://reposition_user:1234@localhost:5432/reposition_db
 ```
+Create locally (psql):
+```sql
 CREATE USER reposition_user WITH PASSWORD '1234';
 CREATE DATABASE reposition_db OWNER reposition_user;
 GRANT ALL PRIVILEGES ON DATABASE reposition_db TO reposition_user;
 ```
-
-Optional environment file (recommended for production):
-```
-.env
+Optional `.env` in project root:
+```ini
   DATABASE_URL=postgresql://reposition_user:1234@localhost:5432/reposition_db
   SESSION_SECRET=replace-with-a-long-random-secret
 ```
 
-### Install dependencies
-JavaScript/TypeScript:
-```
-npm install
-```
-
-Python (ML models):
-```
-pip install -r requirements.txt
-```
-
-### Load data and generate compatibility
-The app expects player/club data in Postgres and precomputed compatibility scores.
-
-1) Load base data (players, clubs, competitions):
-```
+### 3) Load base data (players, clubs, competitions)
+```bash
 python complete_local_loader.py
 ```
 
-2) (Optional) Train/refresh per‑position models and export feature metadata:
-```
-cd models
-python run_all_models.py
-cd ..
-```
-
-3) Compute position compatibility for all players and load results to DB:
-```
+### 4) Compute compatibility for DB players
+```bash
 python models/predict_player_positions.py
 ```
+This writes `data/result.csv` and updates the `position_compatibility` table.
 
-This writes a CSV to `attached_assets/result.csv` and upserts to the `position_compatibility` table.
-
-### Run the app
-- Development (Vite middleware, HMR):
-```
+## Usage
+### Run in development (HMR)
+```bash
 npm run dev
 ```
+Open `http://localhost:5000`.
 
-- Production build and serve (Express on port 5000):
-```
+### Build & run in production
+```bash
 npm run build
 npm run start
 ```
 
-Open: `http://localhost:5000`
+### Using the UI
+- Authentication: Sign in/up via the top-right avatar menu
+- Navigation:
+  - Dashboard – overview cards and quick links
+  - Player Search – filter by name, position, country, etc.
+  - Player Details – card with attributes + compatibility (if exists)
+  - Team Analysis – club-level breakdown and best-fit insights
+  - Favorites – your saved players
+  - CSV Upload – upload external CSV for on-the-fly scoring
 
-### Project structure (high level)
-- `server/` – Express server
-  - `index.ts` – entrypoint, mounts routes and Vite (dev) or static (prod)
-  - `routes.ts` – REST API (players, clubs, teams, stats)
-  - `auth.ts` – local email/password auth with sessions
-  - `db.ts` – Postgres connection + Drizzle ORM init
-  - `vite.ts` – Vite integration and static serving
-  - `storage.ts` – all DB queries via Drizzle (CRUD, search, analytics)
-- `client/` – React (Vite + Tailwind + shadcn/ui)
-  - `index.html` – SPA host document
-  - `src/pages/*` – app pages
-  - `src/components/*` – UI components
-  - `src/lib/*` – API/query utils
-- `models/` – Python ML assets (XGBoost models, features, correlations)
-  - `run_all_models.py` – (optional) train/export per‑position models
-  - `predict_player_positions.py` – compute compatibility and load to DB
-- `attached_assets/` – static assets (logo) and output CSVs
+### CSV Upload
+- Go to `/upload`
+- Click "Download Template" to get a valid header
+- Upload CSV, then Process — results appear in a table and can be downloaded as JSON/CSV
 
-### Useful API endpoints
-- `GET /api/players?name=...&position=...` – search players
-- `GET /api/players/:id` – single player + compatibility (if exists)
-- `GET /api/players/:id/compatibility` – compatibility only
-- `GET /api/teams/:clubName/analysis` – team analysis
-- `GET /api/stats` – global stats
 
-### Common issues
-- Port 5000 busy: stop other processes or change port in `server/index.ts`.
-- DB connection fails: verify `DATABASE_URL` or create the default DB/user above.
-- Empty compatibility: re‑run the Python step: `python models/predict_player_positions.py`.
-- Windows start error: we use `cross-env` in `package.json` so `npm run start` works on Windows.
+## Tech Stack
+- Client: React, Vite, Tailwind, shadcn/ui, TanStack Query
+- Server: Express (TypeScript), Drizzle ORM, Vite (dev middleware)
+- Data: PostgreSQL
+- ML: Python (pandas, numpy, scikit‑learn, xgboost)
 
-### License
+## Project Structure
+```text
+.
+├─ client/
+│  ├─ src/
+│  │  ├─ pages/                 # dashboard, player-search, player-details, team-analysis, favorites, auth-page, csv-upload
+│  │  ├─ components/            # UI components
+│  │  ├─ lib/                   # api.ts, queryClient.ts, utils.ts
+│  │  └─ hooks/                 # custom hooks
+│  └─ index.html
+├─ server/
+│  ├─ index.ts                  # runtime entry (dev/prod)
+│  ├─ routes.ts                 # REST API (players, teams, stats, CSV upload)
+│  ├─ auth.ts                   # session auth (local)
+│  ├─ storage.ts                # DB access layer (Drizzle)
+│  ├─ db.ts                     # Postgres connection
+│  └─ vite.ts                   # Vite integration
+├─ shared/
+│  └─ schema.ts                 # shared types/schemas (Drizzle + Zod)
+├─ models/
+│  ├─ predict_player_positions.py  # compute compatibility for DB players (writes to DB)
+│  ├─ predict_from_csv.py          # compute compatibility for external CSV (no DB writes)
+│  ├─ pos_models.py                # model refresh/helpers
+│  └─ feat_*.csv, corr_*.csv       # features metadata
+├─ data/                        # CSV inputs/outputs used by loaders/scripts
+├─ complete_local_loader.py     # load base CSVs to DB
+├─ requirements.txt             # Python deps (pandas, numpy, sklearn, xgboost, SQLAlchemy ...)
+├─ package.json                 # npm scripts and deps
+└─ README.md
+```
+
+## License
 MIT
 

@@ -16,7 +16,7 @@ from rapidfuzz import process, fuzz
 # ────────── Files ──────────
 PLAYERS_CSV = "PLAYERS_FINAL1.csv"
 FC_CSV      = "FC_PLAYER_nations.csv"
-OUTPUT_CSV  = "players_joined_clean.csv"
+OUTPUT_CSV  = "players_joined.csv"
 SCORE_TH    = 80         
 
 # ────────── Fields to keep ──────────

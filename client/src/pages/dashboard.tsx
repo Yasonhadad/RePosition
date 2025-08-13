@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Trophy, Shield, Upload } from "lucide-react";
+import { Users, Trophy, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 
@@ -16,6 +16,7 @@ export default function Dashboard() {
   const { data: stats, isLoading } = useQuery<GlobalStats>({
     queryKey: ["/api/stats"],
   });
+
 
   if (isLoading) {
     return (
@@ -105,6 +106,8 @@ export default function Dashboard() {
           Machine-Learning Engine that scores every player's ideal position and helps you build data-driven, high-performance squads.
         </p>
       </div>
+
+      {/* CSV upload moved to /upload page */}
 
     </div>
   );

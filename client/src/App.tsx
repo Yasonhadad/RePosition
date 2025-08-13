@@ -15,6 +15,7 @@ import Favorites from "@/pages/favorites";
 import NotFound from "@/pages/not-found";
 import { Landing } from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
+import CsvUploadPage from "@/pages/csv-upload";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,6 +34,7 @@ function Router() {
               <Route path="/player/:id" component={PlayerDetails} />
               <Route path="/favorites" component={Favorites} />
               <Route path="/teams" component={TeamAnalysis} />
+              <Route path="/upload" component={CsvUploadPage} />
 
             </>
           )}

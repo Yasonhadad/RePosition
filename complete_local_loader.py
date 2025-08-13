@@ -150,7 +150,7 @@ def load_competitions(conn):
         ("url", "url", safe_str),
         ("is_major_national_league", "is_major_national_league", safe_str),
     ]
-    return _load_csv_with_mapping(conn, 'attached_assets/competitions.csv', 'competitions', mapping)
+    return _load_csv_with_mapping(conn, 'data/competitions.csv', 'competitions', mapping)
 
 def load_clubs(conn):
     """Load clubs data from clubs.csv (generic loader)."""
@@ -171,7 +171,7 @@ def load_clubs(conn):
         ("coach_name", "coach_name", safe_str),
         ("last_season", "last_season", safe_int),
     ]
-    return _load_csv_with_mapping(conn, 'attached_assets/clubs.csv', 'clubs', mapping)
+    return _load_csv_with_mapping(conn, 'data/clubs.csv', 'clubs', mapping)
 
 def load_players(conn):
     """Load players data from players.csv (generic loader with mapping)."""
@@ -240,7 +240,7 @@ def load_players(conn):
     ]
 
     # Perform minimal validation by filtering out rows without minimal fields inside the generic path
-    csv_file = 'attached_assets/players.csv'
+    csv_file = 'data/players.csv'
     if not os.path.exists(csv_file):
         print("✗ players.csv not found!")
         return False

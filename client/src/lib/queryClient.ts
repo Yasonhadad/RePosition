@@ -12,12 +12,20 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const isForm = typeof FormData !== "undefined" && data instanceof FormData;
+  const init: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
-  });
+  };
+  if (data !== undefined) {
+    if (isForm) {
+      init.body = data as FormData; // Browser will set multipart boundaries automatically
+    } else {
+      init.headers = { "Content-Type": "application/json" };
+      init.body = JSON.stringify(data);
+    }
+  }
+  const res = await fetch(url, init);
 
   await throwIfResNotOk(res);
   return res;
