@@ -78,6 +78,9 @@ export default function PlayerSearch() {
       const [url, searchFilters] = queryKey;
       const params = new URLSearchParams();
 
+      // Always request all players (pageSize=0) for client-side pagination
+      params.append('pageSize', '0');
+
       Object.entries(searchFilters as Record<string, any>).forEach(
         ([key, value]) => {
           if (value !== undefined && value !== "" && value !== null) {

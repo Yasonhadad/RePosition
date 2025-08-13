@@ -159,7 +159,87 @@ export class DatabaseStorage implements IStorage {
     return player || undefined;
   }
 
-  async searchPlayers(filters: SearchFilters, page: number = 1, pageSize: number = 50): Promise<Player[]> {
+  async searchPlayers(filters: SearchFilters, page: number = 1, pageSize: number = 0): Promise<Player[]> {
+    // If pageSize is 0, return all players without pagination
+    if (pageSize === 0) {
+      const conditions = [];
+
+      if (filters.name) {
+        conditions.push(sql`LOWER(${players.name}) LIKE LOWER(${'%' + filters.name + '%'})`);
+      }
+
+      if (filters.position) {
+        conditions.push(
+          or(
+            eq(players.sub_position, filters.position),
+            eq(players.position, filters.position)
+          )
+        );
+      }
+
+      if (filters.team) {
+        conditions.push(sql`LOWER(${players.current_club_name}) LIKE LOWER(${'%' + filters.team + '%'})`);
+      }
+
+      if (filters.country) {
+        // Find all clubs from competitions in the selected country
+        const clubsInCountry = db.select({ name: clubs.name })
+          .from(clubs)
+          .innerJoin(competitions, eq(clubs.domestic_competition_id, competitions.competition_id))
+          .where(eq(competitions.country_name, filters.country));
+        
+        conditions.push(inArray(players.current_club_name, clubsInCountry));
+      }
+
+      if (filters.ageMin !== undefined) {
+        conditions.push(gte(players.age, filters.ageMin));
+      }
+
+      if (filters.ageMax !== undefined) {
+        conditions.push(lte(players.age, filters.ageMax));
+      }
+
+      // Build the query based on conditions
+      if (conditions.length > 0) {
+        let query = db.select().from(players).where(and(...conditions));
+        
+        // Apply sorting
+        if (filters.sortBy) {
+          switch (filters.sortBy) {
+            case "overall":
+              return await query.orderBy(desc(players.ovr));
+            case "age":
+              return await query.orderBy(asc(players.age));
+            case "market_value":
+              return await query.orderBy(desc(players.market_value_in_eur));
+            default:
+              return await query;
+          }
+        }
+        
+        return await query;
+      } else {
+        // No conditions, just apply sorting
+        let query = db.select().from(players);
+        
+        if (filters.sortBy) {
+          switch (filters.sortBy) {
+            case "overall":
+              return await query.orderBy(desc(players.ovr));
+            case "age":
+              return await query.orderBy(asc(players.age));
+            case "market_value":
+              return await query.orderBy(desc(players.market_value_in_eur));
+            default:
+              return await query;
+          }
+        }
+        
+        return await query;
+      }
+    }
+
+    // Original pagination logic for when pageSize > 0
     console.log('filters.team:', filters.team);
     const conditions = [];
 

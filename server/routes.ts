@@ -17,9 +17,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert query string parameters to appropriate types
       const queryFilters: any = { ...req.query };
       
-      // Extract pagination parameters
-      const page = parseInt(queryFilters.page as string) || 1;
-      const pageSize = parseInt(queryFilters.pageSize as string) || 50;
+      // Extract pagination parameters (allow pageSize=0 to pass through)
+      const rawPage = req.query.page as string | undefined;
+      const rawPageSize = req.query.pageSize as string | undefined;
+      const page = rawPage !== undefined && !Number.isNaN(parseInt(rawPage)) ? parseInt(rawPage) : 1;
+      // Default to 0 (no server-side limit) so the client can paginate
+      const pageSize = rawPageSize !== undefined && !Number.isNaN(parseInt(rawPageSize)) ? parseInt(rawPageSize) : 0;
       
       // Remove pagination parameters from filters
       delete queryFilters.page;

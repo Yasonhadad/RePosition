@@ -7,7 +7,6 @@ Player Data Merger: Transfermarkt + FC24
 Merges PLAYERS_FINAL.csv (Transfermarkt) with FC_PLAYER_nations.csv (FC24),
 skips goalkeepers, preserves image_url and current_club_id,
 adds age column (2025-YOB),
-and sets PLAYER_CODE – after replacing "-" → " " – as the final name column.
 Creates one output file: players_joined_clean.csv
 """
 
