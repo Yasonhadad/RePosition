@@ -283,7 +283,7 @@ def load_position_compatibility(conn):
     
     try:
         # Get the path to the predict_player_positions.py script
-        script_path = os.path.join(os.path.dirname(__file__), 'models', 'predict_player_positions.py')
+        script_path = os.path.join(os.path.dirname(__file__), 'predict_player_positions.py')
         
         if not os.path.exists(script_path):
             print("✗ predict_player_positions.py not found!")
