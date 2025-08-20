@@ -9,7 +9,13 @@ import pandas as pd, numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import (
+    roc_auc_score,
+    accuracy_score,
+    precision_recall_fscore_support,
+    confusion_matrix,
+    classification_report,
+)
 from xgboost import XGBClassifier
 
 # ========= positions to train =========
@@ -100,15 +106,23 @@ for POS in POSITIONS:
     clf.fit(X_tr, y_tr)
     prob_te = clf.predict_proba(X_te)[:, 1]
     auc = roc_auc_score(y_te, prob_te)
-    print(f"Holdout AUC (20% test): {auc:.3f}")
+    y_pred = (prob_te >= 0.5).astype(int)
+    acc = accuracy_score(y_te, y_pred)
+    prec, rec, f1, supp = precision_recall_fscore_support(y_te, y_pred, average=None, labels=[0,1], zero_division=0)
+    cm = confusion_matrix(y_te, y_pred, labels=[0,1])
+    print(f"Holdout metrics (20% test): AUC={auc:.3f} | ACC={acc:.3f}")
+    print(f"Class 1 (POS) -> Precision={prec[1]:.3f} Recall={rec[1]:.3f} F1={f1[1]:.3f} Support={supp[1]}")
+    print(f"Class 0 (NEG) -> Precision={prec[0]:.3f} Recall={rec[0]:.3f} F1={f1[0]:.3f} Support={supp[0]}")
+    print("Confusion matrix [rows=true, cols=pred] (0,1):")
+    print(cm)
 
     # ----- feature importances -----
     gains = clf.feature_importances_
     top = np.argsort(gains)[::-1][:TOP_N_IMP]
-    pd.DataFrame({"feature": np.array(num_all)[top], "gain": gains[top]}) \
-        .to_csv(BASE / f"feat_{POS}_full.csv", index=False)
+    top_feats = np.array(num_all)[top]
+    top_gains = gains[top]
+    pd.DataFrame({"feature": top_feats, "gain": top_gains}).to_csv(BASE / f"feat_{POS}_full.csv", index=False)
 
-    print(f"OK - Saved importance for {POS} | Holdout AUC={auc:.3f}")
     summary.append({"pos": POS, "status": "ok", "auc": float(auc), "n_pos": pos_count})
 
 # ===== print final summary =====
