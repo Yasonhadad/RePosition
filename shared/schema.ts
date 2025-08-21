@@ -1,3 +1,7 @@
+/**
+ * Database schema definitions and validation schemas
+ * Defines all table structures, relationships, and data validation rules
+ */
 import {
   pgTable,
   text,
@@ -12,7 +16,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User storage table for simple email/password authentication
+/** User authentication table */
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: varchar("email").notNull().unique(),
@@ -23,9 +27,10 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/** Football players with detailed FIFA attributes and statistics */
 export const players = pgTable("players", {
   id: serial("id").primaryKey(),
-  player_id: integer("player_id").notNull().unique(),
+  player_id: integer("player_id").notNull().unique(), // External player ID from data source
   name: text("name").notNull(),
   country_of_citizenship: text("country_of_citizenship"),
   date_of_birth: text("date_of_birth"),
@@ -86,9 +91,10 @@ export const players = pgTable("players", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+/** Football competitions and leagues */
 export const competitions = pgTable("competitions", {
   id: serial("id").primaryKey(),
-  competition_id: text("competition_id").notNull().unique(),
+  competition_id: text("competition_id").notNull().unique(), // External competition ID
   competition_code: text("competition_code"),
   name: text("name").notNull(),
   sub_type: text("sub_type"),
@@ -101,9 +107,10 @@ export const competitions = pgTable("competitions", {
   is_major_national_league: text("is_major_national_league"),
 });
 
+/** Football clubs and teams */
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
-  club_id: integer("club_id").notNull().unique(),
+  club_id: integer("club_id").notNull().unique(), // External club ID
   club_code: text("club_code"),
   name: text("name").notNull(),
   domestic_competition_id: text("domestic_competition_id"),
@@ -120,9 +127,10 @@ export const clubs = pgTable("clubs", {
   last_season: integer("last_season"),
 });
 
+/** ML-generated position compatibility scores for players */
 export const position_compatibility = pgTable("position_compatibility", {
   id: serial("id").primaryKey(),
-  player_id: integer("player_id").notNull(),
+  player_id: integer("player_id").notNull(), // References players.player_id
   natural_pos: text("natural_pos"),
   st_fit: real("st_fit"),
   lw_fit: real("lw_fit"),
@@ -140,6 +148,7 @@ export const position_compatibility = pgTable("position_compatibility", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+/** User's favorite players - many-to-many relationship */
 export const player_favorites = pgTable("player_favorites", {
   id: serial("id").primaryKey(),
   user_id: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -156,15 +165,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("אנא הכנס כתובת מייל תקינה"),
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must contain at least 6 characters"),
 });
 
 export const registerSchema = insertUserSchema.extend({
-  password: z.string().min(6, "הסיסמא חייבת להכיל לפחות 6 תווים"),
+  password: z.string().min(6, "Password must contain at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "הסיסמאות לא תואמות",
+  message: "Passwords do not match",
   path: ["confirmPassword"],
 });
 
@@ -206,11 +215,11 @@ export type PositionCompatibility = typeof position_compatibility.$inferSelect;
 export type InsertPlayerFavorite = z.infer<typeof insertPlayerFavoriteSchema>;
 export type PlayerFavorite = typeof player_favorites.$inferSelect;
 
-// Football positions
+/** Football position constants */
 export const POSITIONS = ["ST", "LW", "RW", "CM", "CDM", "CAM", "LB", "RB", "CB"] as const;
 export type Position = typeof POSITIONS[number];
 
-// Search filters
+/** Player search and filtering */
 export const searchFiltersSchema = z.object({
   name: z.string().optional(),
   position: z.string().optional(),

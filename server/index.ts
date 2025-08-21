@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
+import { spawn } from "child_process";
 
 const app = express();
 app.use(express.json());
@@ -10,8 +11,6 @@ app.use(express.urlencoded({ extended: false }));
 // Serve public folder for static assets (images, etc.)
 app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
 
-// Note: Removed static files for attached_assets as CSV files are only for database loading
-// Only the logo should be served, but it can be moved to a proper public folder
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -49,9 +48,7 @@ app.use((req, res, next) => {
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -61,6 +58,33 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  // Data bootstrap: run the full data load + compatibility calc on server start
+  // Rename of the job: "DataBootstrap" (independent of the script file name)
+  const shouldBootstrap = process.env.BOOTSTRAP_ON_START !== "false";
+  if (shouldBootstrap) {
+    try {
+      log("DataBootstrap: starting initial data load (this may take a few minutes)...");
+      const py = spawn(process.platform === "win32" ? "python" : "python3", [
+        path.resolve(process.cwd(), "models", "data_loader.py"),
+      ], { cwd: process.cwd(), stdio: "inherit" });
+
+      py.on("exit", (code) => {
+        if (code === 0) {
+          log("DataBootstrap: completed successfully.");
+        } else {
+          log(`DataBootstrap: finished with exit code ${code}`);
+        }
+      });
+      py.on("error", (err) => {
+        log(`DataBootstrap: failed to start: ${err.message}`);
+      });
+    } catch (e: any) {
+      log(`DataBootstrap: unexpected error: ${e?.message || e}`);
+    }
+  } else {
+    log("DataBootstrap: skipped (BOOTSTRAP_ON_START=false)");
   }
 
   // ALWAYS serve the app on port 5000

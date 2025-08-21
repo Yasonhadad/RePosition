@@ -26,17 +26,12 @@ export interface PlayerCompatibility {
 }
 
 export interface TeamAnalytics {
-  avgCompatibility: number;
   playerCount: number;
-  bestPosition: string;
-  positionBreakdown: Record<string, number>;
 }
 
 export interface GlobalStats {
   totalPlayers: number;
   totalTeams: number;
-  avgCompatibility: number;
-  topPositions: Array<{ position: string; count: number }>;
 }
 
 export type Position = "ST" | "LW" | "RW" | "CM" | "CDM" | "CAM" | "LB" | "RB" | "CB";

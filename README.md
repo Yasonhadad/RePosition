@@ -61,14 +61,26 @@ Optional `.env` in project root:
   SESSION_SECRET=replace-with-a-long-random-secret
 ```
 
-### 3) Load base data (players, clubs, competitions) && Compute compatibility for DB players()
+### 3) Create database schema
+```bash
+npm run db:push
+```
+This creates all the database tables based on the schema definitions in `shared/schema.ts`. Run this command whenever you modify the database schema.
+
+### 4) Load base data (players, clubs, competitions) & Compute compatibility for DB players
 
 ```bash
-python complete_local_loader.py
+python models/data_loader.py
 ```
-This writes `data/result.csv` and updates the `position_compatibility` table.
+This writes `data/result.csv` and updates the `position_compatibility`, players, clubs, competitions tables.
+
+**Note**: Make sure to run `npm run db:push` first to create the database schema before loading data.
 
 ## Usage
+### Database Management
+- **Schema changes**: If you modify `shared/schema.ts`, run `npm run db:push` to update the database structure
+- **Data loading**: Run `python models/data_loader.py` to load/update player data and compute compatibility scores
+
 ### Run in development (HMR)
 ```bash
 npm run dev
@@ -100,7 +112,7 @@ npm run start
 ## Tech Stack
 - Client: React, Vite, Tailwind, shadcn/ui, TanStack Query
 - Server: Express (TypeScript), Drizzle ORM, Vite (dev middleware)
-- Data: PostgreSQL
+- Database: PostgreSQL with Drizzle ORM for type-safe queries
 - ML: Python (pandas, numpy, scikit‑learn, xgboost)
 
 ## Project Structure
@@ -121,14 +133,16 @@ npm run start
 │  ├─ db.ts                     # Postgres connection
 │  └─ vite.ts                   # Vite integration
 ├─ shared/
-│  └─ schema.ts                 # shared types/schemas (Drizzle + Zod)
+│  └─ schema.ts                 # Database schema definitions (Drizzle ORM + Zod validation)
+├─ drizzle.config.ts            # Drizzle configuration for database migrations
 ├─ models/
 │  ├─ predict_player_positions.py  # compute compatibility for DB players (writes to DB)
 │  ├─ predict_from_csv.py          # compute compatibility for external CSV (no DB writes)
 │  ├─ pos_models.py                # model refresh/helpers
 │  └─ feat_*.csv, corr_*.csv       # features metadata
 ├─ data/                        # CSV inputs/outputs used by loaders/scripts
-├─ complete_local_loader.py     # load base CSVs to DB
+├─ models/
+│  ├─ data_loader.py            # load base CSVs to DB
 ├─ requirements.txt             # Python deps (pandas, numpy, sklearn, xgboost, SQLAlchemy ...)
 ├─ package.json                 # npm scripts and deps
 └─ README.md
@@ -136,4 +150,3 @@ npm run start
 
 ## License
 MIT
-

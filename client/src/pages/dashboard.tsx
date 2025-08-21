@@ -8,8 +8,6 @@ interface GlobalStats {
   totalPlayers: number;
   totalTeams: number;
   totalCompetitions: number;
-  avgCompatibility: number;
-  topPositions: Array<{ position: string; count: number }>;
 }
 
 export default function Dashboard() {

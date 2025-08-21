@@ -1,3 +1,7 @@
+/**
+ * Authentication and session management using Passport.js
+ * Provides user registration, login, logout, and session persistence
+ */
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
@@ -16,22 +20,38 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+/**
+ * Hashes a password using scrypt with a random salt
+ * @param password - Plain text password to hash
+ * @returns Promise<string> - Hashed password in format "hash.salt"
+ */
+async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-async function comparePasswords(supplied: string, stored: string) {
+/**
+ * Compares a supplied password with a stored hash
+ * @param supplied - Plain text password to verify
+ * @param stored - Stored hash in format "hash.salt"
+ * @returns Promise<boolean> - True if passwords match
+ */
+async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-export function setupAuth(app: Express) {
+/**
+ * Sets up authentication middleware, session management, and auth routes
+ * @param app - Express application instance
+ */
+export function setupAuth(app: Express): void {
   const PostgresSessionStore = connectPg(session);
   
+  // Configure session storage in PostgreSQL
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "reposition-dev-secret-key",
     resave: false,
@@ -48,84 +68,74 @@ export function setupAuth(app: Express) {
     },
   };
 
+  // Configure session and passport middleware
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Configure local authentication strategy
   passport.use(
     new LocalStrategy(
       { usernameField: "email" },
       async (email, password, done) => {
         try {
           const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(password, user.password))) {
-            return done(null, false);
-          } else {
-            return done(null, user);
-          }
+          const isValid = user && await comparePasswords(password, user.password);
+          done(null, isValid ? user : false);
         } catch (error) {
-          return done(error);
+          done(error);
         }
       },
     ),
   );
 
+  // Session serialization
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-      if (!user) {
-        console.warn("deserializeUser: user not found for id", id);
-        return done(null, false);
-      }
-      done(null, user);
+      done(null, user || false);
     } catch (error) {
       done(error);
     }
   });
 
+  // Authentication routes
+  
+  /** User registration endpoint */
   app.post("/api/register", async (req, res, next) => {
     try {
-      console.log("Registration attempt:", { email: req.body.email, firstName: req.body.firstName, lastName: req.body.lastName });
-      
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
-        return res.status(400).json({ message: "משתמש עם מייל זה כבר קיים" });
+        return res.status(400).json({ message: "User with this email already exists" });
       }
 
       const hashedPassword = await hashPassword(req.body.password);
-      console.log("Password hashed successfully");
-
       const userData = {
         email: req.body.email,
         password: hashedPassword,
         firstName: req.body.firstName || null,
         lastName: req.body.lastName || null,
       };
-      console.log("Creating user with data:", { ...userData, password: "[HIDDEN]" });
 
       const user = await storage.createUser(userData);
-      console.log("User created successfully:", { id: user.id, email: user.email });
-
       req.login(user, (err) => {
-        if (err) {
-          console.error("Login error:", err);
-          return next(err);
-        }
+        if (err) return next(err);
         res.status(201).json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
       });
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "שגיאה ביצירת המשתמש", error: String(error) });
+      res.status(500).json({ message: "Error creating user" });
     }
   });
 
+  /** User login endpoint */
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     const user = req.user as SelectUser;
     res.status(200).json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
   });
 
+  /** User logout endpoint */
   app.post("/api/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
@@ -133,16 +143,27 @@ export function setupAuth(app: Express) {
     });
   });
 
+  /** Get current authenticated user */
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const user = req.user as SelectUser;
-    res.json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
+    if (req.isAuthenticated()) {
+      const user = req.user as SelectUser;
+      res.json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
+    } else {
+      res.sendStatus(401);
+    }
   });
 }
 
-export function requireAuth(req: any, res: any, next: any) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
+/**
+ * Middleware to require authentication for protected routes
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
+ */
+export function requireAuth(req: any, res: any, next: any): void {
+  if (req.isAuthenticated()) {
+    next();
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
   }
-  next();
 }

@@ -10,10 +10,7 @@ import type { Club } from "@shared/schema";
 interface TeamAnalysis {
   clubName: string;
   analytics: {
-    avgCompatibility: number;
     playerCount: number;
-    bestPosition: string;
-    positionBreakdown: Record<string, number>;
   };
   players: Array<{
     id: number;
