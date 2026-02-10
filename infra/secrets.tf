@@ -38,7 +38,7 @@ resource "aws_secretsmanager_secret" "app" {
 resource "aws_secretsmanager_secret_version" "app" {
   secret_id = aws_secretsmanager_secret.app.id
   secret_string = jsonencode({
-    DATABASE_URL = "postgresql://${aws_db_instance.main.username}:${random_password.rds.result}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}"
+    DATABASE_URL = "postgresql://${aws_db_instance.main.username}:${random_password.rds.result}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${aws_db_instance.main.db_name}?sslmode=require"
     SESSION_SECRET = random_password.session.result
   })
 }

@@ -56,6 +56,10 @@ export function setupAuth(app: Express): void {
   if (!sessionSecret) throw new Error('SESSION_SECRET is not set. Set it in .env (see .env.example).');
   if (!dbUrl) throw new Error('DATABASE_URL is not set. Set it in .env (see .env.example).');
 
+  // RDS requires SSL; session store uses pg and needs the same SSL config as db.ts
+  const isLocalDb = /localhost|127\.0\.0\.1/.test(dbUrl);
+  const sessionStoreSsl = isLocalDb ? false : { rejectUnauthorized: false };
+
   // Configure session storage in PostgreSQL
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
@@ -63,6 +67,7 @@ export function setupAuth(app: Express): void {
     saveUninitialized: false,
     store: new PostgresSessionStore({
       conString: dbUrl,
+      ssl: sessionStoreSsl,
       createTableIfMissing: true,
       tableName: 'session'
     }),
