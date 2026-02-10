@@ -4,15 +4,12 @@ Complete Local Database Loader for REPOSITION Database
 ====================================================
 
 Loads all data files with correct schema mapping:
-- competitions.csv -> competitions table  
+- competitions.csv -> competitions table
 - clubs.csv -> clubs table
 - players.csv -> players table
 - results.csv -> position_compatibility table
 
-
-Database: reposition_db on localhost
-User: reposition_user
-Password: 1234
+Connection: set DATABASE_URL in env, or DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD (see .env.example).
 """
 
 import pandas as pd
@@ -22,19 +19,32 @@ import os
 from datetime import datetime
 import sys
 
-# Local PostgreSQL configuration
-DB_CONFIG = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'reposition_db',
-    'user': 'reposition_user',
-    'password': '1234'
-}
+
+def _get_db_config():
+    """Build DB config from env (no hardcoded credentials)."""
+    dsn = os.environ.get('DATABASE_URL')
+    if dsn:
+        return None, dsn
+    pw = os.environ.get('DB_PASSWORD') or os.environ.get('DB_PASS')
+    if not pw:
+        raise SystemExit('Set DATABASE_URL or DB_PASSWORD (and DB_HOST, DB_USER, DB_NAME) in .env')
+    return {
+        'host': os.environ.get('DB_HOST', 'localhost'),
+        'port': int(os.environ.get('DB_PORT', '5432')),
+        'database': os.environ.get('DB_NAME', 'reposition_db'),
+        'user': os.environ.get('DB_USER', 'reposition_user'),
+        'password': pw,
+    }, None
+
 
 def connect_db():
-    """Connect to local PostgreSQL database"""
+    """Connect to PostgreSQL using DATABASE_URL or DB_* env vars."""
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
+        config, dsn = _get_db_config()
+        if dsn:
+            conn = psycopg2.connect(dsn)
+        else:
+            conn = psycopg2.connect(**config)
         return conn
     except Exception as e:
         print(f"✗ Database connection failed: {e}")

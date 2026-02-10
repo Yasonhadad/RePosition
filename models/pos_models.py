@@ -5,6 +5,7 @@ For each POS: save correlations and top feature importances.
 """
 
 from pathlib import Path
+import os
 import pandas as pd, numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
@@ -27,23 +28,24 @@ TOP_N_IMP = 35
 SEED = 42
 MIN_POS = 20  # minimal #positives required to train a model
 
-# ====== DB connection details ======
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_NAME = "reposition_db"
-DB_USER = "reposition_user"
-DB_PASS = "1234"
-
-# ===== load players once =====
-db_url = URL.create(
-    "postgresql+psycopg2",
-    username=DB_USER,
-    password=DB_PASS,
-    host=DB_HOST,
-    port=DB_PORT,
-    database=DB_NAME,
-)
-engine = create_engine(db_url)
+# ====== DB connection from env only (no hardcoded credentials) ======
+_dsn = os.environ.get("DATABASE_URL")
+if _dsn:
+    _url = _dsn.replace("postgresql://", "postgresql+psycopg2://", 1) if "postgresql://" in _dsn else _dsn
+    engine = create_engine(_url)
+else:
+    _pw = os.environ.get("DB_PASSWORD") or os.environ.get("DB_PASS")
+    if not _pw:
+        raise SystemExit("Set DATABASE_URL or DB_PASSWORD (and DB_HOST, DB_USER, DB_NAME) in .env")
+    db_url = URL.create(
+        "postgresql+psycopg2",
+        username=os.environ.get("DB_USER", "reposition_user"),
+        password=_pw,
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT", "5432")),
+        database=os.environ.get("DB_NAME", "reposition_db"),
+    )
+    engine = create_engine(db_url)
 df = pd.read_sql("SELECT * FROM players", engine)
 
 # keep only rows with sub_position
@@ -54,7 +56,7 @@ meta = {
     "id", "player_id", "name", "country_of_citizenship", "date_of_birth",
     "current_club_name", "position", "sub_position", "foot", "club_id",
     "created_at", "image_url", "weak_foot", "skill_moves", "preferred_foot",
-    "ovr", "sho", "pas", "dri", "def", "phy", "age",
+    "ovr", "sho", "pas", "dri", "def", "phy", "age","pac",
     "market_value_in_eur", "highest_market_value_in_eur", "league", "team",
 }
 num_all = [c for c in df.select_dtypes(include=["int64", "float64"]).columns if c not in meta]

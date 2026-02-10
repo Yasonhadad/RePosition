@@ -51,13 +51,18 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 export function setupAuth(app: Express): void {
   const PostgresSessionStore = connectPg(session);
   
+  const sessionSecret = process.env.SESSION_SECRET;
+  const dbUrl = process.env.DATABASE_URL;
+  if (!sessionSecret) throw new Error('SESSION_SECRET is not set. Set it in .env (see .env.example).');
+  if (!dbUrl) throw new Error('DATABASE_URL is not set. Set it in .env (see .env.example).');
+
   // Configure session storage in PostgreSQL
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "reposition-dev-secret-key",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: new PostgresSessionStore({
-      conString: process.env.DATABASE_URL || 'postgresql://reposition_user:1234@localhost:5432/reposition_db',
+      conString: dbUrl,
       createTableIfMissing: true,
       tableName: 'session'
     }),

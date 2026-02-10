@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Player } from "@shared/schema";
-import { getPlayerInitials, capitalizeName, getCompatibilityColor } from "@/lib/player-utils";
+import { capitalizeName, getCompatibilityColor } from "@/lib/player-utils";
 
 interface UnifiedPlayerCardProps {
   player: Player;
@@ -24,24 +24,7 @@ interface UnifiedPlayerCardProps {
   showProfileButton?: boolean;
 }
 
-// Shared PlayerImage component
-const PlayerImage = ({ player, size = "w-16 h-16" }: { player: Player, size?: string }) => {
-  if (player.image_url) {
-    return (
-      <img
-        src={player.image_url}
-        alt={player.name}
-        className={`${size} rounded-lg object-cover border-2 border-white shadow-sm`}
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          target.nextElementSibling?.classList.remove('hidden');
-        }}
-      />
-    );
-  }
-  return null;
-};
+
 
 export function UnifiedPlayerCard({ 
   player, 
@@ -85,12 +68,13 @@ export function UnifiedPlayerCard({
         <CardContent className="p-4">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <PlayerImage player={player} />
-              <div className={`w-16 h-16 bg-gradient-to-br from-primary to-analytics rounded-lg flex items-center justify-center hidden`}>
-                <span className="text-white font-bold text-sm">
-                  {getPlayerInitials(player.name)}
-                </span>
-              </div>
+              {player.image_url && (
+                <img
+                  src={player.image_url}
+                  alt={player.name}
+                  className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-sm"
+                />
+              )}
             </div>
             
             <div className="flex-1 min-w-0">
@@ -147,12 +131,13 @@ export function UnifiedPlayerCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <PlayerImage player={player} />
-            <div className={`w-16 h-16 bg-gradient-to-br ${getCompatibilityColor(compatibilityScore)} rounded-lg flex items-center justify-center hidden`}>
-              <span className="text-white font-bold text-lg">
-                {getPlayerInitials(player.name)}
-              </span>
-            </div>
+            {player.image_url && (
+              <img
+                src={player.image_url}
+                alt={player.name}
+                className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-sm"
+              />
+            )}
           </div>
           <div>
             <h4 className="font-semibold text-dark">{capitalizeName(player.name)}</h4>

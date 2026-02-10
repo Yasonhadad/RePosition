@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import argparse
+import os
 import warnings
 import pandas as pd
 import numpy as np
@@ -45,22 +46,24 @@ def main() -> int:
     input_csv = Path(args.input)
     out_csv = Path(args.out)
 
-    # ────────── Database Connection for reference stats ──────────
-    DB_HOST = "localhost"
-    DB_PORT = 5432
-    DB_NAME = "reposition_db"
-    DB_USER = "reposition_user"
-    DB_PASS = "1234"
-
-    db_url = URL.create(
-        "postgresql+psycopg2",
-        username=DB_USER,
-        password=DB_PASS,
-        host=DB_HOST,
-        port=DB_PORT,
-        database=DB_NAME,
-    )
-    engine = create_engine(db_url)
+    # ────────── Database connection from env (see .env.example) ──────────
+    dsn = os.environ.get("DATABASE_URL")
+    if dsn:
+        url = dsn.replace("postgresql://", "postgresql+psycopg2://", 1) if "postgresql://" in dsn else dsn
+        engine = create_engine(url)
+    else:
+        pw = os.environ.get("DB_PASSWORD") or os.environ.get("DB_PASS")
+        if not pw:
+            raise SystemExit("Set DATABASE_URL or DB_PASSWORD (and DB_HOST, DB_USER, DB_NAME) in .env")
+        db_url = URL.create(
+            "postgresql+psycopg2",
+            username=os.environ.get("DB_USER", "reposition_user"),
+            password=pw,
+            host=os.environ.get("DB_HOST", "localhost"),
+            port=int(os.environ.get("DB_PORT", "5432")),
+            database=os.environ.get("DB_NAME", "reposition_db"),
+        )
+        engine = create_engine(db_url)
 
     with engine.connect() as con:
         dm = pd.read_sql("SELECT * FROM players", con)

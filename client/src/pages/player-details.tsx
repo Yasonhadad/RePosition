@@ -8,6 +8,7 @@ import { StarButton } from "@/components/ui/star-button";
 import { ArrowLeft, Star, TrendingUp, User, MapPin, Calendar, DollarSign } from "lucide-react";
 import { Link } from "wouter";
 import { PositionCompatibility } from "@/components/player/position-compatibility";
+
 import type { Player, PositionCompatibility as PositionCompatibilityType } from "@shared/schema";
 
 interface PlayerData {
@@ -31,9 +32,7 @@ export default function PlayerDetails() {
     enabled: !!playerId,
   });
 
-  const getPlayerInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  };
+
 
   const formatCurrency = (value: number | null | undefined) => {
     if (!value || value === 0) return "N/A";
@@ -46,29 +45,7 @@ export default function PlayerDetails() {
     return `€${value.toLocaleString()}`;
   };
 
-  const PlayerImage = ({ player, size = "w-24 h-24" }: { player: Player, size?: string }) => {
-    if (player.image_url) {
-      return (
-        <img
-          src={player.image_url}
-          alt={player.name}
-          className={`${size} rounded-full object-cover border-4 border-white shadow-lg`}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.nextElementSibling?.classList.remove('hidden');
-          }}
-        />
-      );
-    }
-    return (
-      <div className={`${size} bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center`}>
-        <span className="text-white font-bold text-2xl">
-          {getPlayerInitials(player.name)}
-        </span>
-      </div>
-    );
-  };
+
 
   function capitalizeName(name: string) {
     return name
@@ -199,7 +176,13 @@ export default function PlayerDetails() {
             <CardContent className="p-6">
               <div className="flex items-center space-x-6 mb-6">
                 <div className="relative">
-                  <PlayerImage player={player} />
+                  {player.image_url && (
+                    <img
+                      src={player.image_url}
+                      alt={player.name}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">

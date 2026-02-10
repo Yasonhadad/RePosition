@@ -12,7 +12,7 @@ Calculates position compatibility scores for all players using ML models.
 """
 
 from pathlib import Path
-import argparse, warnings
+import argparse, os, warnings
 import runpy
 import pandas as pd, numpy as np
 import psycopg2
@@ -38,22 +38,24 @@ args = parser.parse_args()
 print("Refreshing position models via pos_models.py ...")
 runpy.run_path(str(BASE / "pos_models.py"), run_name="__main__")
 
-# ────────── Database Connection ──────────
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_NAME = "reposition_db"
-DB_USER = "reposition_user"
-DB_PASS = "1234"
-
-db_url = URL.create(
-    "postgresql+psycopg2",
-    username=DB_USER,
-    password=DB_PASS,
-    host=DB_HOST,
-    port=DB_PORT,
-    database=DB_NAME,
-)
-engine = create_engine(db_url)
+# ────────── Database connection from env only ──────────
+_dsn = os.environ.get("DATABASE_URL")
+if _dsn:
+    _url = _dsn.replace("postgresql://", "postgresql+psycopg2://", 1) if "postgresql://" in _dsn else _dsn
+    engine = create_engine(_url)
+else:
+    _pw = os.environ.get("DB_PASSWORD") or os.environ.get("DB_PASS")
+    if not _pw:
+        raise SystemExit("Set DATABASE_URL or DB_PASSWORD (and DB_HOST, DB_USER, DB_NAME) in .env")
+    db_url = URL.create(
+        "postgresql+psycopg2",
+        username=os.environ.get("DB_USER", "reposition_user"),
+        password=_pw,
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT", "5432")),
+        database=os.environ.get("DB_NAME", "reposition_db"),
+    )
+    engine = create_engine(db_url)
 with engine.connect() as con:
     dm = pd.read_sql("SELECT * FROM players", con)
 
@@ -149,10 +151,16 @@ compat_df["best_fit_pct"] = compat_df["best_fit_score"]
 compat_df["created_at"] = datetime.datetime.now().isoformat()
 
 # --- Load results to position_compatibility table in database ---
-conn2 = psycopg2.connect(
-    host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
-    user=DB_USER, password=DB_PASS
-)
+if _dsn:
+    conn2 = psycopg2.connect(_dsn)
+else:
+    conn2 = psycopg2.connect(
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT", "5432")),
+        dbname=os.environ.get("DB_NAME", "reposition_db"),
+        user=os.environ.get("DB_USER", "reposition_user"),
+        password=_pw,
+    )
 cur = conn2.cursor()
 cur.execute("TRUNCATE TABLE position_compatibility;")
 columns = list(compat_df.columns)

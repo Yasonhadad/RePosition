@@ -1,0 +1,36 @@
+# Database credentials: set in .env (copy from .env.example). Never commit real passwords.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-reposition_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
+      POSTGRES_DB: ${POSTGRES_DB:-reposition_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reposition_user -d reposition_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-reposition_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-reposition_db}
+      # "false" = skip bootstrap on startup (fast boot; use when DB already has data)
+      # "true" = run full data load + position compatibility on every start
+      BOOTSTRAP_ON_START: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

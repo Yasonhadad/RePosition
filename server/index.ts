@@ -60,25 +60,47 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Data bootstrap: run the full data load + compatibility calc on server start
-  // Rename of the job: "DataBootstrap" (independent of the script file name)
+  // Ensure DB schema exists (create tables) before bootstrap
   const shouldBootstrap = process.env.BOOTSTRAP_ON_START !== "false";
+  if (shouldBootstrap && process.env.DATABASE_URL) {
+    try {
+      log("DataBootstrap: ensuring database schema (drizzle-kit push)...");
+      const push = spawn(
+        process.platform === "win32" ? "npx.cmd" : "npx",
+        ["drizzle-kit", "push", "--force"],
+        { cwd: process.cwd(), stdio: "inherit", env: process.env }
+      );
+      await new Promise<void>((resolve, reject) => {
+        push.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`drizzle-kit push exited with ${code}`))));
+        push.on("error", reject);
+      });
+      log("DataBootstrap: schema ready.");
+    } catch (e: any) {
+      log(`DataBootstrap: schema push failed: ${e?.message || e}`);
+    }
+  }
+
   if (shouldBootstrap) {
     try {
       log("DataBootstrap: starting initial data load (this may take a few minutes)...");
       const py = spawn(process.platform === "win32" ? "python" : "python3", [
         path.resolve(process.cwd(), "models", "data_loader.py"),
-      ], { cwd: process.cwd(), stdio: "inherit" });
+      ], { cwd: process.cwd(), stdio: "inherit", env: process.env });
 
-      py.on("exit", (code) => {
-        if (code === 0) {
-          log("DataBootstrap: completed successfully.");
-        } else {
-          log(`DataBootstrap: finished with exit code ${code}`);
-        }
-      });
-      py.on("error", (err) => {
-        log(`DataBootstrap: failed to start: ${err.message}`);
+      await new Promise<void>((resolve, reject) => {
+        py.on("exit", (code) => {
+          if (code === 0) {
+            log("DataBootstrap: completed successfully.");
+            resolve();
+          } else {
+            log(`DataBootstrap: finished with exit code ${code}`);
+            resolve(); // still start server so app is usable
+          }
+        });
+        py.on("error", (err) => {
+          log(`DataBootstrap: failed to start: ${err.message}`);
+          resolve(); // still start server
+        });
       });
     } catch (e: any) {
       log(`DataBootstrap: unexpected error: ${e?.message || e}`);
@@ -87,9 +109,7 @@ app.use((req, res, next) => {
     log("DataBootstrap: skipped (BOOTSTRAP_ON_START=false)");
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
+  // Start serving only after bootstrap has finished (when bootstrap ran)
   const port = 5000;
   const host = '0.0.0.0';
   server.listen(port, host, () => {

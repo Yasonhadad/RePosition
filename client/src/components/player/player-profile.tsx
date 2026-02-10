@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StarButton } from "@/components/ui/star-button";
 import { PositionCompatibility } from "./position-compatibility";
 import { Link } from "wouter";
+
 import type { Player, PositionCompatibility as PositionCompatibilityType } from "@shared/schema";
 
 interface PlayerProfileProps {
@@ -35,28 +36,9 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
     enabled: !!player?.player_id,
   });
 
-  const getPlayerInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  };
 
-  const PlayerImage = ({ player, size = "w-20 h-20" }: { player: Player, size?: string }) => {
-    if (player.image_url) {
-      return (
-        <img
-          src={player.image_url}
-          alt={player.name}
-          className={`${size} rounded-full object-cover border-2 border-white shadow-lg`}
-          onError={(e) => {
-            // Fallback to initials if image fails to load
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.nextElementSibling?.classList.remove('hidden');
-          }}
-        />
-      );
-    }
-    return null;
-  };
+
+
 
   function capitalizeName(name: string) {
     return name
@@ -122,12 +104,13 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
         {/* Player Info */}
         <div className="text-center mb-6">
           <div className="relative mx-auto mb-3">
-            <PlayerImage player={currentPlayer} />
-            <div className="w-20 h-20 bg-gradient-to-br from-primary to-analytics rounded-full flex items-center justify-center mx-auto hidden">
-              <span className="text-white font-bold text-xl">
-                {getPlayerInitials(currentPlayer.name)}
-              </span>
-            </div>
+            {currentPlayer.image_url && (
+              <img
+                src={currentPlayer.image_url}
+                alt={currentPlayer.name}
+                className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-lg"
+              />
+            )}
           </div>
           <div className="flex items-center justify-center space-x-2 mb-2">
             <h4 className="font-bold text-dark">{capitalizeName(currentPlayer.name)}</h4>

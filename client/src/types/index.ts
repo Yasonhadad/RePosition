@@ -9,7 +9,6 @@ export interface SearchFilters {
 
 export interface PlayerCompatibility {
   player_id: number;
-  natural_pos: string | null;
   st_fit: number | null;
   lw_fit: number | null;
   rw_fit: number | null;
@@ -21,8 +20,6 @@ export interface PlayerCompatibility {
   cb_fit: number | null;
   best_pos: string | null;
   best_fit_score: number | null;
-  best_fit_pct: number | null;
-  ovr: number | null;
 }
 
 export interface TeamAnalytics {

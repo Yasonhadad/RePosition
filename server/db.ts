@@ -2,13 +2,15 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Force local PostgreSQL database connection
-const LOCAL_DATABASE_URL = 'postgresql://reposition_user:1234@localhost:5432/reposition_db';
+// DATABASE_URL must be set (e.g. in .env). See .env.example.
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not set. Copy .env.example to .env and set your database URL.');
+}
+console.log('Connecting to database:', connectionString.replace(/:[^:@]+@/, ':***@'));
 
-console.log('Connecting to LOCAL database:', LOCAL_DATABASE_URL);
-
-export const pool = new Pool({ 
-  connectionString: LOCAL_DATABASE_URL,
+export const pool = new Pool({
+  connectionString,
   ssl: false,
   max: 20,
   idleTimeoutMillis: 30000,

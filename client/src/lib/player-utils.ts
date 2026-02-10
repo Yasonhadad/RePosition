@@ -1,9 +1,5 @@
 // Utility functions for player-related operations
 
-export const getPlayerInitials = (name: string) => {
-  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-};
-
 export const capitalizeName = (name: string) => {
   return name
     .split(' ')
@@ -18,3 +14,4 @@ export const getCompatibilityColor = (score?: number) => {
   if (score >= 70) return "from-accent to-analytics";
   return "from-gray-400 to-gray-500";
 };
+

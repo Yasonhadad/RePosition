@@ -142,7 +142,7 @@ export default function AuthPage() {
         <div className="flex flex-col items-center space-y-6">
           <div className="flex flex-col items-center space-y-4">
             <img
-              src="/images/reposition-logo-final.png"
+              src="/public/images/reposition-logo-final.png"
               alt="REPOSITION Logo"
               className="h-16 w-auto"
             />
