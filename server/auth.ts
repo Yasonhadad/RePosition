@@ -134,7 +134,8 @@ export function setupAuth(app: Express): void {
         if (err) return next(err);
         res.status(201).json({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName });
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Register error:", error?.message ?? error);
       res.status(500).json({ message: "Error creating user" });
     }
   });

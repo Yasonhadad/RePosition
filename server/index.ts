@@ -5,6 +5,21 @@ import path from "path";
 import { spawn } from "child_process";
 
 const app = express();
+
+// CORS: allow frontend on CloudFront or ALB to call API with credentials (cookies)
+const allowedOriginPatterns = [/^https?:\/\/localhost(:\d+)?$/, /^https?:\/\/[^/]*reposition-alb[^/]*\.elb\.amazonaws\.com$/i, /^https:\/\/[^/]+\.cloudfront\.net$/];
+app.use((req, res, next) => {
+  const origin = req.get("Origin");
+  if (origin && allowedOriginPatterns.some((p) => p.test(origin))) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
