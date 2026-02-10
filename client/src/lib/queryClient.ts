@@ -4,6 +4,9 @@
  */
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+/** API base URL (set in production when frontend is on CloudFront and API on ALB) */
+export const apiBase = (import.meta.env.VITE_API_URL as string) || "";
+
 /**
  * Throws an error if the response is not OK (status 200-299)
  * @param res - Fetch Response object
@@ -42,7 +45,7 @@ export async function apiRequest(
     }
   }
   
-  const res = await fetch(url, init);
+  const res = await fetch(apiBase + url, init);
   await throwIfResNotOk(res);
   return res;
 }
@@ -59,7 +62,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const res = await fetch(apiBase + (queryKey[0] as string), {
       credentials: "include", // Include session cookies
     });
 

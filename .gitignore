@@ -54,3 +54,9 @@ logs/
 # Server
 server/public
 vite.config.ts.*
+
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars

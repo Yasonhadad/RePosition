@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StarButton } from "@/components/ui/star-button";
 import { PositionCompatibility } from "./position-compatibility";
 import { Link } from "wouter";
+import { apiBase } from "@/lib/queryClient";
 
 import type { Player, PositionCompatibility as PositionCompatibilityType } from "@shared/schema";
 
@@ -31,7 +32,7 @@ export function PlayerProfile({ player, showCompatibilityByDefault = false }: Pl
     queryKey: ["/api/players", player?.player_id],
     queryFn: ({ queryKey }) => {
       const [, playerId] = queryKey;
-      return fetch(`/api/players/${playerId}`).then(res => res.json());
+      return fetch(apiBase + `/api/players/${playerId}`).then(res => res.json());
     },
     enabled: !!player?.player_id,
   });

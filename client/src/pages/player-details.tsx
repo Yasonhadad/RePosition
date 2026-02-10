@@ -8,6 +8,7 @@ import { StarButton } from "@/components/ui/star-button";
 import { ArrowLeft, Star, TrendingUp, User, MapPin, Calendar, DollarSign } from "lucide-react";
 import { Link } from "wouter";
 import { PositionCompatibility } from "@/components/player/position-compatibility";
+import { apiBase } from "@/lib/queryClient";
 
 import type { Player, PositionCompatibility as PositionCompatibilityType } from "@shared/schema";
 
@@ -24,7 +25,7 @@ export default function PlayerDetails() {
     queryKey: ["/api/players", playerId],
     queryFn: ({ queryKey }) => {
       const [, id] = queryKey;
-      return fetch(`/api/players/${id}`).then(res => {
+      return fetch(apiBase + `/api/players/${id}`).then(res => {
         if (!res.ok) throw new Error('Player not found');
         return res.json();
       });

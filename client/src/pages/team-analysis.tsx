@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
+import { apiBase } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import type { Club } from "@shared/schema";
@@ -69,7 +70,7 @@ export default function TeamAnalysis() {
     queryKey: ["/api/clubs/country", selectedCountry],
     queryFn: () => {
       console.log("Fetching clubs for country:", selectedCountry);
-      return fetch(`/api/clubs/country/${encodeURIComponent(selectedCountry)}`).then(res => res.json());
+      return fetch(apiBase + `/api/clubs/country/${encodeURIComponent(selectedCountry)}`).then(res => res.json());
     },
     enabled: !!selectedCountry && selectedCountry !== "",
   });
@@ -78,7 +79,7 @@ export default function TeamAnalysis() {
     queryKey: ["/api/teams", selectedClub, "analysis"],
     queryFn: () => {
       console.log("Fetching team analysis for club:", selectedClub);
-      return fetch(`/api/teams/${encodeURIComponent(selectedClub)}/analysis`).then(res => res.json());
+      return fetch(apiBase + `/api/teams/${encodeURIComponent(selectedClub)}/analysis`).then(res => res.json());
     },
     enabled: !!selectedClub && selectedClub !== "",
   });
