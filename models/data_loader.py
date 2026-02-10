@@ -368,10 +368,14 @@ def show_final_summary(conn):
 def main():
     """Main execution function"""
     print("Loading database...")
-    
+
     # Connect to database once
     conn = connect_db()
-    print(f"OK - Connected to {DB_CONFIG['database']} on {DB_CONFIG['host']}")
+    config, _ = _get_db_config()
+    if config:
+        print(f"OK - Connected to {config['database']} on {config['host']}")
+    else:
+        print("OK - Connected to database")
     
     try:
         # Execute loading sequence (removed Users as they register through the app)
