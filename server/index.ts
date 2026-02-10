@@ -65,10 +65,12 @@ app.use((req, res, next) => {
   if (shouldBootstrap && process.env.DATABASE_URL) {
     try {
       log("DataBootstrap: ensuring database schema (drizzle-kit push)...");
+      // RDS uses a cert that Node treats as self-signed; allow for this subprocess only
+      const pushEnv = { ...process.env, NODE_TLS_REJECT_UNAUTHORIZED: "0" };
       const push = spawn(
         process.platform === "win32" ? "npx.cmd" : "npx",
         ["drizzle-kit", "push", "--force"],
-        { cwd: process.cwd(), stdio: "inherit", env: process.env }
+        { cwd: process.cwd(), stdio: "inherit", env: pushEnv }
       );
       await new Promise<void>((resolve, reject) => {
         push.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`drizzle-kit push exited with ${code}`))));
