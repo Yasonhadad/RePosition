@@ -249,6 +249,24 @@ terraform apply
 
 **חשוב:** כשנכנסים דרך CloudFront, יש להגדיר `VITE_API_URL` לכתובת ה־**CloudFront** (לא ה־ALB). CloudFront מפנה `/api/*` ל־ALB מאחורי הקלעים.
 
+### Rollback לבקאנד (לפי digest)
+
+אם הגרסה האחרונה שבורה ורוצים לחזור לגרסה קודמת:
+
+1. **למצוא digest של image שעבד:** ECR → Repositories → reposition → Images. עמודה "Image digest" (למשל `sha256:a1b2c3d4...`).
+2. **להריץ Rollback workflow:** Actions → **Rollback Backend (by Digest)** → Run workflow → להדביק את ה-digest → Run.
+3. ECS יגש ל-image הקודם ויריץ deployment חדש.
+
+(ECR שומר עד 10 images – ראה `ecr_keep_last_n_images` ב־variables.tf.)
+
+### Rollback לפרונט (לפי commit)
+
+**אופציה 1 – Workflow:** Actions → **Rollback Frontend (by Commit)** → Run workflow → להזין commit SHA של הגרסה שעבדה (מ־GitHub → Commits). ה-workflow יבנה מאותו commit ויעלה ל-S3.
+
+**אופציה 2 – git revert:** `git revert <commit>` → push. ה-Frontend workflow ירוץ אוטומטית ויעלה build מהגרסה המחזורית.
+
+**אופציה 3 – S3 versioning:** ה-bucket עם versioning – אפשר לשחזר גרסאות קודמות ידנית ב-Console (S3 → Object → Versions → Restore).
+
 ### הרצה ידנית
 
 ניתן להריץ כל workflow ידנית: Actions → בחר workflow → Run workflow.

@@ -1,0 +1,86 @@
+# Rollback Backend: deploy a previous Docker image by digest
+# Use when the latest deployment has issues and you need to revert.
+name: Rollback Backend (by Digest)
+
+on:
+  workflow_dispatch:
+    inputs:
+      digest:
+        description: "ECR image digest (e.g. sha256:a1b2c3d4e5f6...). ECR → Repositories → reposition → Images → copy Image digest"
+        required: true
+        type: string
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-1' }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'reposition' }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'reposition-cluster' }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE || 'reposition-service' }}
+  TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION || 'reposition' }}
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Validate digest format
+        run: |
+          DIGEST="${{ github.event.inputs.digest }}"
+          if [[ ! "$DIGEST" =~ ^sha256:[a-fA-F0-9]+$ ]]; then
+            echo "Invalid digest. Use format sha256:xxx (64 hex chars). Copy from ECR → Images → Image digest"
+            exit 1
+          fi
+
+      - name: Get ECR repository URI
+        id: ecr
+        run: |
+          REPO_URI=$(aws ecr describe-repositories --repository-names $ECR_REPOSITORY --query 'repositories[0].repositoryUri' --output text --region $AWS_REGION)
+          echo "uri=$REPO_URI" >> $GITHUB_OUTPUT
+          DIGEST="${{ github.event.inputs.digest }}"
+          IMAGE="${REPO_URI}@${DIGEST}"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "Rolling back to image: $IMAGE"
+
+      - name: Get current task definition and create rollback revision
+        id: taskdef
+        run: |
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition $TASK_DEFINITION \
+            --query 'taskDefinition' \
+            --output json \
+            --region $AWS_REGION)
+
+          # Remove read-only fields
+          echo "$TASK_DEF" | jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > taskdef.json
+
+          # Replace image with digest
+          IMAGE="${{ steps.ecr.outputs.image }}"
+          jq --arg img "$IMAGE" '(.containerDefinitions[0].image) = $img' taskdef.json > taskdef-new.json
+
+          # Register new task definition
+          aws ecs register-task-definition \
+            --cli-input-json file://taskdef-new.json \
+            --region $AWS_REGION \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text > new_task_arn.txt
+
+          NEW_ARN=$(cat new_task_arn.txt)
+          echo "task_def_arn=$NEW_ARN" >> $GITHUB_OUTPUT
+          echo "Registered new task definition: $NEW_ARN"
+
+      - name: Update ECS service to use rollback image
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --task-definition ${{ steps.taskdef.outputs.task_def_arn }} \
+            --force-new-deployment \
+            --region $AWS_REGION \
+            --query 'service.serviceName' \
+            --output text
+          echo "Rollback initiated. ECS is pulling the previous image and starting new tasks."
