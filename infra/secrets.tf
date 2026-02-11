@@ -1,12 +1,12 @@
 # =============================================================================
-# Secrets Manager – ניהול סיסמאות וסודות האפליקציה
+# Secrets Manager – Application secrets and credentials
 # =============================================================================
-# Terraform יוצר סיסמאות אקראיות, מגדיר איתן את RDS, ושומר ב-Secrets Manager
-# JSON אחד שהאפליקציה (ECS) תקבל כ-env vars. כך אין צורך להעביר סיסמאות ידנית.
+# Terraform generates random passwords, configures RDS, and stores a single JSON
+# secret in Secrets Manager. ECS injects these as environment variables.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# סיסמאות אקראיות (לא נשמרות בקוד – רק ב-state וב-Secrets Manager)
+# Random passwords – stored only in Terraform state and Secrets Manager
 # -----------------------------------------------------------------------------
 resource "random_password" "rds" {
   length           = 32
@@ -21,10 +21,10 @@ resource "random_password" "session" {
 }
 
 # -----------------------------------------------------------------------------
-# Secret ב-Secrets Manager – ערך JSON עם DATABASE_URL ו-SESSION_SECRET
+# Secrets Manager secret – JSON with DATABASE_URL and SESSION_SECRET
 # -----------------------------------------------------------------------------
-# ECS יקרא את ה-secret ויזריק את הערכים כ-env vars (DATABASE_URL, SESSION_SECRET).
-# ה-secret נוצר אחרי ש-RDS קיים, כי אנחנו בונים את DATABASE_URL מה-endpoint.
+# ECS reads this secret and injects values as env vars. Created after RDS exists
+# because DATABASE_URL is built from the RDS endpoint.
 # -----------------------------------------------------------------------------
 resource "aws_secretsmanager_secret" "app" {
   name        = "${var.project_name}/app"

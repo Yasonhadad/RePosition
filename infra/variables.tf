@@ -17,7 +17,7 @@ variable "app_port" {
 }
 
 # -----------------------------------------------------------------------------
-# ECR (שלב 4)
+# Elastic Container Registry
 # -----------------------------------------------------------------------------
 variable "ecr_keep_last_n_images" {
   description = "How many Docker images to keep in ECR (older ones are deleted)"
@@ -26,7 +26,7 @@ variable "ecr_keep_last_n_images" {
 }
 
 # -----------------------------------------------------------------------------
-# ECS (שלב 5) – Fargate
+# ECS Fargate
 # -----------------------------------------------------------------------------
 variable "ecs_task_cpu" {
   description = "Fargate task CPU units (256, 512, 1024, 2048, 4096)"
@@ -59,7 +59,7 @@ variable "ecs_bootstrap_on_start" {
 }
 
 # -----------------------------------------------------------------------------
-# Custom domain + HTTPS (אופציונלי)
+# Custom domain and HTTPS (optional)
 # -----------------------------------------------------------------------------
 variable "domain_name" {
   description = "Custom domain for the app (e.g. app.reposition.com). Leave empty to skip domain/HTTPS setup."
@@ -80,7 +80,7 @@ variable "route53_zone_id" {
 }
 
 # -----------------------------------------------------------------------------
-# S3 + CloudFront (שלב 6)
+# S3 and CloudFront
 # -----------------------------------------------------------------------------
 variable "cloudfront_price_class" {
   description = "CloudFront price class (PriceClass_All, PriceClass_200, PriceClass_100)"
@@ -88,8 +88,14 @@ variable "cloudfront_price_class" {
   default     = "PriceClass_200"
 }
 
+variable "enable_waf" {
+  description = "Enable AWS WAF for CloudFront (protection against SQLi, XSS, rate abuse)"
+  type        = bool
+  default     = true
+}
+
 # -----------------------------------------------------------------------------
-# RDS (שלב 2)
+# RDS PostgreSQL
 # -----------------------------------------------------------------------------
 variable "rds_db_name" {
   description = "Name of the PostgreSQL database to create"

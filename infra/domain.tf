@@ -1,17 +1,10 @@
 # =============================================================================
-# Custom domain + HTTPS – CloudFront (פרונט) + ALB (API)
+# Custom domains and TLS: ACM certificates and Route53 DNS records.
+# Activates when domain_name and route53_zone_id are set; optionally api_domain_name for a separate API subdomain.
 # =============================================================================
-# הפעלה: הגדר domain_name + route53_zone_id (ו־api_domain_name אם רוצה API נפרד).
-# =============================================================================
-
-data "aws_route53_zone" "main" {
-  count        = var.domain_name != "" && var.route53_zone_id != "" ? 1 : 0
-  zone_id      = var.route53_zone_id
-  private_zone = false
-}
 
 # -----------------------------------------------------------------------------
-# ACM – תעודה ל-CloudFront (חייבת להיות ב־us-east-1)
+# CloudFront ACM certificate – must be provisioned in us-east-1
 # -----------------------------------------------------------------------------
 resource "aws_acm_certificate" "cloudfront" {
   count             = var.domain_name != "" && var.route53_zone_id != "" ? 1 : 0
@@ -48,7 +41,7 @@ resource "aws_acm_certificate_validation" "cloudfront" {
 }
 
 # -----------------------------------------------------------------------------
-# ACM – תעודה ל־ALB (אותו region)
+# ALB ACM certificate – provisioned in the same region as the infrastructure
 # -----------------------------------------------------------------------------
 resource "aws_acm_certificate" "alb" {
   count             = var.api_domain_name != "" && var.route53_zone_id != "" ? 1 : 0
@@ -83,7 +76,7 @@ resource "aws_acm_certificate_validation" "alb" {
 }
 
 # -----------------------------------------------------------------------------
-# Route53 – פרונט → CloudFront
+# Frontend DNS alias – routes the main domain to the CloudFront distribution
 # -----------------------------------------------------------------------------
 resource "aws_route53_record" "frontend" {
   count   = var.domain_name != "" && var.route53_zone_id != "" ? 1 : 0
@@ -99,7 +92,7 @@ resource "aws_route53_record" "frontend" {
 }
 
 # -----------------------------------------------------------------------------
-# Route53 – API → ALB (אם מוגדר api_domain_name)
+# API DNS alias – routes the API subdomain to the ALB (when a separate API domain is configured)
 # -----------------------------------------------------------------------------
 resource "aws_route53_record" "api" {
   count   = var.api_domain_name != "" && var.route53_zone_id != "" ? 1 : 0

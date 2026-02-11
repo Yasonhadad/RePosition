@@ -1,15 +1,14 @@
 # =============================================================================
-# שלב 5 (חלק ב'): ECS Cluster, Task Definition, Service (Fargate)
-# =============================================================================
-# Cluster – קבוצת containers. Task Definition – תבנית (image, משאבים, env, secrets).
-# Service – מריץ N tasks ומחבר ל-ALB.
+# ECS Fargate – cluster, task definition, and service running the application.
+# Task definition sources the image from ECR and secrets from Secrets Manager;
+# the service keeps tasks running and attached to the ALB.
 # =============================================================================
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 # -----------------------------------------------------------------------------
-# ECS Cluster
+# Cluster – logical grouping for Fargate tasks
 # -----------------------------------------------------------------------------
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
@@ -25,7 +24,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 # -----------------------------------------------------------------------------
-# CloudWatch Log Group – לוגים מה-container
+# Log group – receives stdout/stderr from running containers
 # -----------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project_name}"
@@ -37,7 +36,7 @@ resource "aws_cloudwatch_log_group" "app" {
 }
 
 # -----------------------------------------------------------------------------
-# IAM Role – ECS Task Execution (משיכת image, סודות, לוגים)
+# Execution role – grants task permission to pull images, read secrets, and write logs
 # -----------------------------------------------------------------------------
 resource "aws_iam_role" "ecs_execution" {
   name = "${var.project_name}-ecs-execution"
@@ -100,7 +99,7 @@ resource "aws_iam_role_policy" "ecs_execution" {
 }
 
 # -----------------------------------------------------------------------------
-# Task Definition – Fargate, container עם image מ-ECR ו-secrets מ-Secrets Manager
+# Task definition – Fargate-compatible container spec with image, CPU/memory, and secrets
 # -----------------------------------------------------------------------------
 resource "aws_ecs_task_definition" "app" {
   family                   = var.project_name
@@ -152,7 +151,7 @@ resource "aws_ecs_task_definition" "app" {
 }
 
 # -----------------------------------------------------------------------------
-# ECS Service – מריץ tasks ומחבר ל-ALB
+# Service – maintains the desired task count and registers them with the ALB
 # -----------------------------------------------------------------------------
 resource "aws_ecs_service" "app" {
   name            = "${var.project_name}-service"

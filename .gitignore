@@ -10,12 +10,10 @@ build/
 .next/
 out/
 
-# Environment variables
+# Environment variables and secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Database files
 *.db
@@ -32,13 +30,13 @@ env/
 venv/
 .venv/
 
-# IDE
+# IDE and editor
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
@@ -46,12 +44,21 @@ Thumbs.db
 *.log
 logs/
 
-# Temporary files
+# Temporary and archive files
 *.tmp
 *.temp
 *.tar.gz
+*.zip
 
-# Server
+# SSL certificates and keys (never commit)
+*.pem
+*.key
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Server (generated)
 server/public
 vite.config.ts.*
 

@@ -1,8 +1,6 @@
 # =============================================================================
-# שלב 4: ECR – Elastic Container Registry
-# =============================================================================
-# מאגר Docker images בתוך AWS. ה-image של האפליקציה ( Dockerfile) יידחף
-# לכאן ב-GitHub Actions, ו-ECS ימשוך מכאן את ה-image להרצת ה-containers.
+# Elastic Container Registry – private Docker registry for application images.
+# CI pushes images here; ECS pulls from here when starting tasks.
 # =============================================================================
 
 resource "aws_ecr_repository" "app" {
@@ -19,7 +17,7 @@ resource "aws_ecr_repository" "app" {
 }
 
 # -----------------------------------------------------------------------------
-# Lifecycle policy – שומר רק את X התמונות האחרונות (חוסך מקום ועלות)
+# Lifecycle policy – expire older images to cap storage usage and cost
 # -----------------------------------------------------------------------------
 resource "aws_ecr_lifecycle_policy" "app" {
   repository = aws_ecr_repository.app.name

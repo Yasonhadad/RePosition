@@ -1,4 +1,5 @@
-# Database credentials: set in .env (copy from .env.example). Never commit real passwords.
+# Docker Compose – local development with PostgreSQL and app container.
+# Configure credentials in .env (copy from .env.example). Never commit real passwords.
 services:
   db:
     image: postgres:16-alpine
@@ -25,8 +26,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-reposition_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-reposition_db}
-      # "false" = skip bootstrap on startup (fast boot; use when DB already has data)
-      # "true" = run full data load + position compatibility on every start
+      # false = skip bootstrap (fast startup when DB already has data)
+      # true = run full data load and position compatibility on every start
       BOOTSTRAP_ON_START: "false"
     depends_on:
       db:

@@ -1,7 +1,5 @@
 # =============================================================================
-# שלב 5 (חלק א'): Application Load Balancer
-# =============================================================================
-# ה-ALB מקבל תעבורת HTTP/HTTPS מהאינטרנט ומפנה ל-ECS tasks (פורט 5000).
+# Application Load Balancer – distributes HTTP/HTTPS traffic to Fargate tasks
 # =============================================================================
 
 resource "aws_lb" "main" {
@@ -17,7 +15,7 @@ resource "aws_lb" "main" {
 }
 
 # -----------------------------------------------------------------------------
-# Target group – ECS tasks (Fargate) רשומים כאן לפי IP
+# Target group – registers Fargate tasks by IP for health-checked traffic routing
 # -----------------------------------------------------------------------------
 resource "aws_lb_target_group" "app" {
   name        = "${var.project_name}-tg"
@@ -42,7 +40,7 @@ resource "aws_lb_target_group" "app" {
 }
 
 # -----------------------------------------------------------------------------
-# Listener – פורט 80: forward או redirect ל-HTTPS
+# HTTP listener – either forwards to targets or redirects to HTTPS depending on domain configuration
 # -----------------------------------------------------------------------------
 resource "aws_lb_listener" "http_forward" {
   count             = var.api_domain_name == "" || var.route53_zone_id == "" ? 1 : 0
@@ -73,7 +71,7 @@ resource "aws_lb_listener" "http_redirect" {
 }
 
 # -----------------------------------------------------------------------------
-# Listener – פורט 443 (HTTPS) כאשר יש api_domain_name
+# HTTPS listener – terminates TLS and forwards to the target group
 # -----------------------------------------------------------------------------
 resource "aws_lb_listener" "https" {
   count             = var.api_domain_name != "" && var.route53_zone_id != "" ? 1 : 0

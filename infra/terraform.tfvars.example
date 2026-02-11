@@ -1,11 +1,11 @@
-# Example: copy to terraform.tfvars and customize
-# Used for: terraform apply -var-file="terraform.tfvars"
+# Copy to terraform.tfvars and customize.
+# Usage: terraform apply -var-file="terraform.tfvars"
 
 aws_region   = "eu-west-1"
 project_name = "reposition"
 
 # -----------------------------------------------------------------------------
-# Custom domain + HTTPS (optional)
+# Custom domain and HTTPS (optional)
 # -----------------------------------------------------------------------------
 # Uncomment and set to enable custom domain with ACM certificates.
 # Requires: Route53 hosted zone for the domain.

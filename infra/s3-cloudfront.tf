@@ -1,12 +1,9 @@
 # =============================================================================
-# שלב 6: S3 + CloudFront – פרונט סטטי (React build)
-# =============================================================================
-# Build של ה-client (npm run build) מועלה ל-S3. CloudFront מפזר את הקבצים
-# ומגיש אותם עם HTTPS. גישה ל-bucket רק דרך CloudFront (OAC).
+# Static frontend – S3 origin with CloudFront CDN, OAC for secure bucket access
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# S3 bucket – אחסון קבצי הפרונט (ללא גישה ציבורית ישירה)
+# S3 bucket – stores built frontend assets; no public access, CloudFront only
 # -----------------------------------------------------------------------------
 resource "aws_s3_bucket" "frontend" {
   bucket = "${var.project_name}-frontend-${data.aws_caller_identity.current.account_id}"
@@ -34,7 +31,7 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
 }
 
 # -----------------------------------------------------------------------------
-# Origin Access Control – רק CloudFront יכול לקרוא מ-S3
+# Origin Access Control – authenticates CloudFront as the sole S3 reader
 # -----------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "frontend" {
   name                              = "${var.project_name}-frontend-oac"
@@ -45,7 +42,7 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
 }
 
 # -----------------------------------------------------------------------------
-# Bucket policy – CloudFront מורשה GetObject
+# Bucket policy – allows CloudFront to read objects via OAC
 # -----------------------------------------------------------------------------
 resource "aws_s3_bucket_policy" "frontend" {
   bucket = aws_s3_bucket.frontend.id
@@ -74,9 +71,7 @@ resource "aws_s3_bucket_policy" "frontend" {
 }
 
 # -----------------------------------------------------------------------------
-# CloudFront distribution – S3 (פרונט) + ALB (API) כ-origins
-# -----------------------------------------------------------------------------
-# API דרך CloudFront מונע Mixed Content (HTTPS→HTTP). VITE_API_URL = כתובת CloudFront.
+# CloudFront distribution – S3 for static assets, ALB for /api/*
 # -----------------------------------------------------------------------------
 resource "aws_cloudfront_distribution" "frontend" {
   enabled                 = true
@@ -84,14 +79,16 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object     = "index.html"
   comment                 = "${var.project_name} frontend"
   price_class             = var.cloudfront_price_class
-  wait_for_deployment     = false  # apply מסתיים מהר; ההפצה ממשיכה ברקע
+  wait_for_deployment     = false  # apply finishes quickly; deployment continues in background
   aliases                 = var.domain_name != "" ? [var.domain_name] : []
+  web_acl_id              = var.enable_waf ? aws_wafv2_web_acl.main[0].arn : null
 
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                 = "S3-${aws_s3_bucket.frontend.id}"
     origin_access_control_id  = aws_cloudfront_origin_access_control.frontend.id
   }
+
 
   # When api_domain_name is set, CloudFront must use HTTPS to the API domain (ALB cert matches).
   # Otherwise ALB port 80 redirects to 443 and CloudFront fails with "Failed to fetch".
@@ -107,7 +104,7 @@ resource "aws_cloudfront_distribution" "frontend" {
     }
   }
 
-  # /api/* → ALB (באקאנד). חיוני כדי שכל הקריאות יהיו דרך HTTPS (אותו origin).
+  # /api/* → ALB (backend). Ensures all API calls use HTTPS (same origin).
   ordered_cache_behavior {
     path_pattern           = "/api/*"
     target_origin_id       = "ALB-${var.project_name}"
@@ -148,12 +145,7 @@ resource "aws_cloudfront_distribution" "frontend" {
     }
   }
 
-  # SPA – כל path שלא קובץ מחזיר index.html
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
+  # SPA routing – 404 returns index.html. No 403 override so WAF blocks return real 403.
   custom_error_response {
     error_code         = 404
     response_code      = 200

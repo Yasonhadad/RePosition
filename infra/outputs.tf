@@ -24,7 +24,7 @@ output "rds_security_group_id" {
 }
 
 # -----------------------------------------------------------------------------
-# RDS outputs – לצורך בניית DATABASE_URL ו-Secrets Manager
+# Database connection details
 # -----------------------------------------------------------------------------
 output "rds_endpoint" {
   description = "RDS connection endpoint (host:port)"
@@ -47,7 +47,7 @@ output "rds_username" {
 }
 
 # -----------------------------------------------------------------------------
-# Secrets Manager – ל-ECS (להזרקת env vars מהסוד)
+# Secrets Manager – ARN used by ECS to inject env vars into tasks
 # -----------------------------------------------------------------------------
 output "app_secret_arn" {
   description = "ARN of the app secret (DATABASE_URL, SESSION_SECRET) for ECS task definition"
@@ -55,10 +55,10 @@ output "app_secret_arn" {
 }
 
 # -----------------------------------------------------------------------------
-# ECR (שלב 4) – ל-ECS Task Definition ו-GitHub Actions
+# ECR – image registry URL for push/pull
 # -----------------------------------------------------------------------------
 output "ecr_repository_url" {
-  description = "ECR repository URL for docker push/pull (e.g. 699475953070.dkr.ecr.eu-west-1.amazonaws.com/reposition)"
+  description = "ECR repository URL for docker push/pull (e.g. 123456789012.dkr.ecr.eu-west-1.amazonaws.com/reposition)"
   value       = aws_ecr_repository.app.repository_url
 }
 
@@ -68,50 +68,50 @@ output "ecr_repository_arn" {
 }
 
 # -----------------------------------------------------------------------------
-# ECS + ALB (שלב 5) – כתובת האתר
+# Load balancer URLs
 # -----------------------------------------------------------------------------
 output "alb_dns_name" {
-  description = "ALB DNS name – גש לאתר דרך http://<this-value>"
+  description = "ALB DNS name – access the app via http://<this-value>"
   value       = aws_lb.main.dns_name
 }
 
 output "alb_zone_id" {
-  description = "ALB Route53 zone ID (להגדרת CNAME אם יש דומיין)"
+  description = "ALB Route53 zone ID (for CNAME setup when using custom domain)"
   value       = aws_lb.main.zone_id
 }
 
 # -----------------------------------------------------------------------------
-# S3 + CloudFront (שלב 6) – פרונט
+# Frontend – S3 bucket and CloudFront
 # -----------------------------------------------------------------------------
 output "frontend_bucket_name" {
-  description = "S3 bucket name להעלאת build של הפרונט (למשל ב-GitHub Actions)"
+  description = "S3 bucket name for frontend build upload (e.g. in GitHub Actions)"
   value       = aws_s3_bucket.frontend.id
 }
 
 output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID – ל-invalidation אחרי deploy"
+  description = "CloudFront distribution ID – for invalidation after deploy"
   value       = aws_cloudfront_distribution.frontend.id
 }
 
 output "cloudfront_domain_name" {
-  description = "CloudFront domain (למשל xxx.cloudfront.net)"
+  description = "CloudFront domain (e.g. xxx.cloudfront.net)"
   value       = aws_cloudfront_distribution.frontend.domain_name
 }
 
 output "cloudfront_url" {
-  description = "כתובת הפרונט – https://<domain>.cloudfront.net"
+  description = "Frontend URL – https://<domain>.cloudfront.net"
   value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
 
 # -----------------------------------------------------------------------------
-# Custom domain (כאשר domain_name ו־route53_zone_id מוגדרים)
+# Custom domain (when domain_name and route53_zone_id are set)
 # -----------------------------------------------------------------------------
 output "frontend_url" {
-  description = "כתובת הפרונט עם דומיין מותאם (אם הוגדר)"
+  description = "Frontend URL with custom domain (if configured)"
   value       = var.domain_name != "" ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
 
 output "api_url" {
-  description = "כתובת ה-API – דומיין מותאם או ALB"
+  description = "API URL – custom domain or ALB"
   value       = var.api_domain_name != "" ? "https://${var.api_domain_name}" : "http://${aws_lb.main.dns_name}"
 }

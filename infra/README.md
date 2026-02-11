@@ -1,49 +1,48 @@
 # RePosition – AWS Infrastructure
 
-תשתית ב־Terraform לפי סדר השלבים.
+Terraform-managed infrastructure for the RePosition application on AWS.
 
-## דרישות
+## Prerequisites
 
-- [Terraform](https://www.terraform.io/downloads) (1.0+)
-- AWS CLI מוגדר (`aws configure` או env: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`)
+- [Terraform](https://www.terraform.io/downloads) 1.0+
+- [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure` or `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`)
 
-## סדר השלבים (כולל)
+## Infrastructure Overview
 
-| # | שלב | תיאור |
-|---|-----|--------|
-| 1 | **VPC + Security Groups** | רשת + קבוצות אבטחה (ALB, ECS, RDS) |
-| 2 | RDS PostgreSQL + Secrets Manager | מסד נתונים + סיסמאות ב-Secrets Manager |
-| 3 | (משולב בשלב 2) | — |
-| 4 | ECR | מאגר Docker images |
-| 5 | ECS (Fargate) | Cluster, ALB, Task Definition, Service |
-| 6 | S3 + CloudFront | פרונט סטטי |
-| 7 | GitHub Actions | CI/CD |
-| 8 | Bootstrap | טעינת נתונים ראשונית |
+| Component | Description |
+|----------|-------------|
+| **VPC + Security Groups** | Network and security groups for ALB, ECS, RDS |
+| **RDS PostgreSQL + Secrets Manager** | Database and credential storage |
+| **ECR** | Docker image registry |
+| **ECS (Fargate)** | Cluster, ALB, Task Definition, Service |
+| **S3 + CloudFront** | Static frontend hosting |
+| **WAF** | Web Application Firewall for CloudFront |
+| **GitHub Actions** | CI/CD pipelines |
 
 ---
 
-## שלב 1: VPC + Security Groups
+## VPC and Security Groups
 
-### מה נוצר
+### Resources Created
 
-- **VPC** עם CIDR `10.0.0.0/16`
-- **2 subnets ציבוריים** (בשתי Availability Zones) – ל־ALB ו־Fargate
-- **Internet Gateway** – גישה לאינטרנט (למשיכת images מ־ECR)
+- **VPC** – CIDR `10.0.0.0/16`
+- **2 public subnets** – across two Availability Zones for ALB and Fargate
+- **Internet Gateway** – internet access (for ECR image pulls)
 - **Security groups:**
-  - **ALB** – כניסה על פורטים 80, 443 מהאינטרנט
-  - **ECS** – כניסה על פורט האפליקציה (5000) רק מ־ALB
-  - **RDS** – כניסה על 5432 רק מ־ECS
+  - **ALB** – ingress on ports 80, 443 from internet
+  - **ECS** – ingress on app port (5000) from ALB only
+  - **RDS** – ingress on 5432 from ECS only
 
-### הרצה
+### Commands
 
 ```bash
 cd infra
 terraform init
-terraform plan   # לבדיקה
-terraform apply  # יישום (יאשר עם yes)
+terraform plan   # Review changes
+terraform apply  # Apply (confirm with yes)
 ```
 
-### פלטים (לשלבים הבאים)
+### Outputs
 
 - `vpc_id`
 - `public_subnet_ids`
@@ -51,15 +50,15 @@ terraform apply  # יישום (יאשר עם yes)
 - `ecs_security_group_id`
 - `rds_security_group_id`
 
-### אזור (Region)
+### Region
 
-ברירת מחדל: `eu-west-1`. לשינוי:
+Default: `eu-west-1`. Override via:
 
 ```bash
 terraform apply -var="aws_region=us-east-1"
 ```
 
-או קובץ `terraform.tfvars`:
+Or in `terraform.tfvars`:
 
 ```hcl
 aws_region   = "eu-west-1"
@@ -68,50 +67,50 @@ project_name = "reposition"
 
 ---
 
-## שלב 2: RDS PostgreSQL + Secrets Manager
+## RDS PostgreSQL and Secrets Manager
 
-### מה נוצר
+### Resources Created
 
-- **DB Subnet Group** – חיבור ה-RDS ל־2 ה-subnets הקיימים (בשתי AZ).
-- **RDS Instance** – PostgreSQL 16, סיסמה **נוצרת אוטומטית** (לא מעבירים ידנית).
-- **Secrets Manager** – סוד אחד `reposition/app` עם JSON:
-  - `DATABASE_URL` – מחרוזת החיבור ל־PostgreSQL (כולל סיסמה)
-  - `SESSION_SECRET` – סוד לסשן של האפליקציה (נוצר אקראית)
+- **DB Subnet Group** – RDS placed in the two existing subnets
+- **RDS Instance** – PostgreSQL 16; password is auto-generated
+- **Secrets Manager** – single secret `reposition/app` with JSON:
+  - `DATABASE_URL` – PostgreSQL connection string (includes password)
+  - `SESSION_SECRET` – session signing key (randomly generated)
 
-ה-DB **לא** נגיש מהאינטרנט (`publicly_accessible = false`). רק ECS בתוך ה-VPC מתחבר, ומקבל את `DATABASE_URL` ו־`SESSION_SECRET` מ-Secrets Manager (בלי להעביר סיסמאות בקוד או ב-env).
+The database is **not** internet-accessible (`publicly_accessible = false`). Only ECS within the VPC connects, and credentials are injected from Secrets Manager.
 
-### הרצה
+### Commands
 
-**אין צורך להעביר סיסמאות** – Terraform יוצר סיסמאות אקראיות ושומר ב-Secrets Manager:
+No passwords need to be provided; Terraform generates and stores them:
 
 ```bash
 cd infra
-terraform init   # פעם ראשונה אחרי הוספת provider random
+terraform init   # First time after adding random provider
 terraform plan
 terraform apply
 ```
 
-### פלטים (לשלב 5 – ECS)
+### Outputs
 
-- `rds_endpoint`, `rds_port`, `rds_db_name`, `rds_username` – למידע/דיבוג.
-- **`app_secret_arn`** – ARN של הסוד ב-Secrets Manager. ב־ECS נשתמש בו כדי להזריק `DATABASE_URL` ו־`SESSION_SECRET` ל־container.
+- `rds_endpoint`, `rds_port`, `rds_db_name`, `rds_username` – for debugging
+- **`app_secret_arn`** – used by ECS to inject `DATABASE_URL` and `SESSION_SECRET`
 
-### הערות
+### Notes
 
-- יצירת RDS לוקחת כמה דקות. הסיסמאות נמצאות ב־Terraform state וב-Secrets Manager – לא ב-Git.
-- אם כבר הרצת שלב 2 עם `rds_password` (משתנה): אחרי `terraform apply` עם הקוד החדש, סיסמת RDS תוחלף לסיסמה האקראית החדשה שתישמר ב-Secrets Manager.
+- RDS creation takes several minutes
+- Passwords are stored in Terraform state and Secrets Manager only, never in Git
 
 ---
 
-## שלב 4: ECR (Elastic Container Registry)
+## Elastic Container Registry (ECR)
 
-### מה נוצר
+### Resources Created
 
-- **ECR repository** – מאגר לתמונות Docker של האפליקציה (שם: `reposition`).
-- **Image scanning** – סריקה אוטומטית ב-push לגילוי פגיעויות.
-- **Lifecycle policy** – שומר רק את X התמונות האחרונות (ברירת מחדל: 10); ישנות נמחקות אוטומטית.
+- **ECR repository** – Docker image registry for the application
+- **Image scanning** – automatic vulnerability scan on push
+- **Lifecycle policy** – retains only the last N images (default: 10)
 
-### הרצה
+### Commands
 
 ```bash
 cd infra
@@ -119,28 +118,28 @@ terraform plan
 terraform apply
 ```
 
-### פלטים (לשלב 5 – ECS ו-GitHub Actions)
+### Outputs
 
-- **`ecr_repository_url`** – כתובת ל־`docker push` / `docker pull` (למשל `699475953070.dkr.ecr.eu-west-1.amazonaws.com/reposition`).
-- **`ecr_repository_arn`** – ARN של ה-repository.
+- **`ecr_repository_url`** – for `docker push` / `docker pull`
+- **`ecr_repository_arn`** – repository ARN
 
-ב־GitHub Actions: התחברות ל־ECR עם `aws ecr get-login-password`, tag של ה-image עם `ecr_repository_url:tag`, ו־`docker push`.
+GitHub Actions: use `aws ecr get-login-password`, tag the image with `ecr_repository_url:tag`, and `docker push`.
 
 ---
 
-## שלב 5: ECS (Fargate) + ALB
+## ECS Fargate and ALB
 
-### מה נוצר
+### Resources Created
 
-- **ALB** – Application Load Balancer על פורט 80, מפנה ל-target group.
-- **Target group** – health check על `/`, פורט 5000.
-- **ECS Cluster** – Fargate.
-- **Task Definition** – image מ־ECR (`reposition:latest`), env מ־Secrets Manager (`DATABASE_URL`, `SESSION_SECRET`), `NODE_ENV=production`, `BOOTSTRAP_ON_START` (משתנה).
-- **ECS Service** – מריץ task אחד (ברירת מחדל), מחובר ל־ALB.
-- **CloudWatch Log Group** – לוגים של ה-container.
-- **IAM Role** – הרשאות למשיכת image מ־ECR, קריאת סודות מ־Secrets Manager, כתיבת לוגים.
+- **ALB** – Application Load Balancer on port 80, forwards to target group
+- **Target group** – health check on `/`, port 5000
+- **ECS Cluster** – Fargate
+- **Task Definition** – image from ECR (`reposition:latest`), env from Secrets Manager (`DATABASE_URL`, `SESSION_SECRET`), `NODE_ENV=production`, `BOOTSTRAP_ON_START`
+- **ECS Service** – runs N tasks (default: 1), connected to ALB
+- **CloudWatch Log Group** – container logs
+- **IAM Role** – permissions for ECR image pull, Secrets Manager read, log write
 
-### הרצה
+### Commands
 
 ```bash
 cd infra
@@ -148,9 +147,9 @@ terraform plan
 terraform apply
 ```
 
-### אחרי ה-apply
+### After Apply
 
-ה-Service מחפש image `reposition:latest` ב־ECR. **בפעם הראשונה** אין עדיין image – צריך לבנות ולדחוף (ידנית או דרך GitHub Actions):
+The service expects `reposition:latest` in ECR. On first run, build and push manually or via GitHub Actions:
 
 ```bash
 aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-west-1.amazonaws.com
@@ -159,24 +158,24 @@ docker tag reposition:latest <ecr_repository_url>:latest
 docker push <ecr_repository_url>:latest
 ```
 
-אחרי ה-push: ב-ECS Console לעשות **Update service** → **Force new deployment**, או להריץ שוב את ה-pipeline ב-GitHub Actions (שלב 7).
+Then in ECS Console: **Update service** → **Force new deployment**, or re-run the pipeline.
 
-### פלטים
+### Outputs
 
-- **`alb_dns_name`** – כתובת האתר: `http://<alb_dns_name>` (למשל `http://reposition-alb-xxx.eu-west-1.elb.amazonaws.com`).
-- **`alb_zone_id`** – לשימוש ב-Route53 אם יש דומיין מותאם.
+- **`alb_dns_name`** – app URL: `http://<alb_dns_name>`
+- **`alb_zone_id`** – for Route53 CNAME if using custom domain
 
 ---
 
-## שלב 6: S3 + CloudFront (פרונט)
+## S3 and CloudFront (Frontend)
 
-### מה נוצר
+### Resources Created
 
-- **S3 bucket** – אחסון קבצי הפרונט (build של `client/`). גישה חסומה – רק CloudFront יכול לקרוא (OAC).
-- **CloudFront distribution** – מפזר את הקבצים, HTTPS, cache. תמיכה ב-SPA (404/403 → `index.html`).
-- **Origin Access Control** – רק CloudFront מורשה לגשת ל-bucket.
+- **S3 bucket** – stores frontend build artifacts; access restricted to CloudFront (OAC)
+- **CloudFront distribution** – serves content over HTTPS with caching; SPA support (404 → `index.html`); 403 remains unchanged for WAF blocks
+- **Origin Access Control** – only CloudFront can read from the bucket
 
-### הרצה
+### Commands
 
 ```bash
 cd infra
@@ -184,9 +183,9 @@ terraform plan
 terraform apply
 ```
 
-### העלאת פרונט (ידנית או ב-GitHub Actions)
+### Frontend Upload (manual or GitHub Actions)
 
-ה-build יוצא ל־`dist/public` (מ־vite). העלאה ל-S3:
+Build output goes to `dist/public` (Vite). Upload to S3:
 
 ```bash
 npm run build
@@ -194,9 +193,9 @@ aws s3 sync dist/public s3://<frontend_bucket_name> --delete
 aws cloudfront create-invalidation --distribution-id <cloudfront_distribution_id> --paths "/*"
 ```
 
-### אם ה-apply הופסק לפני סיום (CloudFront "Deploying")
+### CloudFront Deployment Interrupted
 
-**חשוב:** אם ה-distribution כבר מופיע ב-Console, **חובה** לייבא אותו לפני `terraform apply` נוסף. אחרת Terraform ייצור distribution **שני** (כפילות ועלות).
+If `apply` was interrupted while CloudFront was deploying, **import** the existing distribution before running `apply` again to avoid creating a duplicate:
 
 ```bash
 cd infra
@@ -204,80 +203,91 @@ terraform import aws_cloudfront_distribution.frontend <ID-FROM-CONSOLE>
 terraform apply
 ```
 
-(החלף `<ID-FROM-CONSOLE>` ב-ID של ה-distribution הקיים, למשל `E347S21BSBPF91`.)
+Replace `<ID-FROM-CONSOLE>` with the distribution ID from the AWS Console.
 
-**אם כבר נוצרו שני distributions:** מחק את הישן (זה שלא מופיע ב-`terraform state list` / ב-outputs) ב-Console: בחר → Disable → אחרי ש-Deployed → Delete. השאר רק את זה ש-Terraform מנהל (ה-output `cloudfront_distribution_id`).
+**If two distributions exist:** delete the orphan in the Console (the one not in `terraform state list` / outputs): Disable → wait for Deployed → Delete. Keep the one Terraform manages (`cloudfront_distribution_id`).
 
-### פלטים
+### Outputs
 
-- **`frontend_bucket_name`** – שם ה-S3 bucket להעלאה.
-- **`cloudfront_distribution_id`** – ל-invalidation אחרי deploy.
-- **`cloudfront_domain_name`** – דומיין CloudFront (xxx.cloudfront.net).
-- **`cloudfront_url`** – כתובת הפרונט: `https://<domain>.cloudfront.net`.
+- **`frontend_bucket_name`** – S3 bucket for uploads
+- **`cloudfront_distribution_id`** – for post-deploy invalidation
+- **`cloudfront_domain_name`** – e.g. `xxx.cloudfront.net`
+- **`cloudfront_url`** – frontend URL: `https://<domain>.cloudfront.net`
 
 ---
 
-## שלב 7: GitHub Actions (CI/CD)
+## WAF (Web Application Firewall)
 
-ב־`.github/workflows/` מוגדרים שני workflows:
+CloudFront is protected by AWS WAF with these rules:
 
-| Workflow | טריגר | פעולה |
-|----------|--------|--------|
-| **Backend** | דחיפה ל־`main` (שינויים ב־server, Dockerfile, וכו') | Build Docker → Push ל־ECR → עדכון ECS (force new deployment) |
-| **Frontend** | דחיפה ל־`main` (שינויים ב־client, vite, וכו') | Build עם `VITE_API_URL` → Sync ל־S3 → Invalidation ב־CloudFront |
+| Rule | Description |
+|------|-------------|
+| **AWSManagedRulesCommonRuleSet** | XSS, path traversal, common exploits |
+| **AWSManagedRulesSQLiRuleSet** | SQL Injection |
+| **AWSManagedRulesKnownBadInputsRuleSet** | Known malicious inputs |
+| **RateLimitRule** | Block IPs exceeding 2000 requests per 5 minutes |
 
-### הגדרות ב־GitHub
+**Disable:** In `terraform.tfvars`: `enable_waf = false`
+
+---
+
+## GitHub Actions (CI/CD)
+
+Workflows in `.github/workflows/`:
+
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| **Backend** | Push to `main` (server, Dockerfile, etc.) | Build Docker → Push to ECR → ECS force new deployment |
+| **Frontend** | Push to `main` (client, vite, etc.) | Build with `VITE_API_URL` → Sync to S3 → CloudFront invalidation |
+
+### GitHub Configuration
 
 **Variables (Settings → Secrets and variables → Actions → Variables):**
 
-| Variable | חובה | תיאור |
-|----------|------|--------|
-| `AWS_ROLE_ARN` | **כן** | ARN של ה־IAM Role שנוצר ל-OIDC (למשל `arn:aws:iam::123456789:role/github-actions-oidc`). ראה OIDC setup. |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AWS_ROLE_ARN` | **Yes** | IAM Role ARN for OIDC (e.g. `arn:aws:iam::123456789:role/github-actions-oidc`) |
 
-**Variables נוספות:**
+**Additional variables:**
 
-| Variable | חובה | ברירת מחדל | תיאור |
-|----------|------|------------|--------|
-| `AWS_REGION` | לא | `eu-west-1` | אזור AWS |
-| `ECR_REPOSITORY` | לא | `reposition` | שם ה-repository ב־ECR |
-| `ECS_CLUSTER` | לא | `reposition-cluster` | שם ה-ECS cluster |
-| `ECS_SERVICE` | לא | `reposition-service` | שם ה-ECS service |
-| `S3_BUCKET` | **כן (פרונט)** | — | שם ה-S3 bucket של הפרונט (למשל מהפלט `frontend_bucket_name`) |
-| `CLOUDFRONT_DISTRIBUTION_ID` | **כן (פרונט)** | — | ID של ה־CloudFront distribution (למשל מהפלט `cloudfront_distribution_id`) |
-| `VITE_API_URL` | **כן (CloudFront)** | — | כתובת CloudFront (למשל `https://xxx.cloudfront.net`) – CloudFront מפנה /api ל־ALB, כך שאין Mixed Content. נבנית into ה-build. |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `AWS_REGION` | No | `eu-west-1` | AWS region |
+| `ECR_REPOSITORY` | No | `reposition` | ECR repository name |
+| `ECS_CLUSTER` | No | `reposition-cluster` | ECS cluster name |
+| `ECS_SERVICE` | No | `reposition-service` | ECS service name |
+| `S3_BUCKET` | **Yes** (frontend) | — | Frontend S3 bucket (from `frontend_bucket_name`) |
+| `CLOUDFRONT_DISTRIBUTION_ID` | **Yes** (frontend) | — | CloudFront distribution ID (from `cloudfront_distribution_id`) |
+| `VITE_API_URL` | **Yes** (CloudFront) | — | CloudFront URL (e.g. `https://xxx.cloudfront.net`). CloudFront routes `/api/*` to ALB, avoiding Mixed Content. |
 
-**חשוב:** כשנכנסים דרך CloudFront, יש להגדיר `VITE_API_URL` לכתובת ה־**CloudFront** (או לדומיין המותאם). CloudFront מפנה `/api/*` ל־ALB מאחורי הקלעים.
+When using CloudFront, set `VITE_API_URL` to the CloudFront URL (or custom domain). CloudFront proxies `/api/*` to the ALB.
 
-### דומיין מותאם + HTTPS
+### Custom Domain and HTTPS
 
-כדי להשתמש בדומיין משלך (למשל `app.reposition.com`) עם HTTPS:
+1. **Route53:** Create a hosted zone for your domain and copy the Zone ID
+2. **Terraform:** Set in `terraform.tfvars` or apply:
+   - `domain_name` = frontend domain (e.g. `app.reposition.com`)
+   - `api_domain_name` = (optional) API domain (e.g. `api.reposition.com`)
+   - `route53_zone_id` = Route53 Zone ID
+3. **`terraform apply`** – creates ACM certificates, DNS records, and attaches domains to CloudFront/ALB
+4. **GitHub:** Update `VITE_API_URL` – when frontend and API share an origin (e.g. `re-position.org`), set it to **empty** (`""`) since API is at `/api/*` on same origin. With a separate API domain, set the API URL.
 
-1. **Route53:** ליצור hosted zone לדומיין (אם עדיין לא קיים), ולהעתיק את ה־Zone ID.
-2. **Variables ב־`terraform.tfvars` או ל־apply:**
-   - `domain_name` = כתובת הפרונט (למשל `app.reposition.com`)
-   - `api_domain_name` = (אופציונלי) כתובת ה-API (למשל `api.reposition.com`) – גישה ישירה ל־ALB עם HTTPS
-   - `route53_zone_id` = Zone ID מה־Route53
-3. **`terraform apply`** – ייווצרו תעודות ACM, רשומות DNS, ו־CloudFront/ALB יתווספו לדומיין.
-4. **GitHub:** לעדכן `VITE_API_URL` – כשהכל על דומיין אחד (למשל re-position.org): להגדיר **ריק** (`""`) כי ה-API נגיש דרך `/api/*` באותו origin. כשיש דומיין נפרד ל-API: להגדיר את כתובת ה-API.
+### Backend Rollback (by digest)
 
-### Rollback לבקאנד (לפי digest)
+1. **Find working image digest:** ECR → Repositories → reposition → Images → Image digest (e.g. `sha256:a1b2c3d4...`)
+2. **Run Rollback workflow:** Actions → **Rollback Backend (by Digest)** → Run workflow → paste digest → Run
+3. ECS deploys the previous image
 
-אם הגרסה האחרונה שבורה ורוצים לחזור לגרסה קודמת:
+(ECR retains up to 10 images; see `ecr_keep_last_n_images` in `variables.tf`.)
 
-1. **למצוא digest של image שעבד:** ECR → Repositories → reposition → Images. עמודה "Image digest" (למשל `sha256:a1b2c3d4...`).
-2. **להריץ Rollback workflow:** Actions → **Rollback Backend (by Digest)** → Run workflow → להדביק את ה-digest → Run.
-3. ECS יגש ל-image הקודם ויריץ deployment חדש.
+### Frontend Rollback (by commit)
 
-(ECR שומר עד 10 images – ראה `ecr_keep_last_n_images` ב־variables.tf.)
+**Option 1 – Workflow:** Actions → **Rollback Frontend (by Commit)** → Run workflow → enter commit SHA of a working version. The workflow builds from that commit and uploads to S3.
 
-### Rollback לפרונט (לפי commit)
+**Option 2 – git revert:** `git revert <commit>` → push. The Frontend workflow runs and deploys the reverted build.
 
-**אופציה 1 – Workflow:** Actions → **Rollback Frontend (by Commit)** → Run workflow → להזין commit SHA של הגרסה שעבדה (מ־GitHub → Commits). ה-workflow יבנה מאותו commit ויעלה ל-S3.
+**Option 3 – S3 versioning:** The bucket has versioning; restore previous object versions manually in the Console (S3 → Object → Versions → Restore).
 
-**אופציה 2 – git revert:** `git revert <commit>` → push. ה-Frontend workflow ירוץ אוטומטית ויעלה build מהגרסה המחזורית.
+### Manual Run
 
-**אופציה 3 – S3 versioning:** ה-bucket עם versioning – אפשר לשחזר גרסאות קודמות ידנית ב-Console (S3 → Object → Versions → Restore).
-
-### הרצה ידנית
-
-ניתן להריץ כל workflow ידנית: Actions → בחר workflow → Run workflow.
+Any workflow can be run manually from Actions → select workflow → Run workflow.

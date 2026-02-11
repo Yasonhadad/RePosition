@@ -1,16 +1,9 @@
 # =============================================================================
-# שלב 2: RDS PostgreSQL
-# =============================================================================
-# RDS = שירות מסד נתונים מנוהל של AWS. אנחנו יוצרים instance של PostgreSQL
-# שרץ בתוך ה-VPC שלנו, עם קבוצת האבטחה שכבר הגדרנו (רק ECS יכול להתחבר).
+# RDS PostgreSQL – managed database with private access from ECS only
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# DB Subnet Group
-# -----------------------------------------------------------------------------
-# RDS דורש "subnet group" – רשימת subnets (בשתי AZ שונות) שבהם ה-DB יכול לרוץ.
-# אנחנו משתמשים באותם 2 subnets ציבוריים שיצרנו – ה-DB לא יקבל IP ציבורי
-# (publicly_accessible = false), אז הוא נגיש רק מתוך ה-VPC (מ-ECS).
+# Subnet group – RDS requires subnets in at least two availability zones
 # -----------------------------------------------------------------------------
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
@@ -22,33 +15,33 @@ resource "aws_db_subnet_group" "main" {
 }
 
 # -----------------------------------------------------------------------------
-# RDS Instance – ה-instance של PostgreSQL עצמו
+# Database instance – PostgreSQL with credentials stored in Secrets Manager
 # -----------------------------------------------------------------------------
 resource "aws_db_instance" "main" {
   identifier = "${var.project_name}-db"
 
-  # מנוע וגרסה – PostgreSQL 16 (תואם למהתמשנו ב-Docker)
+  # Engine – PostgreSQL 16 (matches Docker/local setup)
   engine               = "postgres"
   engine_version       = "16"
   instance_class       = var.rds_instance_class
   allocated_storage    = var.rds_allocated_storage
   max_allocated_storage = var.rds_max_allocated_storage
 
-  # שם המסד, משתמש ראשי וסיסמה – הסיסמה נוצרת אוטומטית ונשמרת ב-Secrets Manager
+  # Credentials – password is auto-generated and stored in Secrets Manager
   db_name  = var.rds_db_name
   username = var.rds_username
   password = random_password.rds.result
 
-  # רשת ואבטחה
+  # Network and security – no public IP; only ECS within VPC can connect
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false  # אין IP ציבורי – רק ECS בתוך ה-VPC יכול להתחבר
+  publicly_accessible    = false
 
-  # Backup (אפשר לשנות לפי צורך)
+  # Backup – configurable retention and window (UTC)
   backup_retention_period = var.rds_backup_retention_days
-  backup_window          = "03:00-04:00"  # חלון גיבוי (UTC)
+  backup_window          = "03:00-04:00"
 
-  # למניעת מחיקה בטעות – ב-production עדיף true
+  # Snapshot and deletion protection – set skip_final_snapshot=false in production
   skip_final_snapshot       = var.rds_skip_final_snapshot
   deletion_protection       = var.rds_deletion_protection
 

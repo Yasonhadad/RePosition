@@ -8,9 +8,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# ---------------------------------------------------------------------------
-# VPC: 2 public subnets (for ALB + Fargate). Fargate pulls images from ECR.
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Core networking: VPC, subnets, routing. Public subnets host ALB and Fargate
+# and allow container tasks to pull images from ECR.
+# -----------------------------------------------------------------------------
 data "aws_availability_zones" "available" {
   state = "available"
 }

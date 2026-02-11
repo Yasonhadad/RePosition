@@ -4,18 +4,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build outputs (we build inside Docker)
+# Build outputs (built inside container)
 dist
 build
 .next
 out
 
-# Env and secrets
+# Environment and secrets
 .env
 .env.*
 !.env.example
 
-# Git and IDE
+# Version control and IDE
 .git
 .gitignore
 .vscode
@@ -23,7 +23,7 @@ out
 *.md
 !README.md
 
-# Python venv / cache
+# Python virtualenv and cache
 __pycache__
 *.py[cod]
 *$py.class
@@ -31,12 +31,12 @@ __pycache__
 venv
 env
 
-# OS and temp
+# OS and temporary files
 .DS_Store
 Thumbs.db
 *.tmp
 *.temp
 *.zip
 
-# Optional: exclude heavy data in image (mount as volume instead)
+# Optional: exclude large data files (mount as volume instead)
 # data/*.csv

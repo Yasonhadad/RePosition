@@ -1,9 +1,9 @@
-# Multi-stage: build then run with Node + Python (for data_loader bootstrap)
+# Multi-stage build: Node + Python (for data_loader bootstrap on container start)
 FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
-# Install Python for models/data_loader.py (bootstrap)
+# Install Python for models/data_loader.py bootstrap script
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
@@ -16,17 +16,17 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Install Python deps for bootstrap script (--break-system-packages: OK in container, Debian PEP 668)
+# Install Python deps for bootstrap (--break-system-packages: required on Debian 12+)
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
-# ---
+# -----------------------------------------------------------------------------
 # Production image
-# ---
+# -----------------------------------------------------------------------------
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Python for data_loader.py on bootstrap
+# Python runtime for data_loader.py bootstrap
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
@@ -41,12 +41,12 @@ COPY --from=builder /app/data ./data
 COPY --from=builder /app/shared ./shared
 COPY --from=builder /app/drizzle.config.ts ./
 
-# Python dependencies (used by models/data_loader.py)
+# Python dependencies for models/data_loader.py
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 ENV NODE_ENV=production
 EXPOSE 5000
 
-# Allow override for DB and bootstrap; default port 5000
+# DB URL and bootstrap flag are configurable via environment variables
 CMD ["node", "dist/index.js"]
