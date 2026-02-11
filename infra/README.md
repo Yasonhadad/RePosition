@@ -258,7 +258,7 @@ terraform apply
    - `api_domain_name` = (אופציונלי) כתובת ה-API (למשל `api.reposition.com`) – גישה ישירה ל־ALB עם HTTPS
    - `route53_zone_id` = Zone ID מה־Route53
 3. **`terraform apply`** – ייווצרו תעודות ACM, רשומות DNS, ו־CloudFront/ALB יתווספו לדומיין.
-4. **GitHub:** לעדכן `VITE_API_URL` לכתובת הסופית (למשל `https://app.reposition.com` אם הכל דרך דומיין אחד, או `https://api.reposition.com` אם נפרד).
+4. **GitHub:** לעדכן `VITE_API_URL` – כשהכל על דומיין אחד (למשל re-position.org): להגדיר **ריק** (`""`) כי ה-API נגיש דרך `/api/*` באותו origin. כשיש דומיין נפרד ל-API: להגדיר את כתובת ה-API.
 
 ### Rollback לבקאנד (לפי digest)
 

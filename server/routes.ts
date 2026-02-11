@@ -250,8 +250,9 @@ export async function registerRoutes(app: ExpressApp): Promise<Server> {
 
   // === Statistics Routes ===
   
-  // Get global statistics
+  // Get global statistics (no cache - CloudFront must not serve stale stats)
   app.get("/api/stats", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     try {
       const stats = await storage.getGlobalStats();
       sendSuccess(res, stats);

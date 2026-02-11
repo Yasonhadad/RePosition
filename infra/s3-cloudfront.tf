@@ -93,14 +93,16 @@ resource "aws_cloudfront_distribution" "frontend" {
     origin_access_control_id  = aws_cloudfront_origin_access_control.frontend.id
   }
 
+  # When api_domain_name is set, CloudFront must use HTTPS to the API domain (ALB cert matches).
+  # Otherwise ALB port 80 redirects to 443 and CloudFront fails with "Failed to fetch".
   origin {
-    domain_name = aws_lb.main.dns_name
+    domain_name = var.api_domain_name != "" ? var.api_domain_name : aws_lb.main.dns_name
     origin_id   = "ALB-${var.project_name}"
 
     custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy  = "http-only"
+      http_port             = 80
+      https_port            = 443
+      origin_protocol_policy = var.api_domain_name != "" ? "https-only" : "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
