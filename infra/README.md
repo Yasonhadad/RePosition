@@ -228,14 +228,13 @@ terraform apply
 
 ### הגדרות ב־GitHub
 
-**Secrets (Settings → Secrets and variables → Actions):**
+**Variables (Settings → Secrets and variables → Actions → Variables):**
 
-| Secret | תיאור |
-|--------|--------|
-| `AWS_ACCESS_KEY_ID` | מפתח גישה ל־AWS (משתמש IAM עם הרשאות ECR, ECS, S3, CloudFront) |
-| `AWS_SECRET_ACCESS_KEY` | סוד המפתח |
+| Variable | חובה | תיאור |
+|----------|------|--------|
+| `AWS_ROLE_ARN` | **כן** | ARN של ה־IAM Role שנוצר ל-OIDC (למשל `arn:aws:iam::123456789:role/github-actions-oidc`). ראה OIDC setup. |
 
-**Variables (אותה מסך – Variables):**
+**Variables נוספות:**
 
 | Variable | חובה | ברירת מחדל | תיאור |
 |----------|------|------------|--------|
@@ -247,7 +246,19 @@ terraform apply
 | `CLOUDFRONT_DISTRIBUTION_ID` | **כן (פרונט)** | — | ID של ה־CloudFront distribution (למשל מהפלט `cloudfront_distribution_id`) |
 | `VITE_API_URL` | **כן (CloudFront)** | — | כתובת CloudFront (למשל `https://xxx.cloudfront.net`) – CloudFront מפנה /api ל־ALB, כך שאין Mixed Content. נבנית into ה-build. |
 
-**חשוב:** כשנכנסים דרך CloudFront, יש להגדיר `VITE_API_URL` לכתובת ה־**CloudFront** (לא ה־ALB). CloudFront מפנה `/api/*` ל־ALB מאחורי הקלעים.
+**חשוב:** כשנכנסים דרך CloudFront, יש להגדיר `VITE_API_URL` לכתובת ה־**CloudFront** (או לדומיין המותאם). CloudFront מפנה `/api/*` ל־ALB מאחורי הקלעים.
+
+### דומיין מותאם + HTTPS
+
+כדי להשתמש בדומיין משלך (למשל `app.reposition.com`) עם HTTPS:
+
+1. **Route53:** ליצור hosted zone לדומיין (אם עדיין לא קיים), ולהעתיק את ה־Zone ID.
+2. **Variables ב־`terraform.tfvars` או ל־apply:**
+   - `domain_name` = כתובת הפרונט (למשל `app.reposition.com`)
+   - `api_domain_name` = (אופציונלי) כתובת ה-API (למשל `api.reposition.com`) – גישה ישירה ל־ALB עם HTTPS
+   - `route53_zone_id` = Zone ID מה־Route53
+3. **`terraform apply`** – ייווצרו תעודות ACM, רשומות DNS, ו־CloudFront/ALB יתווספו לדומיין.
+4. **GitHub:** לעדכן `VITE_API_URL` לכתובת הסופית (למשל `https://app.reposition.com` אם הכל דרך דומיין אחד, או `https://api.reposition.com` אם נפרד).
 
 ### Rollback לבקאנד (לפי digest)
 

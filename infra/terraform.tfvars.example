@@ -1,0 +1,15 @@
+# Example: copy to terraform.tfvars and customize
+# Used for: terraform apply -var-file="terraform.tfvars"
+
+aws_region   = "eu-west-1"
+project_name = "reposition"
+
+# -----------------------------------------------------------------------------
+# Custom domain + HTTPS (optional)
+# -----------------------------------------------------------------------------
+# Uncomment and set to enable custom domain with ACM certificates.
+# Requires: Route53 hosted zone for the domain.
+#
+# domain_name       = "app.reposition.com"   # Frontend – CloudFront
+# api_domain_name   = "api.reposition.com"   # API – ALB (optional; omit to use domain_name/api)
+# route53_zone_id   = "Z1234567890ABCDEF"   # Route53 hosted zone ID

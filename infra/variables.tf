@@ -55,7 +55,28 @@ variable "ecs_log_retention_days" {
 variable "ecs_bootstrap_on_start" {
   description = "If true, run schema (drizzle-kit push) + data load (data_loader.py) on container start. Set to false after first successful load to speed up future deployments."
   type        = bool
-  default     = true
+  default     = false
+}
+
+# -----------------------------------------------------------------------------
+# Custom domain + HTTPS (אופציונלי)
+# -----------------------------------------------------------------------------
+variable "domain_name" {
+  description = "Custom domain for the app (e.g. app.reposition.com). Leave empty to skip domain/HTTPS setup."
+  type        = string
+  default     = ""
+}
+
+variable "api_domain_name" {
+  description = "Custom domain for the API (e.g. api.reposition.com). Leave empty to use only domain_name/api."
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  description = "Route53 hosted zone ID for the domain (e.g. Z1234567890ABC). Required if domain_name is set."
+  type        = string
+  default     = ""
 }
 
 # -----------------------------------------------------------------------------

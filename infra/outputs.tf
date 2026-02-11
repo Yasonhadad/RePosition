@@ -102,3 +102,16 @@ output "cloudfront_url" {
   description = "כתובת הפרונט – https://<domain>.cloudfront.net"
   value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
+
+# -----------------------------------------------------------------------------
+# Custom domain (כאשר domain_name ו־route53_zone_id מוגדרים)
+# -----------------------------------------------------------------------------
+output "frontend_url" {
+  description = "כתובת הפרונט עם דומיין מותאם (אם הוגדר)"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.frontend.domain_name}"
+}
+
+output "api_url" {
+  description = "כתובת ה-API – דומיין מותאם או ALB"
+  value       = var.api_domain_name != "" ? "https://${var.api_domain_name}" : "http://${aws_lb.main.dns_name}"
+}
