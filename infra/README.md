@@ -245,9 +245,9 @@ terraform apply
 | `ECS_SERVICE` | לא | `reposition-service` | שם ה-ECS service |
 | `S3_BUCKET` | **כן (פרונט)** | — | שם ה-S3 bucket של הפרונט (למשל מהפלט `frontend_bucket_name`) |
 | `CLOUDFRONT_DISTRIBUTION_ID` | **כן (פרונט)** | — | ID של ה־CloudFront distribution (למשל מהפלט `cloudfront_distribution_id`) |
-| `VITE_API_URL` | לא | — | כתובת ה-API בפרודקשן (כתובת ה-ALB, למשל `http://reposition-alb-xxx.eu-west-1.elb.amazonaws.com`) – נבנית into ה-build כדי שהפרונט יקרא ל־API הנכון |
+| `VITE_API_URL` | **כן (CloudFront)** | — | כתובת CloudFront (למשל `https://xxx.cloudfront.net`) – CloudFront מפנה /api ל־ALB, כך שאין Mixed Content. נבנית into ה-build. |
 
-אם לא מגדירים `VITE_API_URL`, הפרונט יניח שה-API על אותו origin (מתאים רק אם הפרונט וה-API behind אותו דומיין/פרוקסי).
+**חשוב:** כשנכנסים דרך CloudFront, יש להגדיר `VITE_API_URL` לכתובת ה־**CloudFront** (לא ה־ALB). CloudFront מפנה `/api/*` ל־ALB מאחורי הקלעים.
 
 ### הרצה ידנית
 

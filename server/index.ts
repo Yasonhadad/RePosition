@@ -25,6 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Serve public folder for static assets (images, etc.)
 app.use('/public', express.static(path.resolve(process.cwd(), 'public')));
+app.use('/images', express.static(path.resolve(process.cwd(), 'public', 'images')));
 
 
 app.use((req, res, next) => {

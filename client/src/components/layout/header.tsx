@@ -83,7 +83,7 @@ export function Header() {
             <Link href="/" className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="flex items-center">
                 <img 
-                  src="/public/images/reposition-logo-final.png" 
+                  src="/images/reposition-logo-final.png" 
                   alt="RePosition Logo" 
                   className="h-20 w-auto"
                 />

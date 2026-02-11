@@ -41,6 +41,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check VITE_API_URL (required for CloudFront)
+        run: |
+          if [ -z "$VITE_API_URL" ]; then
+            echo "::warning::VITE_API_URL is not set. Set it in GitHub Variables (Settings → Variables) to the ALB URL (e.g. http://reposition-alb-xxx.elb.amazonaws.com) so login/register work when using CloudFront."
+          fi
       - name: Build frontend
         run: npm run build
         env:

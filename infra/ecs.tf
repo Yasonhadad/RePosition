@@ -125,7 +125,9 @@ resource "aws_ecs_task_definition" "app" {
 
       environment = [
         { name = "NODE_ENV", value = "production" },
-        { name = "BOOTSTRAP_ON_START", value = var.ecs_bootstrap_on_start ? "true" : "false" }
+        { name = "BOOTSTRAP_ON_START", value = var.ecs_bootstrap_on_start ? "true" : "false" },
+        # RDS uses a cert Node treats as self-signed; allow so pg/drizzle/session store can connect
+        { name = "NODE_TLS_REJECT_UNAUTHORIZED", value = "0" }
       ]
 
       secrets = [
@@ -158,6 +160,9 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.ecs_desired_count
   launch_type     = "FARGATE"
+
+  # Allow time for bootstrap (drizzle-kit + data_loader ~3 min) before ALB health checks can mark task unhealthy
+  health_check_grace_period_seconds = 360
 
   network_configuration {
     subnets          = aws_subnet.public[*].id

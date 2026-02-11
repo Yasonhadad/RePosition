@@ -53,9 +53,9 @@ variable "ecs_log_retention_days" {
 }
 
 variable "ecs_bootstrap_on_start" {
-  description = "If true, run data load + position compatibility on container start (use once, then false)"
+  description = "If true, run schema (drizzle-kit push) + data load (data_loader.py) on container start. Set to false after first successful load to speed up future deployments."
   type        = bool
-  default     = false
+  default     = true
 }
 
 # -----------------------------------------------------------------------------
