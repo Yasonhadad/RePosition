@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reposition
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Yasonhadad/RePosition.git
+    targetRevision: main
+    path: k8s/charts/reposition
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-production.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reposition
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

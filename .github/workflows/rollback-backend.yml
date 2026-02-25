@@ -1,5 +1,4 @@
-# Rollback Backend: deploy a previous Docker image by digest
-# Use when the latest deployment has issues and you need to revert.
+# Rollback Backend: deploy a previous Docker image by digest on EKS
 name: Rollback Backend (by Digest)
 
 on:
@@ -13,9 +12,7 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-1' }}
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'reposition' }}
-  ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'reposition-cluster' }}
-  ECS_SERVICE: ${{ vars.ECS_SERVICE || 'reposition-service' }}
-  TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION || 'reposition' }}
+  EKS_CLUSTER: ${{ vars.EKS_CLUSTER || 'reposition' }}
 
 jobs:
   rollback:
@@ -42,47 +39,18 @@ jobs:
         id: ecr
         run: |
           REPO_URI=$(aws ecr describe-repositories --repository-names $ECR_REPOSITORY --query 'repositories[0].repositoryUri' --output text --region $AWS_REGION)
-          echo "uri=$REPO_URI" >> $GITHUB_OUTPUT
-          DIGEST="${{ github.event.inputs.digest }}"
-          IMAGE="${REPO_URI}@${DIGEST}"
+          IMAGE="${REPO_URI}@${{ github.event.inputs.digest }}"
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "Rolling back to image: $IMAGE"
 
-      - name: Get current task definition and create rollback revision
-        id: taskdef
+      - name: Update kubeconfig
         run: |
-          TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition $TASK_DEFINITION \
-            --query 'taskDefinition' \
-            --output json \
-            --region $AWS_REGION)
+          aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
 
-          # Remove read-only fields
-          echo "$TASK_DEF" | jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' > taskdef.json
-
-          # Replace image with digest
-          IMAGE="${{ steps.ecr.outputs.image }}"
-          jq --arg img "$IMAGE" '(.containerDefinitions[0].image) = $img' taskdef.json > taskdef-new.json
-
-          # Register new task definition
-          aws ecs register-task-definition \
-            --cli-input-json file://taskdef-new.json \
-            --region $AWS_REGION \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text > new_task_arn.txt
-
-          NEW_ARN=$(cat new_task_arn.txt)
-          echo "task_def_arn=$NEW_ARN" >> $GITHUB_OUTPUT
-          echo "Registered new task definition: $NEW_ARN"
-
-      - name: Update ECS service to use rollback image
+      - name: Set deployment image to rollback digest
         run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --task-definition ${{ steps.taskdef.outputs.task_def_arn }} \
-            --force-new-deployment \
-            --region $AWS_REGION \
-            --query 'service.serviceName' \
-            --output text
-          echo "Rollback initiated. ECS is pulling the previous image and starting new tasks."
+          kubectl set image deployment/reposition \
+            reposition=${{ steps.ecr.outputs.image }} \
+            -n reposition
+          kubectl rollout status deployment/reposition -n reposition --timeout=300s
+          echo "Rollback complete."

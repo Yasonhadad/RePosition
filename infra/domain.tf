@@ -92,17 +92,14 @@ resource "aws_route53_record" "frontend" {
 }
 
 # -----------------------------------------------------------------------------
-# API DNS alias – routes the API subdomain to the ALB (when a separate API domain is configured)
+# API DNS — CNAME to the ALB created by AWS LB Controller.
+# Set eks_ingress_alb_dns after first deploy (kubectl get ingress -n reposition).
 # -----------------------------------------------------------------------------
 resource "aws_route53_record" "api" {
-  count   = var.api_domain_name != "" && var.route53_zone_id != "" ? 1 : 0
+  count   = var.api_domain_name != "" && var.route53_zone_id != "" && var.eks_ingress_alb_dns != "" ? 1 : 0
   zone_id = var.route53_zone_id
   name    = var.api_domain_name
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.main.dns_name
-    zone_id                = aws_lb.main.zone_id
-    evaluate_target_health = false
-  }
+  type    = "CNAME"
+  ttl     = 300
+  records = [var.eks_ingress_alb_dns]
 }

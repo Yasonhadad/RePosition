@@ -2,7 +2,7 @@
 # Secrets Manager – Application secrets and credentials
 # =============================================================================
 # Terraform generates random passwords, configures RDS, and stores a single JSON
-# secret in Secrets Manager. ECS injects these as environment variables.
+# secret in Secrets Manager. External Secrets Operator syncs these into K8s.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -23,8 +23,8 @@ resource "random_password" "session" {
 # -----------------------------------------------------------------------------
 # Secrets Manager secret – JSON with DATABASE_URL and SESSION_SECRET
 # -----------------------------------------------------------------------------
-# ECS reads this secret and injects values as env vars. Created after RDS exists
-# because DATABASE_URL is built from the RDS endpoint.
+# ESO syncs these into a K8s Secret. Created after RDS because DATABASE_URL
+# includes the RDS endpoint.
 # -----------------------------------------------------------------------------
 resource "aws_secretsmanager_secret" "app" {
   name        = "${var.project_name}/app"

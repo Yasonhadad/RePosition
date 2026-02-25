@@ -1,0 +1,88 @@
+# Default values — override in values-production.yaml
+replicaCount: 1
+
+image:
+  repository: ""  # set via ArgoCD / CI — e.g. 123456789.dkr.ecr.eu-west-1.amazonaws.com/reposition
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: "reposition"
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443},{"HTTP":80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
+    alb.ingress.kubernetes.io/success-codes: "200"
+  # Set these in values-production.yaml:
+  # alb.ingress.kubernetes.io/subnets: subnet-xxx,subnet-yyy
+  # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:...
+  # alb.ingress.kubernetes.io/security-groups: sg-xxx
+  # alb.ingress.kubernetes.io/waf-acl-id: arn:aws:wafv2:...
+  hosts:
+    - paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  NODE_ENV: production
+  BOOTSTRAP_ON_START: "false"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+externalSecret:
+  enabled: true
+  refreshInterval: 5m
+  secretStoreName: aws-secrets-manager
+  remoteRef: reposition/app
+  keys:
+    - secretKey: DATABASE_URL
+      remoteKey: reposition/app
+      property: DATABASE_URL
+    - secretKey: SESSION_SECRET
+      remoteKey: reposition/app
+      property: SESSION_SECRET
+
+resources:
+  requests:
+    cpu: 128m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+
+networkPolicy:
+  enabled: true
+  appPort: 5000
+  dbPort: 5432
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: false  # Node.js may need /tmp writes
+  allowPrivilegeEscalation: false
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+
+nodeSelector: {}
+
+tolerations: []

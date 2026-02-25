@@ -1,0 +1,22 @@
+# Production overrides — ArgoCD applies this file on top of values.yaml
+
+replicaCount: 1
+
+image:
+  repository: "699475953070.dkr.ecr.eu-west-1.amazonaws.com/reposition"
+  tag: "latest"
+
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/subnets: "subnet-0e0e1320b443b42c3,subnet-0dc1db1302a55ef36"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:699475953070:certificate/cfc6e683-9650-4330-886b-5b01bbd1e747"
+    alb.ingress.kubernetes.io/security-groups: "sg-0f16cb2971e040fec"
+    # WAF is CloudFront-scope only; not applicable to regional ALB
+
+env:
+  NODE_ENV: production
+  BOOTSTRAP_ON_START: "false"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+nodeSelector:
+  kubernetes.io/arch: amd64

@@ -5,11 +5,27 @@ aws_region   = "eu-west-1"
 project_name = "reposition"
 
 # -----------------------------------------------------------------------------
+# EKS
+# -----------------------------------------------------------------------------
+# eks_cluster_version       = "1.31"
+# eks_system_instance_types = ["t4g.medium"]
+# eks_system_node_count     = 1
+# eks_log_retention_days    = 3
+
+# -----------------------------------------------------------------------------
 # Custom domain and HTTPS (optional)
 # -----------------------------------------------------------------------------
 # Uncomment and set to enable custom domain with ACM certificates.
 # Requires: Route53 hosted zone for the domain.
 #
-# domain_name       = "app.reposition.com"   # Frontend – CloudFront
-# api_domain_name   = "api.reposition.com"   # API – ALB (optional; omit to use domain_name/api)
-# route53_zone_id   = "Z1234567890ABCDEF"   # Route53 hosted zone ID
+# domain_name       = "re-position.org"        # Frontend – CloudFront
+# api_domain_name   = "api.re-position.org"    # API – ALB via K8s Ingress
+# route53_zone_id   = "Z1234567890ABCDEF"      # Route53 hosted zone ID
+
+# -----------------------------------------------------------------------------
+# ALB DNS (set after first deploy)
+# -----------------------------------------------------------------------------
+# After EKS deploy, get the ALB DNS with: kubectl get ingress -n reposition
+# Then uncomment and paste the DNS here so CloudFront and Route53 can use it.
+#
+# eks_ingress_alb_dns = "k8s-repositi-repositi-xxxxxxxxxx-yyyyyyyyyy.eu-west-1.elb.amazonaws.com"

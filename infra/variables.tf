@@ -1,59 +1,59 @@
 variable "aws_region" {
-  description = "AWS region (e.g. eu-west-1, us-east-1)"
+  description = "AWS region"
   type        = string
   default     = "eu-west-1"
 }
 
 variable "project_name" {
-  description = "Project name used for resource names"
+  description = "Project name used for resource naming"
   type        = string
   default     = "reposition"
 }
 
 variable "app_port" {
-  description = "Port the app listens on (must match server)"
+  description = "Port the app listens on"
   type        = number
   default     = 5000
 }
 
 # -----------------------------------------------------------------------------
-# Elastic Container Registry
+# ECR
 # -----------------------------------------------------------------------------
 variable "ecr_keep_last_n_images" {
-  description = "How many Docker images to keep in ECR (older ones are deleted)"
+  description = "Docker images to keep in ECR (older ones expire)"
   type        = number
   default     = 10
 }
 
 # -----------------------------------------------------------------------------
-# ECS Fargate
+# EKS
 # -----------------------------------------------------------------------------
-variable "ecs_task_cpu" {
-  description = "Fargate task CPU units (256, 512, 1024, 2048, 4096)"
-  type        = number
-  default     = 512
+variable "eks_cluster_version" {
+  description = "Kubernetes version for the EKS cluster"
+  type        = string
+  default     = "1.31"
 }
 
-variable "ecs_task_memory" {
-  description = "Fargate task memory in MB (512, 1024, 2048, 3072, 4096, ...)"
-  type        = number
-  default     = 1024
+variable "eks_system_instance_types" {
+  description = "Instance types for the system (always-on) managed node group"
+  type        = list(string)
+  default     = ["t4g.medium"]
 }
 
-variable "ecs_desired_count" {
-  description = "Number of ECS tasks to run"
+variable "eks_system_node_count" {
+  description = "Desired number of nodes in the system node group"
   type        = number
   default     = 1
 }
 
-variable "ecs_log_retention_days" {
-  description = "CloudWatch log retention for ECS (days)"
+variable "eks_log_retention_days" {
+  description = "CloudWatch log retention for EKS / Fluent Bit (days)"
   type        = number
-  default     = 7
+  default     = 3
 }
 
-variable "ecs_bootstrap_on_start" {
-  description = "If true, run schema (drizzle-kit push) + data load (data_loader.py) on container start. Set to false after first successful load to speed up future deployments."
+variable "bootstrap_on_start" {
+  description = "Run schema push + data load on container start. Set false after first successful load."
   type        = bool
   default     = false
 }
@@ -62,19 +62,25 @@ variable "ecs_bootstrap_on_start" {
 # Custom domain and HTTPS (optional)
 # -----------------------------------------------------------------------------
 variable "domain_name" {
-  description = "Custom domain for the app (e.g. app.reposition.com). Leave empty to skip domain/HTTPS setup."
+  description = "Custom domain for the frontend (e.g. re-position.org). Leave empty to skip."
   type        = string
   default     = ""
 }
 
 variable "api_domain_name" {
-  description = "Custom domain for the API (e.g. api.reposition.com). Leave empty to use only domain_name/api."
+  description = "Custom domain for the API (e.g. api.re-position.org). Leave empty to skip."
+  type        = string
+  default     = ""
+}
+
+variable "eks_ingress_alb_dns" {
+  description = "ALB DNS created by AWS LB Controller. Get with: kubectl get ingress -n reposition. Set after first deploy if not using api_domain_name."
   type        = string
   default     = ""
 }
 
 variable "route53_zone_id" {
-  description = "Route53 hosted zone ID for the domain (e.g. Z1234567890ABC). Required if domain_name is set."
+  description = "Route53 hosted zone ID. Required if domain_name is set."
   type        = string
   default     = ""
 }
@@ -83,13 +89,13 @@ variable "route53_zone_id" {
 # S3 and CloudFront
 # -----------------------------------------------------------------------------
 variable "cloudfront_price_class" {
-  description = "CloudFront price class (PriceClass_All, PriceClass_200, PriceClass_100)"
+  description = "CloudFront price class"
   type        = string
   default     = "PriceClass_200"
 }
 
 variable "enable_waf" {
-  description = "Enable AWS WAF for CloudFront (protection against SQLi, XSS, rate abuse)"
+  description = "Enable AWS WAF for CloudFront"
   type        = bool
   default     = true
 }
@@ -98,7 +104,7 @@ variable "enable_waf" {
 # RDS PostgreSQL
 # -----------------------------------------------------------------------------
 variable "rds_db_name" {
-  description = "Name of the PostgreSQL database to create"
+  description = "PostgreSQL database name"
   type        = string
   default     = "reposition_db"
 }
@@ -110,7 +116,7 @@ variable "rds_username" {
 }
 
 variable "rds_instance_class" {
-  description = "RDS instance type (e.g. db.t3.micro for free tier)"
+  description = "RDS instance type"
   type        = string
   default     = "db.t3.micro"
 }
@@ -134,13 +140,19 @@ variable "rds_backup_retention_days" {
 }
 
 variable "rds_skip_final_snapshot" {
-  description = "If true, no snapshot when destroying (dev only)"
+  description = "Skip snapshot on destroy (dev only)"
   type        = bool
   default     = true
 }
 
 variable "rds_deletion_protection" {
-  description = "If true, RDS cannot be deleted accidentally"
+  description = "Prevent accidental RDS deletion"
   type        = bool
   default     = false
+}
+
+variable "rds_legacy_subnet_id" {
+  description = "Old subnet ID still used by RDS during migration. Set to empty after first successful apply."
+  type        = string
+  default     = ""
 }

@@ -1,5 +1,5 @@
-# Backend: build Docker image, push to ECR, update ECS service
-name: Backend (ECR + ECS)
+# Backend: build Docker image, push to ECR, trigger ArgoCD sync
+name: Backend (ECR + EKS)
 
 on:
   push:
@@ -19,8 +19,7 @@ on:
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-1' }}
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'reposition' }}
-  ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'reposition-cluster' }}
-  ECS_SERVICE: ${{ vars.ECS_SERVICE || 'reposition-service' }}
+  EKS_CLUSTER: ${{ vars.EKS_CLUSTER || 'reposition' }}
 
 jobs:
   deploy:
@@ -43,18 +42,25 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push image
-        id: build
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+          docker build \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Force ECS deployment
+      - name: Update kubeconfig
         run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
-            --force-new-deployment \
+          aws eks update-kubeconfig \
+            --name $EKS_CLUSTER \
             --region $AWS_REGION
+
+      - name: Restart deployment (rolling update with new image)
+        run: |
+          kubectl set image deployment/reposition \
+            reposition=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            -n reposition
+          kubectl rollout status deployment/reposition -n reposition --timeout=300s

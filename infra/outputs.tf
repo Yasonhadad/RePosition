@@ -1,21 +1,37 @@
+# =============================================================================
+# Outputs
+# =============================================================================
+
+# -- VPC --
 output "vpc_id" {
   description = "VPC ID"
   value       = aws_vpc.main.id
 }
 
 output "public_subnet_ids" {
-  description = "Public subnet IDs (for ALB and ECS)"
+  description = "Public subnet IDs (ALB, NAT)"
   value       = aws_subnet.public[*].id
 }
 
+output "app_subnet_ids" {
+  description = "App tier (private) subnet IDs (EKS nodes)"
+  value       = aws_subnet.app[*].id
+}
+
+output "data_subnet_ids" {
+  description = "Data tier (private) subnet IDs (RDS)"
+  value       = aws_subnet.data[*].id
+}
+
+# -- Security Groups --
 output "alb_security_group_id" {
   description = "Security group ID for ALB"
   value       = aws_security_group.alb.id
 }
 
-output "ecs_security_group_id" {
-  description = "Security group ID for ECS tasks"
-  value       = aws_security_group.ecs.id
+output "eks_nodes_security_group_id" {
+  description = "Security group ID for EKS nodes"
+  value       = aws_security_group.eks_nodes.id
 }
 
 output "rds_security_group_id" {
@@ -23,17 +39,32 @@ output "rds_security_group_id" {
   value       = aws_security_group.rds.id
 }
 
-# -----------------------------------------------------------------------------
-# Database connection details
-# -----------------------------------------------------------------------------
+# -- EKS --
+output "eks_cluster_name" {
+  description = "EKS cluster name"
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "EKS cluster API endpoint"
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_certificate_authority" {
+  description = "EKS cluster CA (base64)"
+  value       = module.eks.cluster_certificate_authority_data
+  sensitive   = true
+}
+
+output "eks_update_kubeconfig_command" {
+  description = "Command to configure kubectl"
+  value       = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}"
+}
+
+# -- RDS --
 output "rds_endpoint" {
   description = "RDS connection endpoint (host:port)"
   value       = aws_db_instance.main.endpoint
-}
-
-output "rds_port" {
-  description = "RDS port"
-  value       = aws_db_instance.main.port
 }
 
 output "rds_db_name" {
@@ -41,77 +72,40 @@ output "rds_db_name" {
   value       = aws_db_instance.main.db_name
 }
 
-output "rds_username" {
-  description = "Master username (password is in Secrets Manager)"
-  value       = aws_db_instance.main.username
-}
-
-# -----------------------------------------------------------------------------
-# Secrets Manager – ARN used by ECS to inject env vars into tasks
-# -----------------------------------------------------------------------------
+# -- Secrets --
 output "app_secret_arn" {
-  description = "ARN of the app secret (DATABASE_URL, SESSION_SECRET) for ECS task definition"
+  description = "ARN of the app secret in Secrets Manager"
   value       = aws_secretsmanager_secret.app.arn
 }
 
-# -----------------------------------------------------------------------------
-# ECR – image registry URL for push/pull
-# -----------------------------------------------------------------------------
+# -- ECR --
 output "ecr_repository_url" {
-  description = "ECR repository URL for docker push/pull (e.g. 123456789012.dkr.ecr.eu-west-1.amazonaws.com/reposition)"
+  description = "ECR repository URL for docker push/pull"
   value       = aws_ecr_repository.app.repository_url
 }
 
-output "ecr_repository_arn" {
-  description = "ECR repository ARN"
-  value       = aws_ecr_repository.app.arn
-}
-
-# -----------------------------------------------------------------------------
-# Load balancer URLs
-# -----------------------------------------------------------------------------
-output "alb_dns_name" {
-  description = "ALB DNS name – access the app via http://<this-value>"
-  value       = aws_lb.main.dns_name
-}
-
-output "alb_zone_id" {
-  description = "ALB Route53 zone ID (for CNAME setup when using custom domain)"
-  value       = aws_lb.main.zone_id
-}
-
-# -----------------------------------------------------------------------------
-# Frontend – S3 bucket and CloudFront
-# -----------------------------------------------------------------------------
+# -- Frontend --
 output "frontend_bucket_name" {
-  description = "S3 bucket name for frontend build upload (e.g. in GitHub Actions)"
+  description = "S3 bucket for frontend build"
   value       = aws_s3_bucket.frontend.id
 }
 
 output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID – for invalidation after deploy"
+  description = "CloudFront distribution ID"
   value       = aws_cloudfront_distribution.frontend.id
 }
 
 output "cloudfront_domain_name" {
-  description = "CloudFront domain (e.g. xxx.cloudfront.net)"
+  description = "CloudFront domain name"
   value       = aws_cloudfront_distribution.frontend.domain_name
 }
 
-output "cloudfront_url" {
-  description = "Frontend URL – https://<domain>.cloudfront.net"
-  value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
-}
-
-# -----------------------------------------------------------------------------
-# Custom domain (when domain_name and route53_zone_id are set)
-# -----------------------------------------------------------------------------
 output "frontend_url" {
-  description = "Frontend URL with custom domain (if configured)"
+  description = "Frontend URL"
   value       = var.domain_name != "" ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
 
 output "api_url" {
-  description = "API URL – custom domain or ALB"
-  value       = var.api_domain_name != "" ? "https://${var.api_domain_name}" : "http://${aws_lb.main.dns_name}"
+  description = "API URL (ALB managed by K8s Ingress, or custom domain)"
+  value       = var.api_domain_name != "" ? "https://${var.api_domain_name}" : "ALB DNS will be created by AWS LB Controller — run: kubectl get ingress -n reposition"
 }

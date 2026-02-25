@@ -1,293 +1,244 @@
-# RePosition – AWS Infrastructure
+# RePosition – AWS Infrastructure (EKS)
 
-Terraform-managed infrastructure for the RePosition application on AWS.
+Terraform-managed infrastructure for the RePosition application on AWS EKS.
 
 ## Prerequisites
 
 - [Terraform](https://www.terraform.io/downloads) 1.0+
-- [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure` or `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`)
+- [AWS CLI](https://aws.amazon.com/cli/) configured
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Helm](https://helm.sh/docs/intro/install/) 3.x
 
 ## Infrastructure Overview
 
 | Component | Description |
 |----------|-------------|
-| **VPC + Security Groups** | Network and security groups for ALB, ECS, RDS |
-| **RDS PostgreSQL + Secrets Manager** | Database and credential storage |
+| **VPC (3-tier)** | 6 subnets: 2 public, 2 private app, 2 private data |
+| **NAT Gateway** | Single NAT GW for private subnets (cost-optimised) |
+| **S3 Gateway Endpoint** | Free endpoint for ECR image layers |
+| **EKS Cluster** | Kubernetes 1.31 with KMS secrets encryption |
+| **Karpenter** | Spot + Graviton node autoscaling |
+| **AWS LB Controller** | ALB from Kubernetes Ingress |
+| **External Secrets** | Syncs AWS Secrets Manager → K8s Secrets |
+| **ArgoCD** | GitOps (Non-HA) |
+| **Fluent Bit** | Logs → CloudWatch |
+| **RDS PostgreSQL** | Managed DB in data tier (private) |
+| **Secrets Manager** | DATABASE_URL + SESSION_SECRET |
 | **ECR** | Docker image registry |
-| **ECS (Fargate)** | Cluster, ALB, Task Definition, Service |
 | **S3 + CloudFront** | Static frontend hosting |
 | **WAF** | Web Application Firewall for CloudFront |
-| **GitHub Actions** | CI/CD pipelines |
 
 ---
 
-## VPC and Security Groups
+## Architecture
 
-### Resources Created
+```
+Internet
+    ↓
+CloudFront (WAF) ──→ S3 (Frontend)
+    ↓
+CloudFront /api/* ──→ ALB (Public Subnets)
+                        ↓
+                   EKS Nodes (App Tier – Private Subnets)
+                        ↓  ←── NAT GW (outbound internet)
+                   RDS PostgreSQL (Data Tier – Private Subnets)
+```
 
-- **VPC** – CIDR `10.0.0.0/16`
-- **2 public subnets** – across two Availability Zones for ALB and Fargate
-- **Internet Gateway** – internet access (for ECR image pulls)
-- **Security groups:**
-  - **ALB** – ingress on ports 80, 443 from internet
-  - **ECS** – ingress on app port (5000) from ALB only
-  - **RDS** – ingress on 5432 from ECS only
+### VPC Layout
 
-### Commands
+| Subnet | CIDR | AZ | Tier |
+|--------|------|----|------|
+| `public-1` | `10.0.1.0/24` | az-1 | Public (ALB, NAT) |
+| `public-2` | `10.0.2.0/24` | az-2 | Public (ALB) |
+| `app-1` | `10.0.11.0/24` | az-1 | Private – App (EKS) |
+| `app-2` | `10.0.12.0/24` | az-2 | Private – App (EKS) |
+| `data-1` | `10.0.21.0/24` | az-1 | Private – Data (RDS) |
+| `data-2` | `10.0.22.0/24` | az-2 | Private – Data (RDS) |
+
+### Security Groups
+
+```
+ALB SG (80, 443 from internet)
+   → EKS Nodes SG (5000 from ALB)
+      → RDS SG (5432 from EKS only)
+```
+
+---
+
+## Quick Start
+
+### 1. Deploy Infrastructure
 
 ```bash
 cd infra
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+
 terraform init
-terraform plan   # Review changes
-terraform apply  # Apply (confirm with yes)
-```
-
-### Outputs
-
-- `vpc_id`
-- `public_subnet_ids`
-- `alb_security_group_id`
-- `ecs_security_group_id`
-- `rds_security_group_id`
-
-### Region
-
-Default: `eu-west-1`. Override via:
-
-```bash
-terraform apply -var="aws_region=us-east-1"
-```
-
-Or in `terraform.tfvars`:
-
-```hcl
-aws_region   = "eu-west-1"
-project_name = "reposition"
-```
-
----
-
-## RDS PostgreSQL and Secrets Manager
-
-### Resources Created
-
-- **DB Subnet Group** – RDS placed in the two existing subnets
-- **RDS Instance** – PostgreSQL 16; password is auto-generated
-- **Secrets Manager** – single secret `reposition/app` with JSON:
-  - `DATABASE_URL` – PostgreSQL connection string (includes password)
-  - `SESSION_SECRET` – session signing key (randomly generated)
-
-The database is **not** internet-accessible (`publicly_accessible = false`). Only ECS within the VPC connects, and credentials are injected from Secrets Manager.
-
-### Commands
-
-No passwords need to be provided; Terraform generates and stores them:
-
-```bash
-cd infra
-terraform init   # First time after adding random provider
 terraform plan
 terraform apply
 ```
 
-### Outputs
-
-- `rds_endpoint`, `rds_port`, `rds_db_name`, `rds_username` – for debugging
-- **`app_secret_arn`** – used by ECS to inject `DATABASE_URL` and `SESSION_SECRET`
-
-### Notes
-
-- RDS creation takes several minutes
-- Passwords are stored in Terraform state and Secrets Manager only, never in Git
-
----
-
-## Elastic Container Registry (ECR)
-
-### Resources Created
-
-- **ECR repository** – Docker image registry for the application
-- **Image scanning** – automatic vulnerability scan on push
-- **Lifecycle policy** – retains only the last N images (default: 10)
-
-### Commands
+### 2. Configure kubectl
 
 ```bash
-cd infra
-terraform plan
-terraform apply
+aws eks update-kubeconfig --name reposition --region eu-west-1
+kubectl get nodes   # verify connection
 ```
 
-### Outputs
-
-- **`ecr_repository_url`** – for `docker push` / `docker pull`
-- **`ecr_repository_arn`** – repository ARN
-
-GitHub Actions: use `aws ecr get-login-password`, tag the image with `ecr_repository_url:tag`, and `docker push`.
-
----
-
-## ECS Fargate and ALB
-
-### Resources Created
-
-- **ALB** – Application Load Balancer on port 80, forwards to target group
-- **Target group** – health check on `/`, port 5000
-- **ECS Cluster** – Fargate
-- **Task Definition** – image from ECR (`reposition:latest`), env from Secrets Manager (`DATABASE_URL`, `SESSION_SECRET`), `NODE_ENV=production`, `BOOTSTRAP_ON_START`
-- **ECS Service** – runs N tasks (default: 1), connected to ALB
-- **CloudWatch Log Group** – container logs
-- **IAM Role** – permissions for ECR image pull, Secrets Manager read, log write
-
-### Commands
+### 3. Build and Push First Image
 
 ```bash
-cd infra
-terraform plan
-terraform apply
-```
-
-### After Apply
-
-The service expects `reposition:latest` in ECR. On first run, build and push manually or via GitHub Actions:
-
-```bash
-aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.eu-west-1.amazonaws.com
+aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin <ecr_repository_url>
 docker build -t reposition .
 docker tag reposition:latest <ecr_repository_url>:latest
 docker push <ecr_repository_url>:latest
 ```
 
-Then in ECS Console: **Update service** → **Force new deployment**, or re-run the pipeline.
+### 4. Deploy Application via ArgoCD
 
-### Outputs
+```bash
+# Update k8s/charts/reposition/values-production.yaml with:
+# - image.repository: <ecr_repository_url>
+# - ingress annotations: subnet IDs, cert ARN, SG, WAF ARN (from terraform output)
 
-- **`alb_dns_name`** – app URL: `http://<alb_dns_name>`
-- **`alb_zone_id`** – for Route53 CNAME if using custom domain
+kubectl apply -f k8s/platform/argocd-app.yaml
+```
+
+### 5. Get ALB DNS and Connect CloudFront
+
+```bash
+# Wait for ALB creation
+kubectl get ingress -n reposition
+
+# Copy the ALB DNS from ADDRESS column, then:
+terraform apply -var eks_ingress_alb_dns="<ALB_DNS>"
+```
 
 ---
 
-## S3 and CloudFront (Frontend)
+## EKS Components
 
-### Resources Created
+### Karpenter (Node Autoscaling)
 
-- **S3 bucket** – stores frontend build artifacts; access restricted to CloudFront (OAC)
-- **CloudFront distribution** – serves content over HTTPS with caching; SPA support (404 → `index.html`); 403 remains unchanged for WAF blocks
-- **Origin Access Control** – only CloudFront can read from the bucket
+- **System Node Group**: 1× `t4g.medium` On-Demand (Karpenter controller + add-ons)
+- **Workload Nodes**: Spot instances, ARM64 (Graviton): `t4g.small`, `t4g.medium`, `m7g.medium`
+- **Consolidation**: `WhenEmptyOrUnderutilized` — removes idle nodes within 60s
+- **Limits**: max 8 vCPU, 16Gi memory
 
-### Commands
+### Platform Add-ons
 
-```bash
-cd infra
-terraform plan
-terraform apply
-```
+| Add-on | Namespace | Purpose |
+|--------|-----------|---------|
+| Karpenter | `kube-system` | Node autoscaling |
+| AWS LB Controller | `kube-system` | ALB from Ingress |
+| External Secrets | `external-secrets` | Secrets Manager → K8s |
+| Fluent Bit | `kube-system` | Logs → CloudWatch |
+| ArgoCD | `argocd` | GitOps deployments |
 
-### Frontend Upload (manual or GitHub Actions)
+### Pod Identity (IAM)
 
-Build output goes to `dist/public` (Vite). Upload to S3:
-
-```bash
-npm run build
-aws s3 sync dist/public s3://<frontend_bucket_name> --delete
-aws cloudfront create-invalidation --distribution-id <cloudfront_distribution_id> --paths "/*"
-```
-
-### CloudFront Deployment Interrupted
-
-If `apply` was interrupted while CloudFront was deploying, **import** the existing distribution before running `apply` again to avoid creating a duplicate:
-
-```bash
-cd infra
-terraform import aws_cloudfront_distribution.frontend <ID-FROM-CONSOLE>
-terraform apply
-```
-
-Replace `<ID-FROM-CONSOLE>` with the distribution ID from the AWS Console.
-
-**If two distributions exist:** delete the orphan in the Console (the one not in `terraform state list` / outputs): Disable → wait for Deployed → Delete. Keep the one Terraform manages (`cloudfront_distribution_id`).
-
-### Outputs
-
-- **`frontend_bucket_name`** – S3 bucket for uploads
-- **`cloudfront_distribution_id`** – for post-deploy invalidation
-- **`cloudfront_domain_name`** – e.g. `xxx.cloudfront.net`
-- **`cloudfront_url`** – frontend URL: `https://<domain>.cloudfront.net`
-
----
-
-## WAF (Web Application Firewall)
-
-CloudFront is protected by AWS WAF with these rules:
-
-| Rule | Description |
+| Role | Permissions |
 |------|-------------|
-| **AWSManagedRulesCommonRuleSet** | XSS, path traversal, common exploits |
-| **AWSManagedRulesSQLiRuleSet** | SQL Injection |
-| **AWSManagedRulesKnownBadInputsRuleSet** | Known malicious inputs |
-| **RateLimitRule** | Block IPs exceeding 2000 requests per 5 minutes |
+| `reposition-aws-lb-controller` | ELB, EC2, ACM, WAF |
+| `reposition-external-secrets` | SecretsManager:GetSecretValue |
+| `reposition-fluent-bit` | CloudWatch Logs |
+| `reposition-karpenter-node` | EC2, SSM, Pricing |
 
-**Disable:** In `terraform.tfvars`: `enable_waf = false`
+---
+
+## Helm Chart
+
+Located at `k8s/charts/reposition/`. Templates:
+
+| Template | Resource |
+|----------|----------|
+| `deployment.yaml` | Deployment with probes, security context, topology spread |
+| `service.yaml` | ClusterIP Service |
+| `ingress.yaml` | ALB Ingress (internet-facing, HTTPS) |
+| `external-secret.yaml` | SecretStore + ExternalSecret |
+| `network-policy.yaml` | Default deny + explicit allow rules |
+| `hpa.yaml` | HPA (1-4 replicas, CPU 80%) |
+| `namespace.yaml` | Namespace with Pod Security Standards (restricted) |
+
+---
+
+## RDS PostgreSQL
+
+- **Engine**: PostgreSQL 16
+- **Location**: Data Tier (private subnets)
+- **Access**: EKS nodes only (via Security Group)
+- **Credentials**: Auto-generated, stored in Secrets Manager (`reposition/app`)
 
 ---
 
 ## GitHub Actions (CI/CD)
 
-Workflows in `.github/workflows/`:
-
 | Workflow | Trigger | Action |
 |----------|---------|--------|
-| **Backend** | Push to `main` (server, Dockerfile, etc.) | Build Docker → Push to ECR → ECS force new deployment |
-| **Frontend** | Push to `main` (client, vite, etc.) | Build with `VITE_API_URL` → Sync to S3 → CloudFront invalidation |
+| **Backend** | Push to `main` (server, Dockerfile, etc.) | Build → Push to ECR → `kubectl set image` |
+| **Frontend** | Push to `main` (client, vite, etc.) | Build → S3 sync → CloudFront invalidation |
+| **Rollback Backend** | Manual (image digest) | `kubectl set image` to previous digest |
+| **Rollback Frontend** | Manual (commit SHA) | Build from commit → S3 sync |
 
-### GitHub Configuration
-
-**Variables (Settings → Secrets and variables → Actions → Variables):**
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `AWS_ROLE_ARN` | **Yes** | IAM Role ARN for OIDC (e.g. `arn:aws:iam::123456789:role/github-actions-oidc`) |
-
-**Additional variables:**
+### GitHub Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
+| `AWS_ROLE_ARN` | **Yes** | — | IAM Role ARN (OIDC) |
 | `AWS_REGION` | No | `eu-west-1` | AWS region |
 | `ECR_REPOSITORY` | No | `reposition` | ECR repository name |
-| `ECS_CLUSTER` | No | `reposition-cluster` | ECS cluster name |
-| `ECS_SERVICE` | No | `reposition-service` | ECS service name |
-| `S3_BUCKET` | **Yes** (frontend) | — | Frontend S3 bucket (from `frontend_bucket_name`) |
-| `CLOUDFRONT_DISTRIBUTION_ID` | **Yes** (frontend) | — | CloudFront distribution ID (from `cloudfront_distribution_id`) |
-| `VITE_API_URL` | **Yes** (CloudFront) | — | CloudFront URL (e.g. `https://xxx.cloudfront.net`). CloudFront routes `/api/*` to ALB, avoiding Mixed Content. |
+| `EKS_CLUSTER` | No | `reposition` | EKS cluster name |
+| `S3_BUCKET` | **Yes** (frontend) | — | Frontend S3 bucket |
+| `CLOUDFRONT_DISTRIBUTION_ID` | **Yes** (frontend) | — | CloudFront distribution ID |
+| `VITE_API_URL` | **Yes** (frontend) | — | CloudFront URL for API proxy |
 
-When using CloudFront, set `VITE_API_URL` to the CloudFront URL (or custom domain). CloudFront proxies `/api/*` to the ALB.
+---
 
-### Custom Domain and HTTPS
+## Custom Domain and HTTPS
 
-1. **Route53:** Create a hosted zone for your domain and copy the Zone ID
-2. **Terraform:** Set in `terraform.tfvars` or apply:
-   - `domain_name` = frontend domain (e.g. `app.reposition.com`)
-   - `api_domain_name` = (optional) API domain (e.g. `api.reposition.com`)
-   - `route53_zone_id` = Route53 Zone ID
-3. **`terraform apply`** – creates ACM certificates, DNS records, and attaches domains to CloudFront/ALB
-4. **GitHub:** Update `VITE_API_URL` – when frontend and API share an origin (e.g. `re-position.org`), set it to **empty** (`""`) since API is at `/api/*` on same origin. With a separate API domain, set the API URL.
+1. Create a Route53 hosted zone and copy the Zone ID
+2. Set in `terraform.tfvars`:
+   ```hcl
+   domain_name     = "re-position.org"
+   api_domain_name = "api.re-position.org"
+   route53_zone_id = "Z1234567890ABCDEF"
+   ```
+3. `terraform apply` — creates ACM certificates and DNS records
+4. After deploy: set `eks_ingress_alb_dns` to connect Route53 → ALB
 
-### Backend Rollback (by digest)
+---
 
-1. **Find working image digest:** ECR → Repositories → reposition → Images → Image digest (e.g. `sha256:a1b2c3d4...`)
-2. **Run Rollback workflow:** Actions → **Rollback Backend (by Digest)** → Run workflow → paste digest → Run
-3. ECS deploys the previous image
+## Cost Estimate (~$170/month)
 
-(ECR retains up to 10 images; see `ecr_keep_last_n_images` in `variables.tf`.)
+| Resource | Monthly |
+|----------|---------|
+| EKS Control Plane | ~$73 |
+| System Node (t4g.medium On-Demand) | ~$24 |
+| App Node (t4g.small Spot) | ~$3.5 |
+| NAT Gateway | ~$32 |
+| RDS db.t3.micro | ~$15 |
+| ALB | ~$16 |
+| Other (Secrets, CloudWatch, ECR, S3, CF) | ~$6 |
 
-### Frontend Rollback (by commit)
+---
 
-**Option 1 – Workflow:** Actions → **Rollback Frontend (by Commit)** → Run workflow → enter commit SHA of a working version. The workflow builds from that commit and uploads to S3.
+## Terraform Files
 
-**Option 2 – git revert:** `git revert <commit>` → push. The Frontend workflow runs and deploys the reverted build.
-
-**Option 3 – S3 versioning:** The bucket has versioning; restore previous object versions manually in the Console (S3 → Object → Versions → Restore).
-
-### Manual Run
-
-Any workflow can be run manually from Actions → select workflow → Run workflow.
+| File | Description |
+|------|-------------|
+| `main.tf` | VPC, subnets (3-tier), NAT GW, S3 endpoint |
+| `eks.tf` | EKS cluster, node group, Karpenter, KMS |
+| `pod_identity.tf` | IAM roles + Pod Identity associations |
+| `addons.tf` | Helm: LB Controller, ESO, Fluent Bit |
+| `argocd.tf` | Helm: ArgoCD (Non-HA) |
+| `security_groups.tf` | ALB → EKS → RDS security groups |
+| `rds.tf` | RDS PostgreSQL in data tier |
+| `secrets.tf` | Secrets Manager + random passwords |
+| `ecr.tf` | ECR repository + lifecycle |
+| `s3-cloudfront.tf` | S3, CloudFront, OAC |
+| `domain.tf` | ACM certificates, Route53 records |
+| `waf.tf` | WAF for CloudFront |
+| `variables.tf` | Input variables |
+| `outputs.tf` | Output values |
+| `versions.tf` | Provider versions |

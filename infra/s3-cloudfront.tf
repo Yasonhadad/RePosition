@@ -1,6 +1,12 @@
 # =============================================================================
-# Static frontend – S3 origin with CloudFront CDN, OAC for secure bucket access
+# Static frontend – S3 origin with CloudFront CDN, OAC for secure bucket access.
+# API origin points to the ALB created by K8s Ingress (set eks_ingress_alb_dns
+# after first deployment, or use api_domain_name).
 # =============================================================================
+
+locals {
+  api_origin_domain = var.api_domain_name != "" ? var.api_domain_name : var.eks_ingress_alb_dns
+}
 
 # -----------------------------------------------------------------------------
 # S3 bucket – stores built frontend assets; no public access, CloudFront only
@@ -90,38 +96,45 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
 
-  # When api_domain_name is set, CloudFront must use HTTPS to the API domain (ALB cert matches).
-  # Otherwise ALB port 80 redirects to 443 and CloudFront fails with "Failed to fetch".
-  origin {
-    domain_name = var.api_domain_name != "" ? var.api_domain_name : aws_lb.main.dns_name
-    origin_id   = "ALB-${var.project_name}"
+  # ALB origin — points to api_domain_name or the Ingress ALB DNS.
+  # After EKS deployment, get the ALB DNS with: kubectl get ingress -n reposition
+  # Then set api_domain_name or eks_ingress_alb_dns in tfvars.
+  dynamic "origin" {
+    for_each = local.api_origin_domain != "" ? [1] : []
+    content {
+      domain_name = local.api_origin_domain
+      origin_id   = "ALB-${var.project_name}"
 
-    custom_origin_config {
-      http_port             = 80
-      https_port            = 443
-      origin_protocol_policy = var.api_domain_name != "" ? "https-only" : "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      custom_origin_config {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = var.api_domain_name != "" ? "https-only" : "http-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
     }
   }
 
-  # /api/* → ALB (backend). Ensures all API calls use HTTPS (same origin).
-  ordered_cache_behavior {
-    path_pattern           = "/api/*"
-    target_origin_id       = "ALB-${var.project_name}"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods         = ["GET", "HEAD"]
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
+  # /api/* → ALB (backend)
+  dynamic "ordered_cache_behavior" {
+    for_each = local.api_origin_domain != "" ? [1] : []
+    content {
+      path_pattern           = "/api/*"
+      target_origin_id       = "ALB-${var.project_name}"
+      allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods         = ["GET", "HEAD"]
+      compress               = true
+      viewer_protocol_policy = "redirect-to-https"
 
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
+      min_ttl     = 0
+      default_ttl = 0
+      max_ttl     = 0
 
-    forwarded_values {
-      query_string = true
-      headers      = ["*"]
-      cookies {
-        forward = "all"
+      forwarded_values {
+        query_string = true
+        headers      = ["*"]
+        cookies {
+          forward = "all"
+        }
       }
     }
   }
