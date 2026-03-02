@@ -1,4 +1,4 @@
-# Backend: build Docker image, push to ECR, trigger ArgoCD sync
+# Backend: build Docker image, push to ECR, update image tag in Git — ArgoCD syncs automatically (GitOps)
 name: Backend (ECR + EKS)
 
 on:
@@ -22,11 +22,33 @@ env:
   EKS_CLUSTER: ${{ vars.EKS_CLUSTER || 'reposition' }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npm run check
+
+      - name: Run tests
+        run: npm run test
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,15 +74,11 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Update kubeconfig
+      - name: Update image tag in Git (GitOps)
         run: |
-          aws eks update-kubeconfig \
-            --name $EKS_CLUSTER \
-            --region $AWS_REGION
-
-      - name: Restart deployment (rolling update with new image)
-        run: |
-          kubectl set image deployment/reposition \
-            reposition=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
-            -n reposition
-          kubectl rollout status deployment/reposition -n reposition --timeout=300s
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          sed -i 's/tag: ".*"/tag: "${{ github.sha }}"/' k8s/charts/reposition/values-production.yaml
+          git add k8s/charts/reposition/values-production.yaml
+          git diff --staged --quiet || git commit -m "chore(backend): update image tag to ${{ github.sha }} [skip ci]"
+          git push

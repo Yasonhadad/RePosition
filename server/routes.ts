@@ -1,47 +1,37 @@
 import type { Express as ExpressApp } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { searchFiltersSchema, insertPlayerSchema, insertClubSchema, type Club } from "@shared/schema";
+import { type Club } from "@shared/schema";
+import {
+  parseCsvHeader,
+  buildFallbackData,
+  parseCompatibilityResults,
+  parsePlayerId as _parsePlayerId,
+  parseFilters as _parseFilters,
+} from "./route-utils";
 
 import { setupAuth, requireAuth } from "./auth";
 import multer from "multer";
 
 export async function registerRoutes(app: ExpressApp): Promise<Server> {
-  // Auth middleware
   setupAuth(app);
 
-  // Auth routes - handled by auth.ts
   const upload = multer({ storage: multer.memoryStorage() });
 
-  // === Helper Functions ===
-  
-  /**
-   * Generic error handler for API routes
-   */
   const handleError = (res: any, error: any, defaultMessage: string) => {
     console.error(defaultMessage, error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({ error: `${defaultMessage}: ${errorMessage}` });
   };
 
-  /**
-   * Generic success response handler
-   */
   const sendSuccess = (res: any, data: any) => {
     res.json(data);
   };
 
-  /**
-   * Parse and validate player ID from params
-   */
   const parsePlayerId = (req: any): number | null => {
-    const playerId = parseInt(req.params.playerId || req.params.id);
-    return isNaN(playerId) ? null : playerId;
+    return _parsePlayerId(req.params);
   };
 
-  /**
-   * Validate player exists and return it
-   */
   const validatePlayer = async (playerId: number) => {
     const player = await storage.getPlayerByPlayerId(playerId);
     if (!player) {
@@ -50,34 +40,8 @@ export async function registerRoutes(app: ExpressApp): Promise<Server> {
     return player;
   };
 
-  /**
-   * Parse query filters with pagination
-   */
   const parseFilters = (req: any) => {
-    const queryFilters: any = { ...req.query };
-    
-    // Extract pagination parameters
-    const rawPage = req.query.page as string | undefined;
-    const rawPageSize = req.query.pageSize as string | undefined;
-    const page = rawPage !== undefined && !Number.isNaN(parseInt(rawPage)) ? parseInt(rawPage) : 1;
-    const pageSize = rawPageSize !== undefined && !Number.isNaN(parseInt(rawPageSize)) ? parseInt(rawPageSize) : 0;
-    
-    // Remove pagination parameters from filters
-    delete queryFilters.page;
-    delete queryFilters.pageSize;
-    
-    // Convert numeric fields from strings to numbers
-    if (queryFilters.ageMin) {
-      queryFilters.ageMin = parseInt(queryFilters.ageMin as string);
-    }
-    if (queryFilters.ageMax) {
-      queryFilters.ageMax = parseInt(queryFilters.ageMax as string);
-    }
-    if (queryFilters.minCompatibility) {
-      queryFilters.minCompatibility = parseFloat(queryFilters.minCompatibility as string);
-    }
-    
-    return { filters: searchFiltersSchema.parse(queryFilters), page, pageSize };
+    return _parseFilters(req.query);
   };
 
   // === Player Routes ===
@@ -262,80 +226,7 @@ export async function registerRoutes(app: ExpressApp): Promise<Server> {
   });
 
   // === CSV Upload Routes ===
-  
-  /**
-   * Parse CSV header and create column mapping
-   */
-  const parseCsvHeader = (csvText: string): Record<string, number> => {
-    const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    const header = lines[0].split(",").map(h => h.trim());
-    const map: Record<string, number> = {};
-    header.forEach((h, idx) => (map[h] = idx));
-    return map;
-  };
 
-  /**
-   * Build fallback data from input CSV
-   */
-  const buildFallbackData = (csvText: string): Record<number, { name?: string | null; natural_pos?: string | null }> => {
-    const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    const inMap = parseCsvHeader(csvText);
-    const inputById: Record<number, { name?: string | null; natural_pos?: string | null }> = {};
-    
-    if (inMap["player_id"] !== undefined) {
-      for (const line of lines.slice(1)) {
-        const cols = line.split(",");
-        const pid = parseInt((cols[inMap["player_id"]] || "").trim());
-        if (!Number.isNaN(pid)) {
-          inputById[pid] = {
-            name: inMap["name"] !== undefined ? (cols[inMap["name"]] || null) : null,
-            natural_pos: inMap["sub_position"] !== undefined ? (cols[inMap["sub_position"]] || null) : null,
-          };
-        }
-      }
-    }
-    return inputById;
-  };
-
-  /**
-   * Parse compatibility results from output CSV
-   */
-  const parseCompatibilityResults = (csvOut: string, inputById: Record<number, any>) => {
-    const lines = csvOut.split(/\r?\n/).filter(l => l.trim().length > 0);
-    const map = parseCsvHeader(csvOut);
-    
-    return lines.slice(1).map(line => {
-      const cols = line.split(",");
-      const pid = parseInt((cols[map["player_id"]] || "0").trim());
-      const nameOut = map["name"] !== undefined ? (cols[map["name"]] || null) : null;
-      const natOut = map["natural_pos"] !== undefined ? (cols[map["natural_pos"]] || null) : null;
-      const fallback = inputById[pid] || {};
-      
-      return {
-        player_id: pid,
-        name: nameOut || fallback.name || null,
-        natural_pos: natOut || fallback.natural_pos || null,
-        status: "ok" as const,
-        compatibility: {
-          best_pos: cols[map["best_pos"]] || null,
-          best_fit_score: cols[map["best_fit_score"]] ? parseFloat(cols[map["best_fit_score"]]) : null,
-          st_fit: cols[map["st_fit"]] ? parseFloat(cols[map["st_fit"]]) : null,
-          lw_fit: cols[map["lw_fit"]] ? parseFloat(cols[map["lw_fit"]]) : null,
-          rw_fit: cols[map["rw_fit"]] ? parseFloat(cols[map["rw_fit"]]) : null,
-          cm_fit: cols[map["cm_fit"]] ? parseFloat(cols[map["cm_fit"]]) : null,
-          cdm_fit: cols[map["cdm_fit"]] ? parseFloat(cols[map["cdm_fit"]]) : null,
-          cam_fit: cols[map["cam_fit"]] ? parseFloat(cols[map["cam_fit"]]) : null,
-          lb_fit: cols[map["lb_fit"]] ? parseFloat(cols[map["lb_fit"]]) : null,
-          rb_fit: cols[map["rb_fit"]] ? parseFloat(cols[map["rb_fit"]]) : null,
-          cb_fit: cols[map["cb_fit"]] ? parseFloat(cols[map["cb_fit"]]) : null,
-        }
-      };
-    });
-  };
-
-  /**
-   * Run Python prediction script
-   */
   const runPythonPrediction = async (inputPath: string, outputPath: string): Promise<void> => {
     const { spawn } = await import("child_process");
     const path = await import("path");
