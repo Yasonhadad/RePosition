@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import type { IStorage } from "./storage";
 
+
 const { mockStorage } = vi.hoisted(() => {
   const mockStorage: IStorage = {
     getUser: vi.fn(),
