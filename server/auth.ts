@@ -58,19 +58,24 @@ export function setupAuth(app: Express): void {
 
   // RDS requires SSL; session store uses pg and needs the same SSL config as db.ts
   const isLocalDb = /localhost|127\.0\.0\.1/.test(dbUrl);
-  const sessionStoreSsl = isLocalDb ? false : { rejectUnauthorized: false };
 
-  // Configure session storage in PostgreSQL
+  // PGStoreOptions accepts conString OR conObject (with ssl); not both with ssl on conString
+  const storeOptions: connectPg.PGStoreOptions = isLocalDb
+    ? { conString: dbUrl, createTableIfMissing: true, tableName: 'session' }
+    : {
+        conObject: {
+          connectionString: dbUrl,
+          ssl: { rejectUnauthorized: false },
+        },
+        createTableIfMissing: true,
+        tableName: 'session',
+      };
+
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
-    store: new PostgresSessionStore({
-      conString: dbUrl,
-      ssl: sessionStoreSsl,
-      createTableIfMissing: true,
-      tableName: 'session'
-    }),
+    store: new PostgresSessionStore(storeOptions),
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
