@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: "699475953070.dkr.ecr.eu-west-1.amazonaws.com/reposition"
-  tag: "f9ad65bf6066330149147c117363c373b574577d"
+  tag: "2940ad88445899101fd7a223daee5d8f8ac5271e"
 
 ingress:
   annotations:
